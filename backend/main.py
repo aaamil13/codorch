@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend import __version__
+from backend.api.v1.router import api_router
+from backend.core.config import settings
 
 
 @asynccontextmanager
@@ -15,6 +17,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
     # Startup
     print("🚀 Codorch Backend starting...")
+    print(f"   Environment: {settings.ENVIRONMENT}")
+    print(f"   Debug: {settings.DEBUG}")
     yield
     # Shutdown
     print("👋 Codorch Backend shutting down...")
@@ -30,11 +34,14 @@ app = FastAPI(
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API v1 router
+app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")
