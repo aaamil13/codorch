@@ -21,12 +21,9 @@ cd D:\Dev\codorch\backend
 
 # Set environment variables
 $env:DATABASE_URL='postgresql://usr_codorch:lebaro13@localhost:5432/codorch_dev'
-$env:SECRET_KEY='dev-secret-key-change-in-production-32-chars-min'
-$env:OPENAI_BASE_URL='http://localhost:3000/v1'
-$env:OPENAI_API_KEY='b09805ca3e309fcb98cf790e08b6ce422450c405e13f18f5476561b513034381'
 
 # Start backend with Poetry
-poetry run python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+poetry run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 **Expected output:**
