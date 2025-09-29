@@ -56,6 +56,9 @@ class Project(Base):
     owner: Mapped["User"] = relationship("User", back_populates="projects")
     tree_nodes: Mapped[list["TreeNode"]] = relationship("TreeNode", back_populates="project")
     goals: Mapped[list["Goal"]] = relationship("Goal", back_populates="project")
+    opportunities: Mapped[list["Opportunity"]] = relationship(
+        "Opportunity", back_populates="project"
+    )
 
 
 class TreeNode(Base):
@@ -143,3 +146,63 @@ class Goal(Base):
         "Goal", remote_side=[id], back_populates="subgoals"
     )
     subgoals: Mapped[list["Goal"]] = relationship("Goal", back_populates="parent_goal")
+
+
+class Opportunity(Base):
+    """Opportunity model for Module 2: Opportunity Engine."""
+
+    __tablename__ = "opportunities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    tree_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tree_nodes.id", ondelete="SET NULL"), nullable=True
+    )
+    goal_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("goals.id", ondelete="SET NULL"), nullable=True
+    )
+
+    # Opportunity content
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    # AI generation
+    ai_generated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    generation_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    ai_reasoning: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Scoring
+    score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    feasibility_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    impact_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    innovation_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    resource_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    scoring_details: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Business details
+    target_market: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    value_proposition: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    estimated_effort: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    estimated_timeline: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    required_resources: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Validation and approval
+    status: Mapped[str] = mapped_column(String(50), default="proposed", nullable=False)
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project", back_populates="opportunities")
+    goal: Mapped[Optional["Goal"]] = relationship("Goal")
+    approver: Mapped[Optional["User"]] = relationship("User")
