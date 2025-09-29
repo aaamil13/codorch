@@ -1,0 +1,446 @@
+"""Service layer for Architecture Module."""
+
+from typing import Optional
+from uuid import UUID
+
+from sqlalchemy.orm import Session
+
+from backend.db.models import ArchitectureModule, User
+from backend.modules.architecture.repository import (
+    ArchitectureModuleRepository,
+    ArchitectureRuleRepository,
+    ModuleDependencyRepository,
+)
+from backend.modules.architecture.schemas import (
+    ArchitectureModuleCreate,
+    ArchitectureModuleUpdate,
+    ArchitectureRuleCreate,
+    ArchitectureRuleUpdate,
+    ComplexityAnalysisResponse,
+    ComplexityHotspot,
+    ComplexityMetrics,
+    ImpactAnalysisRequest,
+    ImpactAnalysisResponse,
+    ModuleDependencyCreate,
+    ModuleDependencyUpdate,
+    SharedModuleInfo,
+    SharedModulesResponse,
+    ValidationIssue,
+    ArchitectureValidationResponse,
+    AffectedModule,
+)
+
+
+class ArchitectureService:
+    """Service for architecture operations."""
+
+    def __init__(self, db: Session):
+        """Initialize service."""
+        self.db = db
+        self.module_repo = ArchitectureModuleRepository(db)
+        self.dependency_repo = ModuleDependencyRepository(db)
+        self.rule_repo = ArchitectureRuleRepository(db)
+
+    # ========================================================================
+    # Module Operations
+    # ========================================================================
+
+    def create_module(self, data: ArchitectureModuleCreate) -> ArchitectureModule:
+        """Create a new architecture module."""
+        # Calculate level if parent exists
+        if data.parent_id:
+            parent = self.module_repo.get_by_id(data.parent_id)
+            if parent:
+                # Set level to parent level + 1
+                data.level = parent.level + 1
+
+        return self.module_repo.create(data)
+
+    def get_module(self, module_id: UUID) -> Optional[ArchitectureModule]:
+        """Get module by ID."""
+        return self.module_repo.get_by_id(module_id)
+
+    def list_modules(
+        self,
+        project_id: UUID,
+        skip: int = 0,
+        limit: int = 100,
+        parent_id: Optional[UUID] = None,
+        module_type: Optional[str] = None,
+        status: Optional[str] = None,
+    ) -> list[ArchitectureModule]:
+        """List modules for a project."""
+        return self.module_repo.get_by_project(
+            project_id=project_id,
+            skip=skip,
+            limit=limit,
+            parent_id=parent_id,
+            module_type=module_type,
+            status=status,
+        )
+
+    def update_module(
+        self,
+        module_id: UUID,
+        data: ArchitectureModuleUpdate,
+    ) -> Optional[ArchitectureModule]:
+        """Update module."""
+        return self.module_repo.update(module_id, data)
+
+    def delete_module(self, module_id: UUID) -> bool:
+        """Delete module."""
+        return self.module_repo.delete(module_id)
+
+    def approve_module(self, module_id: UUID, user: User) -> Optional[ArchitectureModule]:
+        """Approve module."""
+        return self.module_repo.approve(module_id, user.id)
+
+    # ========================================================================
+    # Dependency Operations
+    # ========================================================================
+
+    def create_dependency(self, data: ModuleDependencyCreate):
+        """Create module dependency with validation."""
+        # Check if dependency already exists
+        if self.dependency_repo.exists(data.from_module_id, data.to_module_id, data.dependency_type):
+            raise ValueError("Dependency already exists")
+
+        # Check for self-dependency
+        if data.from_module_id == data.to_module_id:
+            raise ValueError("Module cannot depend on itself")
+
+        # Check for circular dependency
+        if self._would_create_circular_dependency(data.from_module_id, data.to_module_id):
+            raise ValueError("Would create circular dependency")
+
+        return self.dependency_repo.create(data)
+
+    def get_dependency(self, dependency_id: UUID):
+        """Get dependency by ID."""
+        return self.dependency_repo.get_by_id(dependency_id)
+
+    def list_dependencies(
+        self,
+        project_id: UUID,
+        dependency_type: Optional[str] = None,
+    ):
+        """List dependencies for a project."""
+        return self.dependency_repo.get_by_project(
+            project_id=project_id,
+            dependency_type=dependency_type,
+        )
+
+    def update_dependency(self, dependency_id: UUID, data: ModuleDependencyUpdate):
+        """Update dependency."""
+        return self.dependency_repo.update(dependency_id, data)
+
+    def delete_dependency(self, dependency_id: UUID) -> bool:
+        """Delete dependency."""
+        return self.dependency_repo.delete(dependency_id)
+
+    # ========================================================================
+    # Rule Operations
+    # ========================================================================
+
+    def create_rule(self, data: ArchitectureRuleCreate):
+        """Create architecture rule."""
+        return self.rule_repo.create(data)
+
+    def get_rule(self, rule_id: UUID):
+        """Get rule by ID."""
+        return self.rule_repo.get_by_id(rule_id)
+
+    def list_rules(
+        self,
+        project_id: UUID,
+        level: Optional[str] = None,
+        rule_type: Optional[str] = None,
+        active_only: bool = True,
+    ):
+        """List rules for a project."""
+        return self.rule_repo.get_by_project(
+            project_id=project_id,
+            level=level,
+            rule_type=rule_type,
+            active_only=active_only,
+        )
+
+    def update_rule(self, rule_id: UUID, data: ArchitectureRuleUpdate):
+        """Update rule."""
+        return self.rule_repo.update(rule_id, data)
+
+    def delete_rule(self, rule_id: UUID) -> bool:
+        """Delete rule."""
+        return self.rule_repo.delete(rule_id)
+
+    def deactivate_rule(self, rule_id: UUID):
+        """Deactivate rule."""
+        return self.rule_repo.deactivate(rule_id)
+
+    # ========================================================================
+    # Validation
+    # ========================================================================
+
+    def validate_architecture(self, project_id: UUID) -> ArchitectureValidationResponse:
+        """Validate architecture for circular dependencies and rules."""
+        issues: list[ValidationIssue] = []
+
+        # Check for circular dependencies
+        circular_deps = self._detect_circular_dependencies(project_id)
+        for cycle in circular_deps:
+            issues.append(
+                ValidationIssue(
+                    type="circular_dependency",
+                    severity="critical",
+                    message=f"Circular dependency detected: {' -> '.join([str(m) for m in cycle])}",
+                    affected_modules=cycle,
+                    suggestions=["Break the cycle by introducing an interface or removing a dependency"],
+                )
+            )
+
+        # Count errors and warnings
+        errors_count = sum(1 for issue in issues if issue.severity == "critical")
+        warnings_count = sum(1 for issue in issues if issue.severity == "warning")
+
+        return ArchitectureValidationResponse(
+            is_valid=errors_count == 0,
+            issues=issues,
+            warnings_count=warnings_count,
+            errors_count=errors_count,
+        )
+
+    # ========================================================================
+    # Complexity Analysis
+    # ========================================================================
+
+    def analyze_complexity(self, project_id: UUID) -> ComplexityAnalysisResponse:
+        """Analyze architecture complexity."""
+        modules = self.module_repo.get_by_project(project_id)
+        dependencies = self.dependency_repo.get_by_project(project_id)
+
+        module_count = len(modules)
+        avg_dependencies = len(dependencies) / module_count if module_count > 0 else 0
+        max_depth = max((m.level for m in modules), default=0)
+
+        # Calculate coupling score (inversely related to avg dependencies)
+        coupling_score = min(10.0, max(0.0, 10.0 - (avg_dependencies * 0.5)))
+
+        # Simple cyclomatic complexity estimate
+        cyclomatic_complexity = len(dependencies) + module_count
+
+        metrics = ComplexityMetrics(
+            module_count=module_count,
+            avg_dependencies=avg_dependencies,
+            max_depth=max_depth,
+            cyclomatic_complexity=cyclomatic_complexity,
+            coupling_score=coupling_score,
+            cohesion_score=7.0,  # Placeholder - would need more analysis
+        )
+
+        # Find hotspots (modules with many dependencies)
+        hotspots: list[ComplexityHotspot] = []
+        for module in modules:
+            deps_from = self.dependency_repo.get_dependencies_from(module.id)
+            deps_to = self.dependency_repo.get_dependencies_to(module.id)
+            total_deps = len(deps_from) + len(deps_to)
+
+            if total_deps > avg_dependencies * 2:  # Significantly above average
+                hotspots.append(
+                    ComplexityHotspot(
+                        module_id=module.id,
+                        module_name=module.name,
+                        complexity_score=min(10.0, total_deps / 2.0),
+                        reason=f"High coupling: {total_deps} dependencies",
+                        suggestions=[
+                            "Consider splitting into smaller modules",
+                            "Review and reduce dependencies",
+                        ],
+                    )
+                )
+
+        # Overall complexity (0-10 scale)
+        overall_complexity = (
+            (module_count / 50.0 * 3) +  # More modules = more complex
+            (avg_dependencies / 5.0 * 3) +  # More dependencies = more complex
+            (max_depth / 5.0 * 2) +  # Deeper = more complex
+            (len(hotspots) / 5.0 * 2)  # More hotspots = more complex
+        )
+        overall_complexity = min(10.0, overall_complexity)
+
+        return ComplexityAnalysisResponse(
+            overall_complexity=overall_complexity,
+            metrics=metrics,
+            hotspots=hotspots[:5],  # Top 5 hotspots
+            recommendations=[
+                "Keep module count reasonable (< 50)",
+                "Aim for average dependencies < 5 per module",
+                "Limit hierarchy depth to 4-5 levels",
+            ],
+        )
+
+    # ========================================================================
+    # Impact Analysis
+    # ========================================================================
+
+    def analyze_impact(self, request: ImpactAnalysisRequest) -> ImpactAnalysisResponse:
+        """Analyze impact of changes to a module."""
+        module = self.module_repo.get_by_id(request.module_id)
+        if not module:
+            raise ValueError("Module not found")
+
+        affected_modules: list[AffectedModule] = []
+        breaking_changes = False
+
+        if request.change_type in ["modify", "delete"]:
+            # Find modules that depend on this module
+            dependencies_to = self.dependency_repo.get_dependencies_to(request.module_id)
+
+            for dep in dependencies_to:
+                from_module = self.module_repo.get_by_id(dep.from_module_id)
+                if from_module:
+                    impact_level = "direct" if dep.dependency_type in ["import", "extends"] else "indirect"
+
+                    if dep.dependency_type == "extends":
+                        breaking_changes = True
+
+                    affected_modules.append(
+                        AffectedModule(
+                            module_id=from_module.id,
+                            module_name=from_module.name,
+                            impact_level=impact_level,
+                            affected_features=[
+                                f"{dep.dependency_type} dependency",
+                                from_module.module_type,
+                            ],
+                        )
+                    )
+
+            # Find child modules (cascade effect)
+            children = self.module_repo.get_children(request.module_id)
+            for child in children:
+                affected_modules.append(
+                    AffectedModule(
+                        module_id=child.id,
+                        module_name=child.name,
+                        impact_level="cascading",
+                        affected_features=["Child module"],
+                    )
+                )
+
+        testing_scope = [
+            f"Test {module.name}",
+            *[f"Test {am.module_name}" for am in affected_modules],
+            "Integration tests",
+        ]
+
+        recommendations = []
+        if breaking_changes:
+            recommendations.append("This is a breaking change - update all dependent modules")
+        if len(affected_modules) > 5:
+            recommendations.append("Large impact - consider phased rollout")
+        if request.change_type == "delete":
+            recommendations.append("Remove all dependencies before deletion")
+
+        return ImpactAnalysisResponse(
+            module_id=request.module_id,
+            change_type=request.change_type,
+            affected_modules=affected_modules,
+            breaking_changes=breaking_changes,
+            testing_scope=testing_scope,
+            recommendations=recommendations or ["Impact is minimal"],
+        )
+
+    # ========================================================================
+    # Shared Modules
+    # ========================================================================
+
+    def get_shared_modules(self, project_id: UUID) -> SharedModulesResponse:
+        """Get shared modules (used by multiple modules)."""
+        modules = self.module_repo.get_by_project(project_id)
+        shared_modules: list[SharedModuleInfo] = []
+
+        for module in modules:
+            dependencies_to = self.dependency_repo.get_dependencies_to(module.id)
+
+            if len(dependencies_to) > 1:  # Used by more than one module
+                used_by = [dep.from_module_id for dep in dependencies_to]
+                shared_modules.append(
+                    SharedModuleInfo(
+                        module_id=module.id,
+                        module_name=module.name,
+                        usage_count=len(dependencies_to),
+                        used_by=used_by,
+                    )
+                )
+
+        # Sort by usage count
+        shared_modules.sort(key=lambda x: x.usage_count, reverse=True)
+
+        return SharedModulesResponse(
+            shared_modules=shared_modules,
+            total_count=len(shared_modules),
+        )
+
+    # ========================================================================
+    # Private Helper Methods
+    # ========================================================================
+
+    def _would_create_circular_dependency(self, from_module_id: UUID, to_module_id: UUID) -> bool:
+        """Check if creating this dependency would create a circular dependency."""
+        # Use DFS to check if there's a path from to_module to from_module
+        visited = set()
+
+        def dfs(current_id: UUID) -> bool:
+            if current_id == from_module_id:
+                return True
+            if current_id in visited:
+                return False
+
+            visited.add(current_id)
+
+            # Get all dependencies FROM current module
+            deps = self.dependency_repo.get_dependencies_from(current_id)
+            for dep in deps:
+                if dfs(dep.to_module_id):
+                    return True
+
+            return False
+
+        return dfs(to_module_id)
+
+    def _detect_circular_dependencies(self, project_id: UUID) -> list[list[UUID]]:
+        """Detect all circular dependencies using DFS."""
+        modules = self.module_repo.get_by_project(project_id)
+        cycles: list[list[UUID]] = []
+        visited = set()
+        rec_stack = set()
+        path = []
+
+        def dfs(module_id: UUID) -> bool:
+            visited.add(module_id)
+            rec_stack.add(module_id)
+            path.append(module_id)
+
+            # Get dependencies
+            deps = self.dependency_repo.get_dependencies_from(module_id)
+            for dep in deps:
+                to_id = dep.to_module_id
+
+                if to_id not in visited:
+                    if dfs(to_id):
+                        return True
+                elif to_id in rec_stack:
+                    # Found cycle
+                    cycle_start = path.index(to_id)
+                    cycle = path[cycle_start:] + [to_id]
+                    cycles.append(cycle)
+
+            path.pop()
+            rec_stack.remove(module_id)
+            return False
+
+        for module in modules:
+            if module.id not in visited:
+                dfs(module.id)
+
+        return cycles
