@@ -81,9 +81,10 @@ class ResearchMessageResponse(ResearchMessageBase):
     id: UUID
     session_id: UUID
     role: str
-    metadata: Optional[dict[str, Any]] = Field(
+    message_metadata: Optional[dict[str, Any]] = Field(
         default=None,
         description="Message metadata (agent, tokens, model, etc.)",
+        alias="metadata",
     )
     created_at: datetime
 

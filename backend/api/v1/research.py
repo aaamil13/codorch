@@ -296,7 +296,7 @@ Confidence: {synthesis.confidence:.1%}
             message_id=assistant_message.id,
             content=assistant_content,
             agent="ResearchTeam",
-            metadata=assistant_message.metadata,
+            metadata=assistant_message.message_metadata,
         )
 
     except Exception as e:

@@ -142,7 +142,7 @@ class ResearchService:
             session_id=session_id,
             role=data.role,
             content=data.content,
-            metadata=metadata or {},
+            message_metadata=metadata or {},
         )
 
         return self.message_repo.create(message)

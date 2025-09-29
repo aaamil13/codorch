@@ -273,8 +273,8 @@ class ResearchMessage(Base):
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # user, assistant, system
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
-    # Metadata (agent info, model, tokens, timing, etc.)
-    metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Message metadata (agent info, model, tokens, timing, etc.)
+    message_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
