@@ -1,7 +1,7 @@
 """Base Pydantic schemas for the application."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -107,7 +107,7 @@ class TreeNodeBase(BaseSchema):
     """Base tree node schema."""
 
     node_type: str = Field(..., description="Type of node")
-    data: dict[str, any] = Field(default_factory=dict, description="Node data")  # type: ignore
+    data: dict[str, Any] = Field(default_factory=dict, description="Node data")
     position: Optional[int] = None
     level: Optional[int] = None
 
@@ -121,7 +121,7 @@ class TreeNodeCreate(TreeNodeBase):
 class TreeNodeUpdate(BaseSchema):
     """Schema for updating a tree node."""
 
-    data: Optional[dict[str, any]] = None  # type: ignore
+    data: Optional[dict[str, Any]] = None
     position: Optional[int] = None
 
 
@@ -188,7 +188,7 @@ class ErrorResponse(BaseSchema):
 class PaginatedResponse(BaseSchema):
     """Paginated response schema."""
 
-    items: list[any]  # type: ignore
+    items: list[Any]
     total: int
     page: int
     page_size: int

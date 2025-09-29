@@ -48,10 +48,10 @@ def create_opportunity(
 @router.get("/projects/{project_id}/opportunities", response_model=list[OpportunityResponse])
 def list_opportunities(
     project_id: UUID,
-    skip: int = 0,
-    limit: int = 100,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[OpportunityResponse]:
     """List opportunities for a project."""
     # Verify project ownership
@@ -180,9 +180,9 @@ async def generate_opportunities(
 @router.get("/projects/{project_id}/opportunities/top", response_model=list[OpportunityResponse])
 def get_top_opportunities(
     project_id: UUID,
-    limit: int = 10,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    limit: int = 10,
 ) -> list[OpportunityResponse]:
     """Get top-scored opportunities."""
     # Verify project ownership
