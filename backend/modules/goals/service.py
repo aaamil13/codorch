@@ -1,0 +1,287 @@
+"""Goal service layer."""
+
+from typing import Optional
+from uuid import UUID
+
+from sqlalchemy.orm import Session
+
+from backend.ai_agents.goal_analyst import GoalAnalystAgent
+from backend.db.models import Goal, Project
+from backend.modules.goals.repository import GoalRepository
+from backend.modules.goals.schemas import (
+    GoalAnalysisRequest,
+    GoalAnalysisResponse,
+    GoalCreate,
+    GoalDecomposeRequest,
+    GoalDecomposeResponse,
+    GoalUpdate,
+)
+from backend.modules.goals.smart_validator import SMARTValidator
+
+
+class GoalService:
+    """Service layer for Goal operations."""
+
+    def __init__(self, db: Session) -> None:
+        """Initialize service."""
+        self.db = db
+        self.repository = GoalRepository(db)
+        self.validator = SMARTValidator()
+        self.ai_agent = GoalAnalystAgent()
+
+    def create_goal(self, project_id: UUID, goal_data: GoalCreate) -> Goal:
+        """
+        Create new goal.
+
+        Args:
+            project_id: Project ID
+            goal_data: Goal creation data
+
+        Returns:
+            Created goal
+        """
+        # Verify project exists
+        project = self.db.query(Project).filter(Project.id == project_id).first()
+        if not project:
+            raise ValueError("Project not found")
+
+        # Verify parent goal if specified
+        if goal_data.parent_goal_id:
+            parent = self.repository.get_by_id(goal_data.parent_goal_id)
+            if not parent or parent.project_id != project_id:
+                raise ValueError("Parent goal not found or belongs to different project")
+
+        # Create goal
+        goal = Goal(
+            project_id=project_id,
+            parent_goal_id=goal_data.parent_goal_id,
+            title=goal_data.title,
+            description=goal_data.description,
+            category=goal_data.category,
+            target_date=goal_data.target_date,
+            priority=goal_data.priority,
+            metrics={"metrics": [m.model_dump() for m in goal_data.metrics]}
+            if goal_data.metrics
+            else None,
+            status="draft",
+        )
+
+        # Perform SMART validation
+        validation_result = self.validator.validate_goal(
+            title=goal.title,
+            description=goal.description,
+            category=goal.category,
+            target_date=goal.target_date,
+            metrics=goal.metrics,
+        )
+
+        # Set validation scores
+        goal.specific_score = validation_result["specific_score"]
+        goal.measurable_score = validation_result["measurable_score"]
+        goal.achievable_score = validation_result["achievable_score"]
+        goal.relevant_score = validation_result["relevant_score"]
+        goal.time_bound_score = validation_result["time_bound_score"]
+        goal.overall_smart_score = validation_result["overall_smart_score"]
+        goal.is_smart_validated = validation_result["is_smart_compliant"]
+
+        return self.repository.create(goal)
+
+    def get_goal(self, goal_id: UUID) -> Optional[Goal]:
+        """Get goal by ID."""
+        return self.repository.get_by_id(goal_id)
+
+    def get_goal_with_subgoals(self, goal_id: UUID) -> Optional[Goal]:
+        """Get goal with subgoals."""
+        return self.repository.get_by_id_with_subgoals(goal_id)
+
+    def list_goals(
+        self, project_id: UUID, skip: int = 0, limit: int = 100
+    ) -> list[Goal]:
+        """List goals for project."""
+        return self.repository.get_by_project(project_id, skip, limit)
+
+    def list_root_goals(self, project_id: UUID) -> list[Goal]:
+        """List root goals (no parent) for project."""
+        return self.repository.get_root_goals(project_id)
+
+    def update_goal(self, goal_id: UUID, goal_update: GoalUpdate) -> Goal:
+        """
+        Update goal.
+
+        Args:
+            goal_id: Goal ID
+            goal_update: Update data
+
+        Returns:
+            Updated goal
+        """
+        goal = self.repository.get_by_id(goal_id)
+        if not goal:
+            raise ValueError("Goal not found")
+
+        # Update fields
+        if goal_update.title is not None:
+            goal.title = goal_update.title
+        if goal_update.description is not None:
+            goal.description = goal_update.description
+        if goal_update.category is not None:
+            goal.category = goal_update.category
+        if goal_update.target_date is not None:
+            goal.target_date = goal_update.target_date
+        if goal_update.priority is not None:
+            goal.priority = goal_update.priority
+        if goal_update.status is not None:
+            goal.status = goal_update.status
+        if goal_update.completion_percentage is not None:
+            goal.completion_percentage = goal_update.completion_percentage
+        if goal_update.metrics is not None:
+            goal.metrics = {"metrics": [m.model_dump() for m in goal_update.metrics]}
+
+        # Re-validate if key fields changed
+        if any(
+            [
+                goal_update.title,
+                goal_update.description,
+                goal_update.target_date,
+                goal_update.metrics,
+            ]
+        ):
+            validation_result = self.validator.validate_goal(
+                title=goal.title,
+                description=goal.description,
+                category=goal.category,
+                target_date=goal.target_date,
+                metrics=goal.metrics,
+            )
+
+            goal.specific_score = validation_result["specific_score"]
+            goal.measurable_score = validation_result["measurable_score"]
+            goal.achievable_score = validation_result["achievable_score"]
+            goal.relevant_score = validation_result["relevant_score"]
+            goal.time_bound_score = validation_result["time_bound_score"]
+            goal.overall_smart_score = validation_result["overall_smart_score"]
+            goal.is_smart_validated = validation_result["is_smart_compliant"]
+
+        return self.repository.update(goal)
+
+    def delete_goal(self, goal_id: UUID) -> None:
+        """Delete goal."""
+        goal = self.repository.get_by_id(goal_id)
+        if not goal:
+            raise ValueError("Goal not found")
+
+        self.repository.delete(goal)
+
+    async def analyze_goal(
+        self, goal_id: UUID, request: GoalAnalysisRequest
+    ) -> GoalAnalysisResponse:
+        """
+        Analyze goal with AI.
+
+        Args:
+            goal_id: Goal ID
+            request: Analysis request options
+
+        Returns:
+            Analysis result
+        """
+        goal = self.repository.get_by_id(goal_id)
+        if not goal:
+            raise ValueError("Goal not found")
+
+        # Run AI analysis
+        ai_result = await self.ai_agent.analyze_goal(
+            title=goal.title,
+            description=goal.description,
+            category=goal.category,
+            target_date=str(goal.target_date) if goal.target_date else None,
+        )
+
+        # Get suggested metrics if requested
+        suggested_metrics = []
+        if request.include_metrics:
+            metrics_result = await self.ai_agent.suggest_metrics(
+                title=goal.title, description=goal.description, category=goal.category
+            )
+            suggested_metrics = metrics_result
+
+        # Get suggested subgoals if requested
+        suggested_subgoals = []
+        if request.include_subgoals:
+            subgoals_result = await self.ai_agent.decompose_goal(
+                title=goal.title, description=goal.description, num_subgoals=3
+            )
+            suggested_subgoals = [s.title for s in subgoals_result]
+
+        # Store AI feedback in goal
+        goal.ai_feedback = {
+            "feedback": ai_result.overall_feedback,
+            "strengths": ai_result.strengths,
+            "weaknesses": ai_result.weaknesses,
+        }
+        goal.ai_suggestions = ai_result.suggestions
+        self.repository.update(goal)
+
+        # Build response
+        from backend.modules.goals.schemas import AIFeedback, SMARTScores
+
+        response = GoalAnalysisResponse(
+            goal_id=goal.id,
+            smart_scores=SMARTScores(
+                specific_score=goal.specific_score or 0.0,
+                measurable_score=goal.measurable_score or 0.0,
+                achievable_score=goal.achievable_score or 0.0,
+                relevant_score=goal.relevant_score or 0.0,
+                time_bound_score=goal.time_bound_score or 0.0,
+                overall_smart_score=goal.overall_smart_score or 0.0,
+            ),
+            feedback=AIFeedback(
+                feedback=ai_result.overall_feedback,
+                suggestions=ai_result.suggestions,
+                strengths=ai_result.strengths,
+                weaknesses=ai_result.weaknesses,
+            ),
+            suggested_metrics=suggested_metrics,
+            suggested_subgoals=suggested_subgoals,
+            is_smart_compliant=goal.is_smart_validated,
+        )
+
+        return response
+
+    async def decompose_goal(
+        self, goal_id: UUID, request: GoalDecomposeRequest
+    ) -> GoalDecomposeResponse:
+        """
+        Decompose goal into subgoals.
+
+        Args:
+            goal_id: Goal ID
+            request: Decomposition request
+
+        Returns:
+            Suggested subgoals
+        """
+        goal = self.repository.get_by_id(goal_id)
+        if not goal:
+            raise ValueError("Goal not found")
+
+        # Run AI decomposition
+        subgoals = await self.ai_agent.decompose_goal(
+            title=goal.title, description=goal.description, num_subgoals=request.num_subgoals
+        )
+
+        # If metrics requested, suggest metrics for each subgoal
+        if request.include_metrics:
+            for subgoal in subgoals:
+                metrics = await self.ai_agent.suggest_metrics(
+                    title=subgoal.title, description=subgoal.description, category=goal.category
+                )
+                subgoal.metrics = metrics  # type: ignore
+
+        response = GoalDecomposeResponse(
+            parent_goal_id=goal.id,
+            suggested_subgoals=subgoals,  # type: ignore
+            reasoning=f"AI-generated {len(subgoals)} subgoals based on the main goal analysis",
+        )
+
+        return response
