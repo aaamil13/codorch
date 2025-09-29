@@ -13,7 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from backend.core.config import settings
 from backend.db.base import Base
 from backend.db.models import (  # noqa: F401
+    ArchitectureModule,
+    ArchitectureRule,
     Goal,
+    ModuleDependency,
     Opportunity,
     Project,
     ResearchFinding,
