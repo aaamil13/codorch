@@ -316,3 +316,155 @@ class ResearchFinding(Base):
 
     # Relationships
     session: Mapped["ResearchSession"] = relationship("ResearchSession", back_populates="findings")
+
+
+# ============================================================================
+# Module 4: Architecture Designer Models
+# ============================================================================
+
+
+class ArchitectureModule(Base):
+    """Architecture module model for Module 4: Architecture Designer."""
+
+    __tablename__ = "architecture_modules"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("architecture_modules.id", ondelete="CASCADE"), nullable=True
+    )
+    tree_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tree_nodes.id", ondelete="SET NULL"), nullable=True
+    )
+
+    # Module information
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    module_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="package"
+    )  # package, class, interface, service, component, etc.
+    level: Mapped[int] = mapped_column(Integer, default=0, nullable=False)  # Depth in tree
+
+    # Visual positioning (for canvas)
+    position_x: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    position_y: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
+    # AI generation
+    ai_generated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    generation_reasoning: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Status and approval
+    status: Mapped[str] = mapped_column(String(50), default="draft", nullable=False)  # draft, approved, implemented
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+
+    # Metadata (technologies, patterns, notes, etc.)
+    module_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project")
+    parent: Mapped[Optional["ArchitectureModule"]] = relationship(
+        "ArchitectureModule", remote_side=[id], back_populates="children"
+    )
+    children: Mapped[list["ArchitectureModule"]] = relationship(
+        "ArchitectureModule", back_populates="parent", cascade="all, delete-orphan"
+    )
+    approver: Mapped[Optional["User"]] = relationship("User")
+    dependencies_from: Mapped[list["ModuleDependency"]] = relationship(
+        "ModuleDependency",
+        foreign_keys="ModuleDependency.from_module_id",
+        back_populates="from_module",
+        cascade="all, delete-orphan",
+    )
+    dependencies_to: Mapped[list["ModuleDependency"]] = relationship(
+        "ModuleDependency",
+        foreign_keys="ModuleDependency.to_module_id",
+        back_populates="to_module",
+        cascade="all, delete-orphan",
+    )
+    rules: Mapped[list["ArchitectureRule"]] = relationship(
+        "ArchitectureRule", back_populates="module", cascade="all, delete-orphan"
+    )
+
+
+class ModuleDependency(Base):
+    """Module dependency model - connections between architecture modules."""
+
+    __tablename__ = "module_dependencies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    from_module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("architecture_modules.id", ondelete="CASCADE"), nullable=False
+    )
+    to_module_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("architecture_modules.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # Dependency information
+    dependency_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # import, extends, uses, implements, depends_on
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Metadata (specific dependency configuration)
+    dependency_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Timestamp
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project")
+    from_module: Mapped["ArchitectureModule"] = relationship(
+        "ArchitectureModule", foreign_keys=[from_module_id], back_populates="dependencies_from"
+    )
+    to_module: Mapped["ArchitectureModule"] = relationship(
+        "ArchitectureModule", foreign_keys=[to_module_id], back_populates="dependencies_to"
+    )
+
+
+class ArchitectureRule(Base):
+    """Architecture rule model - rules for architecture validation."""
+
+    __tablename__ = "architecture_rules"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    module_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("architecture_modules.id", ondelete="CASCADE"), nullable=True
+    )  # null = global rule
+
+    # Rule information
+    level: Mapped[str] = mapped_column(String(50), nullable=False)  # global, module, component
+    rule_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # naming, dependency, layer, tech, security
+    rule_definition: Mapped[dict] = mapped_column(JSON, nullable=False)  # Rule specification
+
+    # AI and status
+    ai_generated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project")
+    module: Mapped[Optional["ArchitectureModule"]] = relationship("ArchitectureModule", back_populates="rules")
