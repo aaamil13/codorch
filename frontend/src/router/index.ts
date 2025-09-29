@@ -40,6 +40,11 @@ const routes: RouteRecordRaw[] = [
         name: 'research-session',
         component: () => import('../pages/ResearchSessionPage.vue'),
       },
+      {
+        path: '/project/:projectId/architecture',
+        name: 'project-architecture',
+        component: () => import('../pages/ArchitecturePage.vue'),
+      },
     ],
   },
   {
