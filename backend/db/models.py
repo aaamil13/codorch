@@ -206,3 +206,113 @@ class Opportunity(Base):
     project: Mapped["Project"] = relationship("Project", back_populates="opportunities")
     goal: Mapped[Optional["Goal"]] = relationship("Goal")
     approver: Mapped[Optional["User"]] = relationship("User")
+
+
+class ResearchSession(Base):
+    """Research session model for Module 3: Research Engine."""
+
+    __tablename__ = "research_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    goal_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("goals.id", ondelete="SET NULL"), nullable=True
+    )
+    opportunity_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("opportunities.id", ondelete="SET NULL"), nullable=True
+    )
+    tree_node_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("tree_nodes.id", ondelete="SET NULL"), nullable=True
+    )
+
+    # Session content
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(50), default="active", nullable=False)
+
+    # Context from RefMemTree
+    context_summary: Mapped[Optional[dict]] = mapped_column(
+        JSON, nullable=True, comment="Aggregated context from RefMemTree"
+    )
+
+    # Timestamps
+    created_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project")
+    goal: Mapped[Optional["Goal"]] = relationship("Goal")
+    opportunity: Mapped[Optional["Opportunity"]] = relationship("Opportunity")
+    creator: Mapped["User"] = relationship("User")
+    messages: Mapped[list["ResearchMessage"]] = relationship(
+        "ResearchMessage", back_populates="session", cascade="all, delete-orphan"
+    )
+    findings: Mapped[list["ResearchFinding"]] = relationship(
+        "ResearchFinding", back_populates="session", cascade="all, delete-orphan"
+    )
+
+
+class ResearchMessage(Base):
+    """Research message model - chat messages in research sessions."""
+
+    __tablename__ = "research_messages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("research_sessions.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # Message content
+    role: Mapped[str] = mapped_column(String(20), nullable=False)  # user, assistant, system
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # Metadata (agent info, model, tokens, timing, etc.)
+    metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Timestamp
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    session: Mapped["ResearchSession"] = relationship("ResearchSession", back_populates="messages")
+
+
+class ResearchFinding(Base):
+    """Research finding model - insights extracted from research."""
+
+    __tablename__ = "research_findings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("research_sessions.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # Finding content
+    finding_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # technical, market, user, competitor, other
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # Sources and citations
+    sources: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+
+    # Scoring
+    confidence_score: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="AI confidence in finding (0-1)"
+    )
+    relevance_score: Mapped[Optional[float]] = mapped_column(
+        Float, nullable=True, comment="Relevance to research context (0-1)"
+    )
+
+    # Timestamp
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    session: Mapped["ResearchSession"] = relationship("ResearchSession", back_populates="findings")
