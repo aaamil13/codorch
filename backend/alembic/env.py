@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 # Import settings and models
 from backend.core.config import settings
 from backend.db.base import Base
-from backend.db.models import Project, TreeNode, User  # noqa: F401
+from backend.db.models import Goal, Opportunity, Project, TreeNode, User  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
