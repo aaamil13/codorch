@@ -1,0 +1,214 @@
+diff --git a/Plan_NextStep.md b/Plan_NextStep.md
+--- a/Plan_NextStep.md
++++ b/Plan_NextStep.md
+@@ -1,210 +0,0 @@
+-Разбира се, това е отличен въпрос. Тестването на асинхронен код има своите специфики и изисква фокус върху различни сценарии от синхронния код. Вашите съществуващи тестове са добро начало, но могат да бъдат разширени, за да покрият специфичните предизвикателства на асинхронната среда.
+-
+-Ето няколко категории и конкретни примери за тестове, които биха направили `async` имплементацията ви още по-устойчива:
+-
+-### 1. Тестове за състезание (Race Conditions) и едновременен достъп
+-
+-Това е най-важната категория за `async` код. Целта е да се симулират ситуации, в които няколко задачи се опитват да променят едно и също нещо едновременно, за да се гарантира, че състоянието на системата остава консистентно.
+-
+-#### **Пример 1: Едновременно обновяване и изтриване на един и същи възел**
+-
+-*   **Защо е важно?** Трябва да се гарантира, че операциите са атомни. Или обновяването успява и изтриването се проваля (защото вече е обновено), или изтриването успява и обновяването се проваля (защото възелът вече не съществува). Не трябва да има междинно, счупено състояние.
+-*   **Как да се тества:**
+-
+-```python
+-import asyncio
+-import pytest
+-from graph_system.exceptions import NodeNotFoundError
+-
+-# (във вашия тестов файл)
+-# pytestmark = pytest.mark.asyncio
+-
+-async def test_concurrent_update_and_delete_race_condition(async_system):
+-    # 1. Създаваме възел
+-    node_data = {"name": "RaceNode", "node_type": "service"}
+-    node = await async_system.create_node(node_data)
+-
+-    # 2. Създаваме две задачи, които ще се изпълнят "едновременно"
+-    update_task = asyncio.create_task(
+-        async_system.update_node(node.id, {"name": "UpdatedRaceNode"})
+-    )
+-    delete_task = asyncio.create_task(
+-        async_system.delete_node(node.id)
+-    )
+-
+-    # 3. Изпълняваме ги и събираме резултатите (или грешките)
+-    results = await asyncio.gather(update_task, delete_task, return_exceptions=True)
+-
+-    # 4. Проверяваме резултата
+-    # Очакваме едната операция да успее, а другата да се провали с NodeNotFoundError.
+-    success_results = [r for r in results if not isinstance(r, Exception)]
+-    failed_results = [r for r in results if isinstance(r, Exception)]
+-
+-    assert len(success_results) == 1, "Exactly one operation should succeed."
+-    assert len(failed_results) == 1, "Exactly one operation should fail."
+-    
+-    # Уверяваме се, че грешката е очакваният тип
+-    assert isinstance(failed_results[0], (NodeNotFoundError, ValueError)) # ValueError is raised by create/update on failure
+-
+-    # 5. Проверяваме финалното състояние на системата
+-    # Или възелът е изтрит, или е обновен.
+-    final_node = await async_system.get_node(node.id) if not isinstance(results[1], Exception) else None
+-
+-    if final_node:
+-        # Update won, delete lost
+-        assert final_node.name == "UpdatedRaceNode"
+-    else:
+-        # Delete won, update lost
+-        with pytest.raises(NodeNotFoundError):
+-            await async_system.get_node(node.id)
+-```
+-
+-#### **Пример 2: Добавяне на референция към възел, който се изтрива в същия момент**
+-
+-*   **Защо е важно?** Системата не трябва да позволява създаването на "висящи" референции към несъществуващи възли, дори при конкурентен достъп.
+-*   **Как да се тества:** Подобно на горния пример, но с `update_node` (за добавяне на референция) и `delete_node` на *целевия* възел.
+-
+-### 2. Тестове за отказоустойчивост и грешки (Resilience & Error Handling)
+-
+-Тук се проверява как системата реагира, когато нещо се обърка в някоя от асинхронните задачи.
+-
+-#### **Пример 3: Неочаквана грешка в `CommandHandler`**
+-
+-*   **Защо е важно?** Грешка в обработката на една команда не трябва да спира целия `worker_loop` в `AsyncCommandBus` и да блокира обработката на следващи команди.
+-*   **Как да се тества:** С `monkeypatch` се "счупва" един от хендлърите, така че да хвърля грешка.
+-
+-```python
+-async def test_command_handler_failure_does_not_stop_bus(async_system, monkeypatch):
+-    # 1. "Счупваме" handle_update_node
+-    original_handler = async_system._orchestrator.command_handlers.handle_update_node
+-    async def mock_failing_handler(command):
+-        if command.data.get("name") == "FAIL":
+-            raise RuntimeError("Simulated unexpected failure!")
+-        return await original_handler(command)
+-    
+-    monkeypatch.setattr(async_system._orchestrator.command_handlers, 'handle_update_node', mock_failing_handler)
+-
+-    # 2. Създаваме два възела
+-    node1 = await async_system.create_node({"name": "Node1", "node_type": "service"})
+-    node2 = await async_system.create_node({"name": "Node2", "node_type": "service"})
+-
+-    # 3. Пускаме 3 команди: една успешна, една проваляща се, и още една успешна
+-    update1_task = async_system.update_node(node1.id, {"name": "UpdatedNode1"})
+-    update_fail_task = async_system.update_node(node2.id, {"name": "FAIL"})
+-    update2_task = async_system.update_node(node1.id, {"name": "UpdatedAgainNode1"})
+-
+-    results = await asyncio.gather(update1_task, update_fail_task, update2_task, return_exceptions=True)
+-
+-    # 4. Проверяваме
+-    assert not isinstance(results[0], Exception) # Първата трябва да успее
+-    assert isinstance(results[1], RuntimeError) # Втората трябва да се провали
+-    assert not isinstance(results[2], Exception) # Третата също трябва да успее
+-
+-    final_node1 = await async_system.get_node(node1.id)
+-    assert final_node1.name == "UpdatedAgainNode1", "The last successful command should be applied."
+-```
+-
+-#### **Пример 4: Тайм-аут на команда**
+-
+-*   **Защо е важно?** Да се гарантира, че ако една операция "увисне", клиентът няма да чака безкрайно.
+-*   **Как да се тества:** С `monkeypatch` се добавя дълъг `asyncio.sleep` в някой хендлър и се извиква съответната операция с кратък тайм-аут.
+-
+-```python
+-async def test_command_timeout(async_system, monkeypatch):
+-    # 1. Правим create_node много бавен
+-    async def mock_slow_handler(command):
+-        await asyncio.sleep(2) # Спим за 2 секунди
+-        # Няма да стигнем до тук, но за пълнота
+-        node = async_system._orchestrator.graph_helpers._prepare_node_data(command.data)
+-        return node
+-        
+-    monkeypatch.setattr(async_system._orchestrator.command_handlers, 'handle_create_node', mock_slow_handler)
+-
+-    # 2. Опитваме се да създадем възел с тайм-аут 1 секунда
+-    with pytest.raises(asyncio.TimeoutError):
+-        await async_system.create_node(
+-            {"name": "TimeoutNode", "node_type": "service"},
+-            timeout=1.0
+-        )
+-```
+-
+-### 3. Тестове за натоварване и мащабиране (Stress & Load Testing)
+-
+-Целта е да се види как се държи системата под голямо натоварване от паралелни заявки.
+-
+-#### **Пример 5: Препълване на опашката с команди (`CommandQueueFullError`)**
+-
+-*   **Защо е важно?** Да се тества стратегията за препълване (`DROP_OLDEST` или `REJECT_NEW`).
+-*   **Как да се тества:** Конфигурира се `AsyncCommandBus` с много малък `max_queue_size` (напр. 2). След това се пускат едновременно повече команди от размера на опашката.
+-
+-```python
+-async def test_command_queue_overflow(monkeypatch):
+-    # 1. Създаваме система с малка опашка
+-    config = GraphSystemConfig(storage_path=None, rules_path="rules", max_queue_size=2)
+-    system = GraphSystemFactory.create_async_graph_system(config)
+-    await system.start()
+-
+-    # Забавяме обработката, за да може опашката да се напълни
+-    async def mock_slow_handler(command):
+-        await asyncio.sleep(0.5)
+-        # ...
+-    monkeypatch.setattr(system._orchestrator.command_handlers, 'handle_create_node', mock_slow_handler)
+-
+-    # 2. Пускаме 5 команди едновременно (опашката е с размер 2)
+-    tasks = [
+-        system.create_node({"name": f"Node {i}", "node_type": "service"})
+-        for i in range(5)
+-    ]
+-    
+-    results = await asyncio.gather(*tasks, return_exceptions=True)
+-
+-    # 3. Проверяваме
+-    # Очакваме някои от задачите да се провалят с CommandQueueFullError
+-    exceptions = [r for r in results if isinstance(r, Exception)]
+-    assert len(exceptions) > 0
+-    
+-    # Трябва да има поне една грешка от този тип
+-    assert any(isinstance(e, type(system._command_bus.CommandQueueFullError())) for e in exceptions) # Compare types
+-    
+-    await system.shutdown()
+-```
+-
+-### 4. Интеграционни тестове на компоненти
+-
+-#### **Пример 6: Проверка на асинхронния `EventBus`**
+-
+-*   **Защо е важно?** Да се гарантира, че след успешна асинхронна команда, събитията се публикуват правилно и асинхронните `callbacks` се извикват.
+-*   **Как да се тества:**
+-
+-```python
+-async def test_async_event_bus_integration(async_system):
+-    event_was_fired = asyncio.Event()
+-    received_event_data = None
+-
+-    async def my_async_callback(event):
+-        nonlocal received_event_data
+-        received_event_data = event['data']
+-        event_was_fired.set()
+-
+-    # Абонираме нашия асинхронен callback
+-    async_system._orchestrator.event_bus.subscribe(
+-        "test_subscriber",
+-        {"node_created"},
+-        my_async_callback
+-    )
+-
+-    # Изпълняваме команда, която трябва да задейства събитието
+-    node_data = {"name": "EventNode", "node_type": "service"}
+-    created_node = await async_system.create_node(node_data)
+-    
+-    # Изчакваме нашия callback да бъде извикан (с тайм-аут)
+-    try:
+-        await asyncio.wait_for(event_was_fired.wait(), timeout=2.0)
+-    except asyncio.TimeoutError:
+-        pytest.fail("Async callback was not fired for 'node_created' event.")
+-
+-    assert received_event_data is not None
+-    assert received_event_data['node_data']['id'] == created_node.id
+-```
+-
+-Тези примери покриват ключовите рискове при асинхронните системи. Като ги имплементирате, ще имате много по-голяма увереност в стабилността и коректността на `async` версията на проекта.

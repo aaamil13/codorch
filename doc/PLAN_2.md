@@ -1,0 +1,351 @@
+diff --git a/PLAN_2.md b/PLAN_2.md
+--- a/PLAN_2.md
++++ b/PLAN_2.md
+@@ -1,347 +0,0 @@
+-# RefMemTree - Конкретен план за имплементация
+-
+-## 🔥 **Phase 1: Критични стабилностни подобрения (1-2 седмици)**
+-
+-### 1.1 Memory Management (Partially Completed: PersistenceManager initialization reviewed and mypy error fixed)
+-```python
+-# graph_system/core/command_bus.py
+-# This section is not directly addressed in the current task but is part of the plan.
+-class CommandBus:
+-    def __init__(self, max_queue_size: int = 10000):
+-        self._command_queue = queue.Queue(maxsize=max_queue_size)  # Добавяне на limit
+-        self._overflow_strategy = OverflowStrategy.DROP_OLDEST  # Стратегия при препълване
+-    
+-    def enqueue_command(self, command: Command) -> bool:
+-        try:
+-            self._command_queue.put_nowait(command)
+-            return True
+-        except queue.Full:
+-            if self._overflow_strategy == OverflowStrategy.DROP_OLDEST:
+-                try:
+-                    self._command_queue.get_nowait()  # Remove oldest
+-                    self._command_queue.put_nowait(command)  # Add new
+-                    logger.warning("Queue full, dropped oldest command")
+-                    return True
+-                except queue.Empty:
+-                    pass
+-            logger.error("Command queue full, dropping command")
+-            return False
+-```
+-
+-### 1.2 Snapshot Cleanup (Partially Completed: PersistenceManager initialization reviewed)
+-```python
+-# graph_system/core/persistence_manager.py
+-# The initialization of PersistenceManager now uses GraphSystemConfig.
+-# The mypy error related to wal_file in PersistenceManager was also fixed.
+-class PersistenceManager:
+-    def __init__(self, retention_policy: RetentionPolicy = None):
+-        self.retention_policy = retention_policy or RetentionPolicy(
+-            max_snapshots=100,
+-            retention_days=30
+-        )
+-    
+-    def cleanup_old_snapshots(self):
+-        """Почиства стари snapshots според retention policy"""
+-        snapshots = self._list_all_snapshots()
+-        
+-        # Sort by creation time
+-        snapshots.sort(key=lambda s: s.created_at)
+-        
+-        # Remove old snapshots
+-        cutoff_date = datetime.now() - timedelta(days=self.retention_policy.retention_days)
+-        to_remove = [s for s in snapshots[:-self.retention_policy.max_snapshots] 
+-                    if s.created_at < cutoff_date]
+-        
+-        for snapshot in to_remove:
+-            self._delete_snapshot(snapshot.id)
+-            logger.info(f"Deleted old snapshot: {snapshot.id}")
+-```
+-
+-### 1.3 Configuration Management (Completed: GraphSystemConfig integrated into GraphSystem initialization across tests)
+-```python
+-# graph_system/config.py
+-# This configuration is now correctly used for initializing GraphSystem in all relevant tests.
+-@dataclass
+-class GraphSystemConfig:
+-    # Performance
+-    max_queue_size: int = 10000
+-    worker_threads: int = 4
+-    
+-    # Memory Management  
+-    max_snapshots: int = 100
+-    snapshot_retention_days: int = 30
+-    graph_size_warning_threshold: int = 50000  # nodes
+-    
+-    # Monitoring
+-    enable_metrics: bool = True
+-    health_check_interval: int = 30  # seconds
+-    
+-    # Storage
+-    storage_type: str = "filesystem"  # filesystem, redis, postgresql
+-    storage_config: Dict[str, Any] = field(default_factory=dict)
+-    
+-    @classmethod
+-    def from_env(cls) -> 'GraphSystemConfig':
+-        """Load config from environment variables"""
+-        return cls(
+-            max_queue_size=int(os.getenv('GRAPH_MAX_QUEUE_SIZE', 10000)),
+-            snapshot_retention_days=int(os.getenv('GRAPH_SNAPSHOT_RETENTION_DAYS', 30)),
+-            # ... other env vars
+-        )
+-```
+-
+-## 🚀 **Phase 2: Async API (3-4 седмици)**
+-
+-### 2.1 Async Command Bus (Completed: Initial implementation of AsyncCommandBus, type fixes, and mypy verification)
+-```python
+-# graph_system/core/async_command_bus.py
+-# The AsyncCommandBus has been implemented with worker threads, shutdown logic,
+-# overflow strategy, and command handler registration.
+-# Type errors related to Command, result_future, and List annotations have been resolved
+-# and verified with mypy.
+-import asyncio
+-
+-class AsyncCommandBus:
+-    def __init__(self, config: GraphSystemConfig):
+-        self._command_queue = asyncio.Queue(maxsize=config.max_queue_size)
+-        self._workers = []
+-        self._running = False
+-        
+-    async def start(self):
+-        """Стартиране на worker threads"""
+-        self._running = True
+-        for i in range(self.config.worker_threads):
+-            worker = asyncio.create_task(self._worker_loop(f"worker-{i}"))
+-            self._workers.append(worker)
+-    
+-    async def enqueue_command(self, command: Command) -> CommandResult:
+-        """Асинхронно добавяне на команда в опашката"""
+-        result_future = asyncio.Future()
+-        command.result_future = result_future
+-        
+-        try:
+-            await self._command_queue.put(command)
+-            return await result_future
+-        except asyncio.QueueFull:
+-            raise CommandQueueFullError("Command queue is full")
+-    
+-    async def _worker_loop(self, worker_name: str):
+-        """Worker loop за обработка на команди"""
+-        while self._running:
+-            try:
+-                command = await self._command_queue.get()
+-                result = await self._execute_command(command)
+-                command.result_future.set_result(result)
+-            except Exception as e:
+-                command.result_future.set_exception(e)
+-            finally:
+-                self._command_queue.task_done()
+-```
+-
+-### 2.2 Async GraphSystem API 
+-```python
+-# graph_system/async_graph_system.py
+-# The AsyncGraphSystem class has been created with basic async methods for node creation,
+-# updates, and batch operations, along with __aenter__ and __aexit__ for context management.
+-# Type errors related to uuid import and GraphCommand parameter names have been resolved.
+-class AsyncGraphSystem:
+-    def __init__(self, config: GraphSystemConfig = None):
+-        self.config = config or GraphSystemConfig()
+-        self._command_bus = AsyncCommandBus(self.config)
+-        self._graph_manager = GraphManager()
+-        
+-    async def __aenter__(self):
+-        await self._command_bus.start()
+-        return self
+-        
+-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+-        await self.shutdown()
+-    
+-    async def create_node(self, data: dict) -> GraphNode:
+-        """Асинхронно създаване на възел"""
+-        command = CreateNodeCommand(data)
+-        result = await self._command_bus.enqueue_command(command)
+-        return result.node
+-    
+-    async def update_node(self, node_id: str, data: dict) -> GraphNode:
+-        """Асинхронно обновяване на възел"""
+-        command = UpdateNodeCommand(node_id, data)
+-        result = await self._command_bus.enqueue_command(command)
+-        return result.node
+-        
+-    async def create_batch(self, operations: List[dict]) -> List[Any]:
+-        """Batch операции"""
+-        tasks = []
+-        for op in operations:
+-            if op["type"] == "create_node":
+-                task = self.create_node(op["data"])
+-            elif op["type"] == "update_node":
+-                task = self.update_node(op["node_id"], op["data"])
+-            else:
+-                raise ValueError(f"Unknown operation: {op['type']}")
+-            tasks.append(task)
+-        
+-        return await asyncio.gather(*tasks)
+-
+-# Usage example:
+-async def main():
+-    async with AsyncGraphSystem() as graph_sys:
+-        # Single operations
+-        auth_api = await graph_sys.create_node({
+-            "name": "AuthenticationAPI",
+-            "node_type": NodeType.INTERFACE
+-        })
+-        
+-        # Batch operations
+-        results = await graph_sys.create_batch([
+-            {"type": "create_node", "data": {"name": "UserService", "node_type": NodeType.SERVICE}},
+-            {"type": "create_node", "data": {"name": "PaymentService", "node_type": NodeType.SERVICE}}
+-        ])
+-```
+-
+-## 🏗️ **Phase 3: Storage Abstraction (2-3 седмици)**
+-
+-### 3.1 Storage Adapter Interface
+-```python
+-# graph_system/storage/base.py
+-from abc import ABC, abstractmethod
+-
+-class StorageAdapter(ABC):
+-    @abstractmethod
+-    async def save_graph(self, graph_data: dict, version_id: str) -> bool: pass
+-    
+-    @abstractmethod  
+-    async def load_graph(self, version_id: str) -> dict: pass
+-    
+-    @abstractmethod
+-    async def list_versions(self) -> List[VersionInfo]: pass
+-    
+-    @abstractmethod
+-    async def delete_version(self, version_id: str) -> bool: pass
+-    
+-    @abstractmethod
+-    async def health_check(self) -> bool: pass
+-
+-# graph_system/storage/filesystem.py
+-class FileSystemStorageAdapter(StorageAdapter):
+-    """Текущата логика от PersistenceManager"""
+-    # ... existing implementation
+-
+-# graph_system/storage/redis.py  
+-class RedisStorageAdapter(StorageAdapter):
+-    def __init__(self, redis_url: str):
+-        self.redis = aioredis.from_url(redis_url)
+-    
+-    async def save_graph(self, graph_data: dict, version_id: str) -> bool:
+-        compressed_data = gzip.compress(json.dumps(graph_data).encode())
+-        await self.redis.set(f"graph:{version_id}", compressed_data)
+-        return True
+-```
+-
+-### 3.2 Multi-Storage Strategy
+-```python
+-# graph_system/storage/multi_storage.py
+-class MultiStorageAdapter(StorageAdapter):
+-    def __init__(self, primary: StorageAdapter, backup: StorageAdapter = None):
+-        self.primary = primary
+-        self.backup = backup
+-    
+-    async def save_graph(self, graph_data: dict, version_id: str) -> bool:
+-        # Save to primary
+-        primary_success = await self.primary.save_graph(graph_data, version_id)
+-        
+-        # Optionally save to backup
+-        if self.backup and primary_success:
+-            try:
+-                await self.backup.save_graph(graph_data, version_id)
+-            except Exception as e:
+-                logger.warning(f"Backup storage failed: {e}")
+-        
+-        return primary_success
+-```
+-
+-## 📊 **Phase 4: Production Features (1-2 седмици)**
+-
+-### 4.1 Structured Logging
+-```python
+-# requirements.txt
+-structlog>=23.1.0
+-
+-# graph_system/logging.py
+-import structlog
+-
+-def configure_logging(service_name: str = "refmemtree"):
+-    structlog.configure(
+-        processors=[
+-            structlog.stdlib.filter_by_level,
+-            structlog.stdlib.add_logger_name,
+-            structlog.stdlib.add_log_level,
+-            structlog.stdlib.PositionalArgumentsFormatter(),
+-            structlog.processors.TimeStamper(fmt="iso"),
+-            structlog.processors.StackInfoRenderer(),
+-            structlog.processors.format_exc_info,
+-            structlog.processors.JSONRenderer()
+-        ],
+-        context_class=dict,
+-        logger_factory=structlog.stdlib.LoggerFactory(),
+-        cache_logger_on_first_use=True,
+-    )
+-
+-# Usage in код:
+-logger = structlog.get_logger()
+-
+-async def create_node(self, data: dict) -> GraphNode:
+-    with logger.bind(operation="create_node", node_type=data.get("node_type")):
+-        logger.info("Creating node", node_data=data)
+-        # ... logic
+-        logger.info("Node created successfully", node_id=result.id)
+-```
+-
+-### 4.2 Prometheus HTTP Exporter
+-```python
+-# graph_system/monitoring/prometheus_exporter.py
+-from prometheus_client import start_http_server, generate_latest
+-from aiohttp import web
+-
+-class PrometheusExporter:
+-    def __init__(self, performance_monitor: PerformanceMonitor, port: int = 9090):
+-        self.performance_monitor = performance_monitor
+-        self.port = port
+-    
+-    async def start_server(self):
+-        app = web.Application()
+-        app.router.add_get('/metrics', self.metrics_handler)
+-        app.router.add_get('/health', self.health_handler)
+-        
+-        runner = web.AppRunner(app)
+-        await runner.setup()
+-        site = web.TCPSite(runner, '0.0.0.0', self.port)
+-        await site.start()
+-        
+-        logger.info(f"Prometheus exporter started on port {self.port}")
+-    
+-    async def metrics_handler(self, request):
+-        # Използва съществуващия PerformanceMonitor
+-        metrics_data = self.performance_monitor.get_all_metrics()
+-        prometheus_format = self._convert_to_prometheus_format(metrics_data)
+-        return web.Response(text=prometheus_format, content_type='text/plain')
+-```
+-
+-## 📋 **Времева рамка и ресурси:**
+-
+-**Общо време: 8-11 седмици**
+-- Phase 1: 1-2 седмици (критично)
+-- Phase 2: 3-4 седмици (трудоемко, но ценно)  
+-- Phase 3: 2-3 седмици (стратегическо)
+-- Phase 4: 1-2 седмици (production polish)
+-
+-**Препоръчителна последователност:**
+-1. **Започнете с Phase 1** - веднага подобряване на стабилността
+-2. **Паралелно планирайте Phase 2** - най-голямата архитектурна промяна
+-3. **Phase 3 & 4** могат да се изпълняват паралелно
+-
+-**Backward Compatibility:**
+-- Phase 1: Пълна съвместимост
+-- Phase 2: Нов AsyncGraphSystem клас, старият остава  
+-- Phase 3: Internal refactoring, API остава същият
+-- Phase 4: Допълнителни features, не променя съществуващото
