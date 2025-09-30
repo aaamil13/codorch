@@ -12,6 +12,7 @@ from backend.modules.architecture.repository import (
     ModuleDependencyRepository,
 )
 from backend.modules.architecture.refmemtree_integration import ArchitectureRefMemTreeIntegration
+from backend.core.refmemtree_loader import get_refmemtree_manager
 from backend.modules.architecture.schemas import (
     ArchitectureModuleCreate,
     ArchitectureModuleUpdate,
@@ -43,6 +44,14 @@ class ArchitectureService:
         self.rule_repo = ArchitectureRuleRepository(db)
         # Initialize RefMemTree integration for advanced features
         self.refmem = ArchitectureRefMemTreeIntegration()
+        self._project_id = None  # Set when needed
+
+    async def set_project_context(self, project_id: UUID, session: AsyncSession):
+        """Set project context and load RefMemTree data."""
+        self._project_id = project_id
+        # Load RefMemTree manager (cached)
+        manager = await get_refmemtree_manager(project_id, session)
+        self.refmem.manager = manager
 
     # ========================================================================
     # Module Operations
@@ -96,8 +105,41 @@ class ArchitectureService:
         module_id: UUID,
         data: ArchitectureModuleUpdate,
     ) -> Optional[ArchitectureModule]:
-        """Update module."""
-        return self.module_repo.update(module_id, data)
+        """Update module with RefMemTree change tracking."""
+        # Get old state for change tracking
+        old_module = self.module_repo.get_by_id(module_id)
+        
+        # Update in DB
+        updated = self.module_repo.update(module_id, data)
+        
+        # ⭐ Record change in RefMemTree
+        if old_module and updated:
+            try:
+                from backend.core.refmemtree_advanced import NodeChangeEvent
+                from datetime import datetime
+                
+                event = NodeChangeEvent(
+                    node_id=module_id,
+                    change_type="update",
+                    old_value={
+                        "name": old_module.name,
+                        "type": old_module.module_type,
+                        "status": old_module.status,
+                    },
+                    new_value={
+                        "name": updated.name,
+                        "type": updated.module_type,
+                        "status": updated.status,
+                    },
+                    timestamp=datetime.utcnow(),
+                    changed_by=None,  # Would come from current_user
+                )
+                
+                self.refmem.manager.record_change(event)
+            except Exception as e:
+                print(f"RefMemTree change tracking warning: {e}")
+        
+        return updated
 
     def delete_module(self, module_id: UUID) -> bool:
         """Delete module with RefMemTree impact check."""

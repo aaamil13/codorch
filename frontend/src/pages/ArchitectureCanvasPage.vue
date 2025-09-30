@@ -421,6 +421,128 @@
       </q-card>
     </q-dialog>
 
+    <!-- RefMemTree Impact Analysis Dialog -->
+    <q-dialog v-model="showImpactDialog">
+      <q-card style="min-width: 600px">
+        <q-card-section class="bg-purple text-white">
+          <div class="text-h6">🎯 RefMemTree Impact Analysis</div>
+          <div class="text-caption">Advanced dependency and impact tracking</div>
+        </q-card-section>
+
+        <q-card-section v-if="impactResult">
+          <div class="row q-col-gutter-md q-mb-md">
+            <div class="col-6">
+              <div class="text-caption">Affected Modules</div>
+              <div class="text-h4">{{ impactResult.affected_modules?.length || 0 }}</div>
+            </div>
+            <div class="col-6">
+              <div class="text-caption">High Impact</div>
+              <div class="text-h4" :class="impactResult.high_impact_count > 0 ? 'text-red' : 'text-green'">
+                {{ impactResult.high_impact_count || 0 }}
+              </div>
+            </div>
+          </div>
+
+          <q-banner v-if="!impactResult.safe_to_proceed" class="bg-red text-white q-mb-md">
+            <template v-slot:avatar>
+              <q-icon name="warning" />
+            </template>
+            ⚠️ HIGH IMPACT CHANGE - Review carefully before proceeding!
+          </q-banner>
+
+          <div v-if="impactResult.affected_modules?.length > 0">
+            <div class="text-subtitle2 q-mb-sm">Affected Modules:</div>
+            <q-list bordered>
+              <q-item v-for="moduleId in impactResult.affected_modules" :key="moduleId">
+                <q-item-section avatar>
+                  <q-icon name="account_tree" color="orange" />
+                </q-item-section>
+                <q-item-section>
+                  {{ getModuleName(moduleId) }}
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+
+          <div v-if="impactResult.recommendations?.length > 0" class="q-mt-md">
+            <div class="text-subtitle2 q-mb-sm">RefMemTree Recommendations:</div>
+            <q-list>
+              <q-item v-for="(rec, idx) in impactResult.recommendations" :key="idx">
+                <q-item-section avatar>
+                  <q-icon name="lightbulb" color="primary" />
+                </q-item-section>
+                <q-item-section>{{ rec }}</q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Close" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- RefMemTree Simulation Dialog -->
+    <q-dialog v-model="showSimulateDialog">
+      <q-card style="min-width: 600px">
+        <q-card-section class="bg-deep-purple text-white">
+          <div class="text-h6">🔮 RefMemTree Change Simulation</div>
+          <div class="text-caption">What-if analysis before applying changes</div>
+        </q-card-section>
+
+        <q-card-section v-if="simulationResult">
+          <div class="text-h5 q-mb-md">
+            Risk Level: 
+            <q-chip 
+              :color="getRiskColor(simulationResult.risk_level)"
+              text-color="white"
+              size="lg"
+            >
+              {{ simulationResult.risk_level?.toUpperCase() }}
+            </q-chip>
+          </div>
+
+          <div class="row q-col-gutter-md q-mb-md">
+            <div class="col-6">
+              <div class="text-caption">Success Probability</div>
+              <div class="text-h4">{{ simulationResult.success_probability }}</div>
+            </div>
+            <div class="col-6">
+              <div class="text-caption">Affected Modules</div>
+              <div class="text-h4">{{ simulationResult.affected_modules }}</div>
+            </div>
+          </div>
+
+          <div v-if="simulationResult.side_effects?.length > 0">
+            <div class="text-subtitle2 q-mb-sm">Side Effects:</div>
+            <q-list bordered>
+              <q-item v-for="(effect, idx) in simulationResult.side_effects" :key="idx">
+                <q-item-section avatar>
+                  <q-icon name="info" color="orange" />
+                </q-item-section>
+                <q-item-section>{{ effect }}</q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+
+          <q-banner :class="getBannerClass(simulationResult.risk_level)" class="q-mt-md">
+            {{ simulationResult.recommendation }}
+          </q-banner>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn 
+            v-if="simulationResult?.risk_level === 'low'"
+            color="positive" 
+            label="Proceed with Change" 
+            v-close-popup 
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <!-- Complexity Dialog -->
     <q-dialog v-model="showComplexityDialog">
       <q-card style="min-width: 600px">
@@ -836,6 +958,70 @@ function getComplexityColor(score: number): string {
   if (score < 3) return 'green';
   if (score < 6) return 'orange';
   return 'red';
+}
+
+// RefMemTree Advanced Features
+async function handleImpactAnalysisAdvanced() {
+  if (!selectedModule.value) return;
+
+  try {
+    const response = await api.get(
+      `/api/v1/architecture/modules/${selectedModule.value.id}/impact-analysis-advanced`,
+      { params: { change_type: 'update' } }
+    );
+
+    impactResult.value = response.data;
+    showImpactDialog.value = true;
+  } catch (err) {
+    Notify.create({
+      type: 'negative',
+      message: 'RefMemTree impact analysis unavailable: ' + err,
+    });
+  }
+}
+
+async function handleSimulateChange() {
+  if (!selectedModule.value) return;
+
+  // Simulate type change as example
+  const proposedChanges = {
+    module_type: 'component', // Example change
+  };
+
+  try {
+    const response = await api.post(
+      `/api/v1/architecture/modules/${selectedModule.value.id}/simulate-change`,
+      proposedChanges
+    );
+
+    simulationResult.value = response.data;
+    showSimulateDialog.value = true;
+  } catch (err) {
+    Notify.create({
+      type: 'negative',
+      message: 'RefMemTree simulation unavailable: ' + err,
+    });
+  }
+}
+
+function getRiskColor(riskLevel: string): string {
+  const colors: Record<string, string> = {
+    low: 'green',
+    medium: 'orange',
+    high: 'deep-orange',
+    critical: 'red',
+  };
+  return colors[riskLevel] || 'grey';
+}
+
+function getBannerClass(riskLevel: string): string {
+  const classes: Record<string, string> = {
+    low: 'bg-green text-white',
+    medium: 'bg-orange text-white',
+    high: 'bg-deep-orange text-white',
+    critical: 'bg-red text-white',
+  };
+  return classes[riskLevel] || 'bg-grey text-white';
 }
 </script>
 
