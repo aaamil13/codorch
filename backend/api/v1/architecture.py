@@ -476,9 +476,9 @@ def get_shared_modules(
 @router.get("/modules/{module_id}/impact-analysis-advanced", response_model=dict)
 def analyze_module_impact_advanced(
     module_id: UUID,
-    change_type: str = "update",
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    change_type: str = "update",
 ):
     """
     ADVANCED RefMemTree: Analyze change impact with dependency tracking.
@@ -561,9 +561,9 @@ def validate_module_rules(
 async def execute_ai_architecture_plan(
     project_id: UUID,
     plan: List[Dict],
-    dry_run: bool = False,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    dry_run: bool = False,
 ):
     """
     Execute AI-generated architecture plan using AI Governor.

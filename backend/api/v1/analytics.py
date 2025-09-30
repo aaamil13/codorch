@@ -23,9 +23,9 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 @router.get("/projects/{project_id}/most-critical-nodes")
 async def get_most_critical_nodes(
     project_id: UUID,
-    top_n: int = 10,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    top_n: int = 10,
 ):
     """
     Get most critical nodes (architectural hotspots).
@@ -93,9 +93,9 @@ async def get_most_critical_nodes(
 @router.get("/projects/{project_id}/dependency-hotspots")
 async def get_dependency_hotspots(
     project_id: UUID,
-    threshold: int = 5,
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    threshold: int = 5,
 ):
     """
     Find dependency hotspots (over-coupled modules).

@@ -58,7 +58,7 @@ class ArchitectureService:
     # Module Operations
     # ========================================================================
 
-    def create_module(self, data: ArchitectureModuleCreate) -> ArchitectureModule:
+    async def create_module(self, data: ArchitectureModuleCreate) -> ArchitectureModule:
         """Create a new architecture module."""
         # Calculate level if parent exists
         if data.parent_id:
@@ -182,7 +182,7 @@ class ArchitectureService:
     # Dependency Operations
     # ========================================================================
 
-    def create_dependency(self, data: ModuleDependencyCreate):
+    async def create_dependency(self, data: ModuleDependencyCreate):
         """
         Create module dependency with RefMemTree Rule Engine validation.
         
