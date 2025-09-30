@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from backend.api.v1 import architecture, auth, goals, opportunities, projects, research, requirements, users
+from backend.api.v1 import architecture, auth, code_generation, goals, opportunities, projects, research, requirements, users
 
 api_router = APIRouter()
 
@@ -15,3 +15,4 @@ api_router.include_router(opportunities.router, prefix="/opportunities", tags=["
 api_router.include_router(research.router, prefix="/research", tags=["research"])
 api_router.include_router(architecture.router, prefix="/architecture", tags=["architecture"])
 api_router.include_router(requirements.router, prefix="/requirements", tags=["requirements"])
+api_router.include_router(code_generation.router, prefix="/code-generation", tags=["code-generation"])

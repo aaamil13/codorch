@@ -55,6 +55,11 @@ const routes: RouteRecordRaw[] = [
         name: 'project-requirements',
         component: () => import('../pages/RequirementsPage.vue'),
       },
+      {
+        path: '/project/:projectId/code-generation',
+        name: 'project-code-generation',
+        component: () => import('../pages/CodeGenerationPage.vue'),
+      },
     ],
   },
   {
