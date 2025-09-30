@@ -1,16 +1,31 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      exclude: [
+        'node_modules/',
+        'tests/',
+        '*.config.{js,ts}',
+        '.quasar/',
+        'dist/'
+      ]
+    }
+  },
   plugins: [
     vue({
       template: { transformAssetUrls }
     }),
     quasar({
-      sassVariables: 'src/quasar-variables.sass'
+      sassVariables: 'src/styles/quasar-variables.sass'
     })
   ],
   resolve: {
@@ -19,12 +34,7 @@ export default defineConfig({
       components: path.resolve(__dirname, './src/components'),
       layouts: path.resolve(__dirname, './src/layouts'),
       pages: path.resolve(__dirname, './src/pages'),
-      assets: path.resolve(__dirname, './src/assets'),
-      boot: path.resolve(__dirname, './src/boot'),
       stores: path.resolve(__dirname, './src/stores')
     }
-  },
-  server: {
-    port: 9000
   }
 });
