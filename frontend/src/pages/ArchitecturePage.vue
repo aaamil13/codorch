@@ -12,6 +12,13 @@
           </div>
           <div class="col-auto">
             <q-btn
+              color="secondary"
+              icon="grid_on"
+              label="Open Canvas"
+              class="q-mr-sm"
+              @click="openCanvas"
+            />
+            <q-btn
               color="primary"
               icon="auto_awesome"
               label="Generate Architecture"
@@ -252,7 +259,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useArchitectureStore } from 'src/stores/architecture';
 import type {
   ArchitectureModule,
@@ -261,6 +268,7 @@ import type {
 } from 'src/types/architecture';
 
 const route = useRoute();
+const router = useRouter();
 const architectureStore = useArchitectureStore();
 
 const showGenerateDialog = ref(false);
@@ -375,5 +383,12 @@ async function handleAnalyzeComplexity() {
 function showModuleMenu(module: ArchitectureModule) {
   // TODO: Show module actions menu
   console.log('Module menu:', module);
+}
+
+function openCanvas() {
+  router.push({
+    name: 'architecture-canvas',
+    params: { projectId: route.params.projectId },
+  });
 }
 </script>
