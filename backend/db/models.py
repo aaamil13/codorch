@@ -596,8 +596,6 @@ class APISpecification(Base):
 
     # Relationships
     requirement: Mapped["Requirement"] = relationship("Requirement", back_populates="api_specifications")
-<<<<<<< Current (Your changes)
-=======
 
 
 class CodeGenerationSession(Base):
@@ -682,4 +680,3 @@ class GeneratedFile(Base):
 
     # Relationships
     session: Mapped["CodeGenerationSession"] = relationship("CodeGenerationSession", back_populates="generated_files")
->>>>>>> Incoming (Background Agent changes)

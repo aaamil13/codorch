@@ -55,6 +55,14 @@ const routes: RouteRecordRaw[] = [
         name: 'project-requirements',
         component: () => import('../pages/RequirementsPage.vue'),
       },
+<<<<<<< Current (Your changes)
+=======
+      {
+        path: '/project/:projectId/code-generation',
+        name: 'project-code-generation',
+        component: () => import('../pages/CodeGenerationPage.vue'),
+      },
+>>>>>>> Incoming (Background Agent changes)
     ],
   },
   {
