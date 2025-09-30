@@ -42,6 +42,28 @@
           @click="handleComplexity"
           :loading="architectureStore.loading"
         />
+        <q-separator vertical class="q-mx-sm" />
+        <q-btn
+          flat
+          icon="science"
+          label="Impact Analysis"
+          color="purple"
+          @click="handleImpactAnalysisAdvanced"
+          :disable="!selectedModule"
+          :loading="architectureStore.loading"
+        >
+          <q-tooltip>RefMemTree Advanced: Analyze change impact</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          icon="psychology"
+          label="Simulate Change"
+          color="deep-purple"
+          @click="showSimulateDialog = true"
+          :disable="!selectedModule"
+        >
+          <q-tooltip>RefMemTree Advanced: Simulate before changing</q-tooltip>
+        </q-btn>
       </div>
 
       <div class="toolbar-right">
@@ -516,6 +538,10 @@ const showAddModuleDialog = ref(false);
 const showAddDependencyDialog = ref(false);
 const showValidationDialog = ref(false);
 const showComplexityDialog = ref(false);
+const showImpactDialog = ref(false);
+const showSimulateDialog = ref(false);
+const impactResult = ref<any>(null);
+const simulationResult = ref<any>(null);
 
 const projectId = computed(() => route.params.projectId as string);
 
