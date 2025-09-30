@@ -550,3 +550,45 @@ def validate_module_rules(
     """
     service = ArchitectureService(db)
     return service.validate_module_rules(module_id)
+
+
+# ============================================================================
+# AI Governor - Safe AI Plan Execution
+# ============================================================================
+
+
+@router.post("/projects/{project_id}/execute-ai-plan", response_model=dict)
+async def execute_ai_architecture_plan(
+    project_id: UUID,
+    plan: List[Dict],
+    dry_run: bool = False,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+    Execute AI-generated architecture plan using AI Governor.
+    
+    ⭐ Uses REAL RefMemTree AIGovernor.execute_refactoring_plan()
+    
+    This is THE endpoint that makes AI architecture generation SAFE!
+    
+    Features:
+    - Validates plan before execution
+    - Creates snapshot for rollback
+    - Atomic execution (all-or-nothing)
+    - Auto-rollback on failure
+    - Syncs to PostgreSQL after success
+    
+    Args:
+        project_id: Project UUID
+        plan: AI-generated plan (list of actions)
+        dry_run: If True, simulates without applying
+        
+    Returns:
+        Execution result with status, created nodes, rollback info
+    """
+    from backend.core.ai_governor import execute_ai_plan
+
+    result = await execute_ai_plan(project_id, plan, db, dry_run=dry_run)
+
+    return result
