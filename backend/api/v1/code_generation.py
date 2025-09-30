@@ -40,10 +40,10 @@ async def create_session(
     """Create code generation session."""
     service = CodeGenerationService(session)
     gen_session = await service.create_session(data)
-    
+
     # Auto-validate
     await service.validate_project(gen_session.id)
-    
+
     return gen_session
 
 

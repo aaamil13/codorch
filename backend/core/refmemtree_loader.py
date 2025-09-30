@@ -17,7 +17,7 @@ from backend.db.models import ArchitectureModule, ArchitectureRule, ModuleDepend
 class RefMemTreeLoader:
     """
     Loads project data from PostgreSQL into RefMemTree.
-    
+
     Call this when:
     - Project is first opened
     - User refreshes architecture
@@ -31,7 +31,7 @@ class RefMemTreeLoader:
     ) -> RefMemTreeManager:
         """
         Load complete project into RefMemTree.
-        
+
         Returns initialized RefMemTreeManager with all data loaded.
         """
         manager = RefMemTreeManager()
@@ -54,9 +54,7 @@ class RefMemTreeLoader:
         manager: RefMemTreeManager,
     ) -> None:
         """Load all architecture modules into RefMemTree."""
-        result = await session.execute(
-            select(ArchitectureModule).where(ArchitectureModule.project_id == project_id)
-        )
+        result = await session.execute(select(ArchitectureModule).where(ArchitectureModule.project_id == project_id))
         modules = result.scalars().all()
 
         for module in modules:
@@ -79,9 +77,7 @@ class RefMemTreeLoader:
         manager: RefMemTreeManager,
     ) -> None:
         """Load all module dependencies into RefMemTree."""
-        result = await session.execute(
-            select(ModuleDependency).where(ModuleDependency.project_id == project_id)
-        )
+        result = await session.execute(select(ModuleDependency).where(ModuleDependency.project_id == project_id))
         dependencies = result.scalars().all()
 
         # Strength mapping based on dependency type
@@ -112,9 +108,7 @@ class RefMemTreeLoader:
         manager: RefMemTreeManager,
     ) -> None:
         """Load all architecture rules into RefMemTree."""
-        result = await session.execute(
-            select(ArchitectureRule).where(ArchitectureRule.project_id == project_id)
-        )
+        result = await session.execute(select(ArchitectureRule).where(ArchitectureRule.project_id == project_id))
         rules = result.scalars().all()
 
         for rule in rules:
@@ -144,15 +138,11 @@ class RefMemTreeLoader:
         modules_count = len(list(modules_result.scalars().all()))
 
         # Count dependencies
-        deps_result = await session.execute(
-            select(ModuleDependency).where(ModuleDependency.project_id == project_id)
-        )
+        deps_result = await session.execute(select(ModuleDependency).where(ModuleDependency.project_id == project_id))
         deps_count = len(list(deps_result.scalars().all()))
 
         # Count rules
-        rules_result = await session.execute(
-            select(ArchitectureRule).where(ArchitectureRule.project_id == project_id)
-        )
+        rules_result = await session.execute(select(ArchitectureRule).where(ArchitectureRule.project_id == project_id))
         rules_count = len(list(rules_result.scalars().all()))
 
         return {
@@ -178,14 +168,14 @@ async def get_refmemtree_manager(
 ) -> RefMemTreeManager:
     """
     Get or create RefMemTreeManager for a project.
-    
+
     Caches managers in memory for performance.
-    
+
     Args:
         project_id: Project UUID
         session: Database session
         force_reload: Force reload from DB
-        
+
     Returns:
         RefMemTreeManager instance with all data loaded
     """
@@ -206,7 +196,7 @@ async def get_refmemtree_manager(
 def clear_refmemtree_cache(project_id: Optional[UUID] = None) -> None:
     """
     Clear RefMemTree cache.
-    
+
     Args:
         project_id: Specific project to clear, or None for all
     """

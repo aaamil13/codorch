@@ -39,7 +39,7 @@ class ArchitectureRefMemTreeIntegration:
     ) -> None:
         """
         Register architecture module with its rules.
-        
+
         Example:
             module_data = {"name": "UserService", "type": "service", ...}
             architectural_rules = [
@@ -82,10 +82,10 @@ class ArchitectureRefMemTreeIntegration:
     ) -> None:
         """
         Track dependency between modules.
-        
+
         Use case: When creating ModuleDependency in DB, also track in RefMemTree
         for impact analysis.
-        
+
         Example:
             track_module_dependency(
                 from_module_id=user_service_id,
@@ -105,7 +105,7 @@ class ArchitectureRefMemTreeIntegration:
     def get_module_dependencies_analysis(self, module_id: UUID) -> dict[str, Any]:
         """
         Get comprehensive dependency analysis.
-        
+
         Returns:
             - Direct dependencies
             - Indirect dependencies (chains)
@@ -137,9 +137,9 @@ class ArchitectureRefMemTreeIntegration:
     ) -> dict[str, Any]:
         """
         Analyze impact BEFORE modifying a module.
-        
+
         Use case: User wants to change a module - show what will be affected.
-        
+
         Returns detailed impact analysis with recommendations.
         """
         return analyze_architecture_change_impact(
@@ -151,11 +151,11 @@ class ArchitectureRefMemTreeIntegration:
     def analyze_module_deletion_impact(self, module_id: UUID) -> dict[str, Any]:
         """
         Specific analysis for module deletion.
-        
+
         Use case: Before deleting module, show critical impact.
         """
         impact = self.analyze_module_modification_impact(module_id, "delete")
-        
+
         # Add deletion-specific warnings
         if impact["high_impact_count"] > 0:
             impact["deletion_warning"] = (
@@ -179,9 +179,9 @@ class ArchitectureRefMemTreeIntegration:
     ) -> dict[str, Any]:
         """
         Simulate proposed architecture changes.
-        
+
         Use case: "What if I change this module's type from 'service' to 'component'?"
-        
+
         Returns simulation with risk assessment.
         """
         simulation = self.manager.simulate_change(
@@ -214,9 +214,9 @@ class ArchitectureRefMemTreeIntegration:
     ) -> dict[str, Any]:
         """
         Validate module against defined architectural rules.
-        
+
         Use case: Before saving module changes, check if they violate rules.
-        
+
         Example rules:
         - "Service modules must end with 'Service'"
         - "UI components cannot depend on database layer"

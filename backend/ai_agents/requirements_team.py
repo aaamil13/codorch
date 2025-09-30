@@ -172,7 +172,7 @@ Current Acceptance Criteria: {', '.join(acceptance_criteria) if acceptance_crite
 
 Analyze this requirement thoroughly and provide detailed feedback.
 """
-    
+
     result = await requirements_analyst_agent.run(context)
     return result.data
 
@@ -198,7 +198,7 @@ Previous Analysis:
 
 Perform final validation and determine if this requirement is ready for approval.
 """
-    
+
     result = await requirements_validator_agent.run(context)
     return result.data
 
@@ -210,7 +210,7 @@ async def recommend_technologies(
 ) -> TechnologyRecommendations:
     """Get technology recommendations based on requirements."""
     prefs_str = ", ".join([f"{k}: {v}" for k, v in preferences.items()]) if preferences else "None specified"
-    
+
     context = f"""
 Module Context: {module_context}
 
@@ -222,7 +222,7 @@ User Preferences: {prefs_str}
 Analyze the requirements and recommend appropriate technologies for implementation.
 Provide at least 3-5 recommendations covering different technology categories.
 """
-    
+
     result = await technology_advisor_agent.run(context)
     return result.data
 

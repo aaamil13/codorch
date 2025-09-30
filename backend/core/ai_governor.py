@@ -32,7 +32,7 @@ except ImportError:
 class AIGovernor:
     """
     AI Governor for safe execution of AI-generated plans.
-    
+
     Ensures:
     - Plans are validated before execution
     - Changes are atomic (all-or-nothing)
@@ -54,7 +54,7 @@ class AIGovernor:
     ) -> Dict:
         """
         Execute AI-generated architecture plan safely.
-        
+
         Plan Format:
         [
             {
@@ -78,7 +78,7 @@ class AIGovernor:
                 "data": {"status": "approved"}
             }
         ]
-        
+
         Uses REAL RefMemTree AIGovernor.execute_refactoring_plan()
         """
         if not AIGOVERNOR_AVAILABLE:
@@ -161,9 +161,7 @@ class AIGovernor:
             # Try to rollback if we have snapshot
             if snapshot_id and not dry_run:
                 try:
-                    graph = await self.graph_manager.get_or_create_graph(
-                        project_id, session
-                    )
+                    graph = await self.graph_manager.get_or_create_graph(project_id, session)
                     # ⭐ REAL RefMemTree API
                     graph.rollback_to_version(snapshot_id)
                     print(f"✅ Rolled back to snapshot {snapshot_id}")
@@ -209,12 +207,10 @@ class AIGovernor:
 
         return {"valid": len(errors) == 0, "errors": errors}
 
-    def _convert_to_refmem_plan(
-        self, plan: List[Dict], project_id: UUID
-    ) -> List[Dict]:
+    def _convert_to_refmem_plan(self, plan: List[Dict], project_id: UUID) -> List[Dict]:
         """
         Convert Codorch plan format to RefMemTree AIGovernor format.
-        
+
         Codorch format → RefMemTree format
         """
         refmem_plan = []
@@ -251,18 +247,14 @@ class AIGovernor:
                 )
 
             elif action == "DELETE_NODE":
-                refmem_plan.append(
-                    {"operation": "delete_node", "node_id": step["node_id"]}
-                )
+                refmem_plan.append({"operation": "delete_node", "node_id": step["node_id"]})
 
         return refmem_plan
 
-    async def _sync_plan_to_database(
-        self, plan: List[Dict], project_id: UUID, session: AsyncSession
-    ) -> None:
+    async def _sync_plan_to_database(self, plan: List[Dict], project_id: UUID, session: AsyncSession) -> None:
         """
         Sync executed RefMemTree plan to PostgreSQL.
-        
+
         After RefMemTree successfully executes plan, we need to persist
         the changes to database.
         """
@@ -332,7 +324,7 @@ async def execute_ai_plan(
 ) -> Dict:
     """
     Convenience function to execute AI-generated plan.
-    
+
     Usage:
         result = await execute_ai_plan(
             project_id,
@@ -340,7 +332,7 @@ async def execute_ai_plan(
             session,
             dry_run=True  # Test first!
         )
-        
+
         if result['status'] == 'success':
             # Plan is safe, execute for real
             await execute_ai_plan(project_id, plan, session, dry_run=False)

@@ -41,9 +41,7 @@ class RequirementsService:
     # Requirement CRUD
     # ========================================================================
 
-    async def create_requirement(
-        self, data: RequirementCreate, created_by: UUID
-    ) -> Requirement:
+    async def create_requirement(self, data: RequirementCreate, created_by: UUID) -> Requirement:
         """Create new requirement."""
         requirement = Requirement(
             project_id=data.project_id,
@@ -85,9 +83,7 @@ class RequirementsService:
         """Get requirements for a module."""
         return await self.req_repo.get_by_module(module_id)
 
-    async def update_requirement(
-        self, requirement_id: UUID, data: RequirementUpdate
-    ) -> Optional[Requirement]:
+    async def update_requirement(self, requirement_id: UUID, data: RequirementUpdate) -> Optional[Requirement]:
         """Update requirement."""
         requirement = await self.req_repo.get_by_id(requirement_id)
         if not requirement:
@@ -108,9 +104,7 @@ class RequirementsService:
         await self.req_repo.delete(requirement)
         return True
 
-    async def approve_requirement(
-        self, requirement_id: UUID, approved_by: UUID
-    ) -> Optional[Requirement]:
+    async def approve_requirement(self, requirement_id: UUID, approved_by: UUID) -> Optional[Requirement]:
         """Approve requirement."""
         requirement = await self.req_repo.get_by_id(requirement_id)
         if not requirement:
@@ -122,9 +116,7 @@ class RequirementsService:
     # Validation
     # ========================================================================
 
-    async def validate_requirement(
-        self, requirement_id: UUID
-    ) -> Optional[RequirementValidationResult]:
+    async def validate_requirement(self, requirement_id: UUID) -> Optional[RequirementValidationResult]:
         """Validate single requirement (AI validation)."""
         requirement = await self.req_repo.get_by_id(requirement_id)
         if not requirement:
@@ -181,7 +173,7 @@ class RequirementsService:
     def _basic_validation(self, requirement: Requirement) -> RequirementValidationResult:
         """Basic validation logic."""
         issues = []
-        
+
         # Completeness check
         completeness_score = 10.0
         if not requirement.description or len(requirement.description) < 50:
@@ -243,9 +235,7 @@ class RequirementsService:
     # Technology Recommendations
     # ========================================================================
 
-    async def create_technology_recommendation(
-        self, data: TechnologyRecommendationCreate
-    ) -> TechnologyRecommendation:
+    async def create_technology_recommendation(self, data: TechnologyRecommendationCreate) -> TechnologyRecommendation:
         """Create technology recommendation."""
         recommendation = TechnologyRecommendation(
             project_id=data.project_id,
@@ -263,9 +253,7 @@ class RequirementsService:
         )
         return await self.tech_repo.create(recommendation)
 
-    async def get_technology_recommendation(
-        self, recommendation_id: UUID
-    ) -> Optional[TechnologyRecommendation]:
+    async def get_technology_recommendation(self, recommendation_id: UUID) -> Optional[TechnologyRecommendation]:
         """Get technology recommendation by ID."""
         return await self.tech_repo.get_by_id(recommendation_id)
 

@@ -68,7 +68,7 @@ class ArchitectureService:
                 data.level = parent.level + 1
 
         module = self.module_repo.create(data)
-        
+
         # ⭐ REAL RefMemTree Integration: Add to GraphSystem
         try:
             graph_manager = get_graph_manager()
@@ -89,7 +89,7 @@ class ArchitectureService:
         except Exception as e:
             # Non-blocking if RefMemTree fails
             print(f"RefMemTree sync warning: {e}")
-        
+
         return module
 
     def get_module(self, module_id: UUID) -> Optional[ArchitectureModule]:
@@ -123,16 +123,16 @@ class ArchitectureService:
         """Update module with RefMemTree change tracking."""
         # Get old state for change tracking
         old_module = self.module_repo.get_by_id(module_id)
-        
+
         # Update in DB
         updated = self.module_repo.update(module_id, data)
-        
+
         # ⭐ Record change in RefMemTree
         if old_module and updated:
             try:
                 from backend.core.refmemtree_advanced import NodeChangeEvent
                 from datetime import datetime
-                
+
                 event = NodeChangeEvent(
                     node_id=module_id,
                     change_type="update",
@@ -149,11 +149,11 @@ class ArchitectureService:
                     timestamp=datetime.utcnow(),
                     changed_by=None,  # Would come from current_user
                 )
-                
+
                 self.refmem.manager.record_change(event)
             except Exception as e:
                 print(f"RefMemTree change tracking warning: {e}")
-        
+
         return updated
 
     def delete_module(self, module_id: UUID) -> bool:
@@ -161,9 +161,9 @@ class ArchitectureService:
         # ⭐ ACTIVATE RefMemTree: Check impact before deleting
         try:
             impact = self.analyze_module_change_impact_advanced(module_id, "delete")
-            
+
             # Block deletion if high impact
-            if impact.get('high_impact_count', 0) > 0:
+            if impact.get("high_impact_count", 0) > 0:
                 raise ValueError(
                     f"⚠️ Cannot delete: {impact['high_impact_count']} modules critically depend on this! "
                     f"Affected modules: {impact['affected_modules'][:3]}"
@@ -171,7 +171,7 @@ class ArchitectureService:
         except Exception as e:
             # If RefMemTree not available, proceed with warning
             print(f"RefMemTree impact check warning: {e}")
-        
+
         return self.module_repo.delete(module_id)
 
     def approve_module(self, module_id: UUID, user: User) -> Optional[ArchitectureModule]:
@@ -195,7 +195,7 @@ class ArchitectureService:
         # ⭐ Check for circular dependency using REAL RefMemTree
         try:
             graph_manager = get_graph_manager()
-            
+
             # Temporarily add to check for cycles
             temp_added = await graph_manager.add_dependency_to_graph(
                 project_id=data.project_id,
@@ -204,14 +204,14 @@ class ArchitectureService:
                 to_node_id=data.to_module_id,
                 dependency_type="temp_check",
             )
-            
+
             if temp_added:
                 # ⭐ REAL RefMemTree API: detect_cycles()
                 cycles = await graph_manager.detect_circular_dependencies(
                     project_id=data.project_id,
                     session=self.db,
                 )
-                
+
                 if cycles:
                     # Remove temp and raise error
                     raise ValueError(f"Would create circular dependency: {cycles[0]}")
@@ -224,7 +224,7 @@ class ArchitectureService:
                 raise ValueError("Would create circular dependency")
 
         dependency = self.dependency_repo.create(data)
-        
+
         # ⭐ REAL RefMemTree Integration: Add dependency to GraphSystem
         try:
             graph_manager = get_graph_manager()
@@ -240,7 +240,7 @@ class ArchitectureService:
         except Exception as e:
             # Non-blocking if RefMemTree fails
             print(f"RefMemTree dependency tracking warning: {e}")
-        
+
         return dependency
 
     def get_dependency(self, dependency_id: UUID):
@@ -520,7 +520,7 @@ class ArchitectureService:
     ) -> dict:
         """
         ADVANCED: Analyze impact using RefMemTree dependency tracking.
-        
+
         This uses RefMemTree's internal tracking to provide deeper analysis.
         """
         return self.refmem.analyze_module_modification_impact(module_id, change_type)
@@ -532,7 +532,7 @@ class ArchitectureService:
     ) -> dict:
         """
         ADVANCED: Simulate changes before applying them.
-        
+
         Returns risk level, success probability, and side effects.
         """
         return self.refmem.simulate_architecture_change(module_id, proposed_changes)
@@ -540,7 +540,7 @@ class ArchitectureService:
     def get_dependency_analysis_advanced(self, module_id: UUID) -> dict:
         """
         ADVANCED: Get comprehensive dependency analysis using RefMemTree.
-        
+
         Includes coupling scores, chain analysis, criticality assessment.
         """
         return self.refmem.get_module_dependencies_analysis(module_id)
@@ -554,7 +554,7 @@ class ArchitectureService:
     def sync_module_to_refmemtree(self, module: ArchitectureModule) -> None:
         """
         Sync module and its rules to RefMemTree for advanced tracking.
-        
+
         This should be called after creating/updating modules.
         """
         # Get architectural rules for this module
@@ -593,7 +593,7 @@ class ArchitectureService:
     ) -> None:
         """
         Sync dependency to RefMemTree for impact tracking.
-        
+
         This should be called after creating dependencies.
         """
         # Calculate strength based on dependency type

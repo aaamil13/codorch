@@ -659,9 +659,7 @@ class GeneratedFile(Base):
 
     # File info
     file_path: Mapped[str] = mapped_column(String(500), nullable=False)
-    file_type: Mapped[str] = mapped_column(
-        String(50), nullable=False
-    )  # source, test, config, documentation
+    file_type: Mapped[str] = mapped_column(String(50), nullable=False)  # source, test, config, documentation
     language: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
