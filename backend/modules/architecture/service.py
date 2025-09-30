@@ -183,7 +183,12 @@ class ArchitectureService:
     # ========================================================================
 
     def create_dependency(self, data: ModuleDependencyCreate):
-        """Create module dependency with validation."""
+        """
+        Create module dependency with RefMemTree Rule Engine validation.
+        
+        CRITICAL: Uses RefMemTree to validate BEFORE writing to DB!
+        This is the "immune system" - prevents invalid architecture!
+        """
         # Check if dependency already exists
         if self.dependency_repo.exists(data.from_module_id, data.to_module_id, data.dependency_type):
             raise ValueError("Dependency already exists")
@@ -192,6 +197,49 @@ class ArchitectureService:
         if data.from_module_id == data.to_module_id:
             raise ValueError("Module cannot depend on itself")
 
+        # ⭐ CRITICAL: Validate against RefMemTree rules BEFORE DB write!
+        try:
+            graph_manager = get_graph_manager()
+            graph = await graph_manager.get_or_create_graph(data.project_id, self.db)
+            
+            if graph:
+                # Get nodes from RefMemTree
+                from_node = graph.get_node(str(data.from_module_id))
+                to_node = graph.get_node(str(data.to_module_id))
+                
+                if from_node and to_node:
+                    # ⭐ SIMULATE adding dependency
+                    from_node_after = from_node.model_copy(deep=True)
+                    from_node_after.add_reference(
+                        str(data.to_module_id), 
+                        data.dependency_type
+                    )
+                    
+                    # ⭐ USE REFMEMTREE RULE ENGINE!
+                    impact_signals = graph.impact_analyzer.analyze_change_impact(
+                        from_node,  # Before
+                        from_node_after  # After
+                    )
+                    
+                    # Check for BLOCKING errors from Rule Engine
+                    blocking_errors = [
+                        s for s in impact_signals 
+                        if s.severity in ["ERROR", "CRITICAL"] and s.requires_action
+                    ]
+                    
+                    if blocking_errors:
+                        # ⭐ RULE ENGINE BLOCKS INVALID OPERATION!
+                        error_msg = blocking_errors[0].change_description
+                        raise ValueError(
+                            f"❌ Rule Engine blocked: {error_msg}\n"
+                            f"Rule: {blocking_errors[0].rule_name}\n"
+                            f"Fix: {blocking_errors[0].suggested_fix or 'Review architecture rules'}"
+                        )
+        except ValueError:
+            raise
+        except Exception as e:
+            print(f"⚠️ Rule Engine check failed, using fallback: {e}")
+        
         # ⭐ Check for circular dependency using REAL RefMemTree
         try:
             graph_manager = get_graph_manager()
