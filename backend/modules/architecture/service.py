@@ -183,7 +183,11 @@ class ArchitectureService:
     # ========================================================================
 
 <<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
     def create_dependency(self, data: ModuleDependencyCreate):
+=======
+    async def create_dependency(self, data: ModuleDependencyCreate):
+>>>>>>> Incoming (Background Agent changes)
 =======
     async def create_dependency(self, data: ModuleDependencyCreate):
 >>>>>>> Incoming (Background Agent changes)
