@@ -466,3 +466,87 @@ def get_shared_modules(
     """Get shared modules (used by multiple modules)."""
     service = ArchitectureService(db)
     return service.get_shared_modules(project_id)
+
+
+# ============================================================================
+# RefMemTree Advanced Features API Endpoints
+# ============================================================================
+
+
+@router.get("/modules/{module_id}/impact-analysis-advanced", response_model=dict)
+def analyze_module_impact_advanced(
+    module_id: UUID,
+    change_type: str = "update",
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+    ADVANCED RefMemTree: Analyze change impact with dependency tracking.
+    
+    Uses RefMemTree's internal dependency tracking for deeper analysis:
+    - Propagation paths
+    - Coupling strength analysis
+    - Critical dependency identification
+    """
+    service = ArchitectureService(db)
+    return service.analyze_module_change_impact_advanced(module_id, change_type)
+
+
+@router.post("/modules/{module_id}/simulate-change", response_model=dict)
+def simulate_module_change(
+    module_id: UUID,
+    proposed_changes: dict,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+    ADVANCED RefMemTree: Simulate changes before applying.
+    
+    Simulates proposed change and returns:
+    - Risk level (low/medium/high/critical)
+    - Success probability
+    - Side effects
+    - Affected modules
+    
+    Use case: "What if I change this module's type?"
+    """
+    service = ArchitectureService(db)
+    return service.simulate_module_change(module_id, proposed_changes)
+
+
+@router.get("/modules/{module_id}/dependency-analysis", response_model=dict)
+def get_dependency_analysis(
+    module_id: UUID,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+    ADVANCED RefMemTree: Comprehensive dependency analysis.
+    
+    Provides:
+    - Dependency chain depth
+    - Coupling scores
+    - Criticality assessment (how many modules depend on this)
+    - Indirect dependency analysis
+    """
+    service = ArchitectureService(db)
+    return service.get_dependency_analysis_advanced(module_id)
+
+
+@router.get("/modules/{module_id}/rule-validation", response_model=dict)
+def validate_module_rules(
+    module_id: UUID,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    """
+    ADVANCED RefMemTree: Validate against architecture rules.
+    
+    Checks module compliance with:
+    - Naming conventions
+    - Dependency constraints
+    - Layer rules
+    - Custom architecture rules
+    """
+    service = ArchitectureService(db)
+    return service.validate_module_rules(module_id)

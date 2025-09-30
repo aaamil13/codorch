@@ -11,6 +11,7 @@ from backend.modules.architecture.repository import (
     ArchitectureRuleRepository,
     ModuleDependencyRepository,
 )
+from backend.modules.architecture.refmemtree_integration import ArchitectureRefMemTreeIntegration
 from backend.modules.architecture.schemas import (
     ArchitectureModuleCreate,
     ArchitectureModuleUpdate,
@@ -40,6 +41,8 @@ class ArchitectureService:
         self.module_repo = ArchitectureModuleRepository(db)
         self.dependency_repo = ModuleDependencyRepository(db)
         self.rule_repo = ArchitectureRuleRepository(db)
+        # Initialize RefMemTree integration for advanced features
+        self.refmem = ArchitectureRefMemTreeIntegration()
 
     # ========================================================================
     # Module Operations
@@ -379,6 +382,111 @@ class ArchitectureService:
         return SharedModulesResponse(
             shared_modules=shared_modules,
             total_count=len(shared_modules),
+        )
+
+    # ========================================================================
+    # RefMemTree Advanced Features
+    # ========================================================================
+
+    def analyze_module_change_impact_advanced(
+        self,
+        module_id: UUID,
+        change_type: str = "update",
+    ) -> dict:
+        """
+        ADVANCED: Analyze impact using RefMemTree dependency tracking.
+        
+        This uses RefMemTree's internal tracking to provide deeper analysis.
+        """
+        return self.refmem.analyze_module_modification_impact(module_id, change_type)
+
+    def simulate_module_change(
+        self,
+        module_id: UUID,
+        proposed_changes: dict,
+    ) -> dict:
+        """
+        ADVANCED: Simulate changes before applying them.
+        
+        Returns risk level, success probability, and side effects.
+        """
+        return self.refmem.simulate_architecture_change(module_id, proposed_changes)
+
+    def get_dependency_analysis_advanced(self, module_id: UUID) -> dict:
+        """
+        ADVANCED: Get comprehensive dependency analysis using RefMemTree.
+        
+        Includes coupling scores, chain analysis, criticality assessment.
+        """
+        return self.refmem.get_module_dependencies_analysis(module_id)
+
+    def validate_module_rules(self, module_id: UUID) -> dict:
+        """
+        ADVANCED: Validate module against RefMemTree-tracked rules.
+        """
+        return self.refmem.validate_module_against_rules(module_id)
+
+    def sync_module_to_refmemtree(self, module: ArchitectureModule) -> None:
+        """
+        Sync module and its rules to RefMemTree for advanced tracking.
+        
+        This should be called after creating/updating modules.
+        """
+        # Get architectural rules for this module
+        rules = self.rule_repo.get_by_module(module.id)
+
+        # Convert to RefMemTree rule format
+        refmem_rules = [
+            {
+                "type": rule.rule_type,
+                "condition": str(rule.rule_definition.get("condition", "")),
+                "action": str(rule.rule_definition.get("action", "")),
+                "priority": rule.rule_definition.get("priority", 0),
+            }
+            for rule in rules
+        ]
+
+        # Register module with rules
+        module_data = {
+            "name": module.name,
+            "type": module.module_type,
+            "level": module.level,
+            "status": module.status,
+        }
+
+        self.refmem.register_architecture_module(
+            module.id,
+            module_data,
+            refmem_rules,
+        )
+
+    def sync_dependency_to_refmemtree(
+        self,
+        from_module_id: UUID,
+        to_module_id: UUID,
+        dependency_type: str,
+    ) -> None:
+        """
+        Sync dependency to RefMemTree for impact tracking.
+        
+        This should be called after creating dependencies.
+        """
+        # Calculate strength based on dependency type
+        strength_map = {
+            "extends": 1.0,  # Highest coupling
+            "import": 0.9,
+            "implements": 0.8,
+            "uses": 0.6,
+            "depends_on": 0.4,
+        }
+
+        strength = strength_map.get(dependency_type, 0.5)
+
+        self.refmem.track_module_dependency(
+            from_module_id,
+            to_module_id,
+            dependency_type,
+            strength,
         )
 
     # ========================================================================
