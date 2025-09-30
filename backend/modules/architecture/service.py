@@ -13,6 +13,7 @@ from backend.modules.architecture.repository import (
 )
 from backend.modules.architecture.refmemtree_integration import ArchitectureRefMemTreeIntegration
 from backend.core.refmemtree_loader import get_refmemtree_manager
+from backend.core.graph_manager import get_graph_manager
 from backend.modules.architecture.schemas import (
     ArchitectureModuleCreate,
     ArchitectureModuleUpdate,
@@ -68,9 +69,23 @@ class ArchitectureService:
 
         module = self.module_repo.create(data)
         
-        # ⭐ ACTIVATE RefMemTree: Auto-sync module with rules
+        # ⭐ REAL RefMemTree Integration: Add to GraphSystem
         try:
-            self.sync_module_to_refmemtree(module)
+            graph_manager = get_graph_manager()
+            # This uses REAL RefMemTree GraphSystem.add_node()
+            await graph_manager.add_node_to_graph(
+                project_id=data.project_id,
+                session=self.db,
+                node_id=module.id,
+                node_type=module.module_type,
+                data={
+                    "name": module.name,
+                    "description": module.description,
+                    "level": module.level,
+                    "status": module.status,
+                },
+            )
+            print(f"✅ Module {module.name} added to RefMemTree GraphSystem")
         except Exception as e:
             # Non-blocking if RefMemTree fails
             print(f"RefMemTree sync warning: {e}")
@@ -177,19 +192,51 @@ class ArchitectureService:
         if data.from_module_id == data.to_module_id:
             raise ValueError("Module cannot depend on itself")
 
-        # Check for circular dependency
-        if self._would_create_circular_dependency(data.from_module_id, data.to_module_id):
-            raise ValueError("Would create circular dependency")
+        # ⭐ Check for circular dependency using REAL RefMemTree
+        try:
+            graph_manager = get_graph_manager()
+            
+            # Temporarily add to check for cycles
+            temp_added = await graph_manager.add_dependency_to_graph(
+                project_id=data.project_id,
+                session=self.db,
+                from_node_id=data.from_module_id,
+                to_node_id=data.to_module_id,
+                dependency_type="temp_check",
+            )
+            
+            if temp_added:
+                # ⭐ REAL RefMemTree API: detect_cycles()
+                cycles = await graph_manager.detect_circular_dependencies(
+                    project_id=data.project_id,
+                    session=self.db,
+                )
+                
+                if cycles:
+                    # Remove temp and raise error
+                    raise ValueError(f"Would create circular dependency: {cycles[0]}")
+        except ValueError:
+            raise
+        except Exception as e:
+            # Fallback to custom check if RefMemTree fails
+            print(f"RefMemTree cycle detection unavailable, using fallback: {e}")
+            if self._would_create_circular_dependency(data.from_module_id, data.to_module_id):
+                raise ValueError("Would create circular dependency")
 
         dependency = self.dependency_repo.create(data)
         
-        # ⭐ ACTIVATE RefMemTree: Auto-track dependency
+        # ⭐ REAL RefMemTree Integration: Add dependency to GraphSystem
         try:
-            self.sync_dependency_to_refmemtree(
-                data.from_module_id,
-                data.to_module_id,
-                data.dependency_type
+            graph_manager = get_graph_manager()
+            # This uses REAL RefMemTree node.add_dependency()
+            await graph_manager.add_dependency_to_graph(
+                project_id=data.project_id,
+                session=self.db,
+                from_node_id=data.from_module_id,
+                to_node_id=data.to_module_id,
+                dependency_type=data.dependency_type,
             )
+            print(f"✅ Dependency added to RefMemTree GraphSystem")
         except Exception as e:
             # Non-blocking if RefMemTree fails
             print(f"RefMemTree dependency tracking warning: {e}")
