@@ -16,7 +16,7 @@ class TestChangeMonitor:
         """Test ChangeMonitor can be created."""
         graph_manager = get_graph_manager()
         monitor = ChangeMonitor(graph_manager)
-        
+
         assert monitor is not None
         assert monitor.graph_manager is graph_manager
         assert isinstance(monitor.callbacks, dict)
@@ -24,12 +24,12 @@ class TestChangeMonitor:
     def test_get_changed_fields(self):
         """Test identifying changed fields."""
         monitor = ChangeMonitor(get_graph_manager())
-        
+
         old_data = {"name": "OldName", "type": "service", "status": "draft"}
         new_data = {"name": "NewName", "type": "service", "status": "approved"}
-        
+
         changed = monitor._get_changed_fields(old_data, new_data)
-        
+
         assert "name" in changed
         assert "status" in changed
         assert "type" not in changed  # Unchanged
@@ -38,15 +38,15 @@ class TestChangeMonitor:
         """Test callback storage."""
         monitor = ChangeMonitor(get_graph_manager())
         node_id = uuid4()
-        
+
         def dummy_callback(change):
             pass
-        
+
         # Initially empty
         assert node_id not in monitor.callbacks
-        
+
         monitor.callbacks[node_id] = [dummy_callback]
-        
+
         assert node_id in monitor.callbacks
         assert len(monitor.callbacks[node_id]) == 1
 
@@ -56,13 +56,11 @@ class TestChangeMonitor:
         monitor = ChangeMonitor(get_graph_manager())
         project_id = uuid4()
         node_id = uuid4()
-        
+
         def callback(change):
             pass
-        
+
         # Should not crash
-        result = await monitor.register_node_watcher(
-            project_id, node_id, callback, async_session
-        )
-        
+        result = await monitor.register_node_watcher(project_id, node_id, callback, async_session)
+
         assert isinstance(result, bool)

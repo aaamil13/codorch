@@ -62,9 +62,7 @@ class RequirementRepository:
     async def get_by_module(self, module_id: UUID) -> list[Requirement]:
         """Get requirements by module."""
         result = await self.session.execute(
-            select(Requirement)
-            .where(Requirement.module_id == module_id)
-            .order_by(Requirement.created_at.desc())
+            select(Requirement).where(Requirement.module_id == module_id).order_by(Requirement.created_at.desc())
         )
         return list(result.scalars().all())
 
@@ -90,9 +88,7 @@ class RequirementRepository:
 
     async def count_by_project(self, project_id: UUID) -> int:
         """Count requirements by project."""
-        result = await self.session.execute(
-            select(Requirement).where(Requirement.project_id == project_id)
-        )
+        result = await self.session.execute(select(Requirement).where(Requirement.project_id == project_id))
         return len(list(result.scalars().all()))
 
     async def get_validated_count(self, project_id: UUID) -> int:
@@ -193,9 +189,7 @@ class APISpecificationRepository:
 
     async def get_by_id(self, api_spec_id: UUID) -> Optional[APISpecification]:
         """Get API spec by ID."""
-        result = await self.session.execute(
-            select(APISpecification).where(APISpecification.id == api_spec_id)
-        )
+        result = await self.session.execute(select(APISpecification).where(APISpecification.id == api_spec_id))
         return result.scalar_one_or_none()
 
     async def get_by_requirement(self, requirement_id: UUID) -> list[APISpecification]:

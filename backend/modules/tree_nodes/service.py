@@ -19,7 +19,7 @@ from backend.core.graph_manager import get_graph_manager
 class TreeNodeService:
     """
     Service for tree node operations with RefMemTree integration.
-    
+
     CRITICAL PATTERN: Every DB write → RefMemTree update
     """
 
@@ -37,7 +37,7 @@ class TreeNodeService:
     ) -> TreeNode:
         """
         Create tree node with write-through to RefMemTree.
-        
+
         WRITE-THROUGH PATTERN:
         1. PostgreSQL write (Source of Truth)
         2. RefMemTree update (Query Engine)
@@ -78,7 +78,7 @@ class TreeNodeService:
     ) -> Optional[TreeNode]:
         """
         Update tree node with write-through to RefMemTree.
-        
+
         WRITE-THROUGH PATTERN:
         1. Update PostgreSQL
         2. Update RefMemTree
@@ -135,9 +135,9 @@ class TreeNodeService:
     ) -> bool:
         """
         Delete tree node with write-through to RefMemTree.
-        
+
         CRITICAL: Checks impact BEFORE deleting!
-        
+
         WRITE-THROUGH PATTERN:
         1. Check impact using RefMemTree
         2. If safe → Delete from PostgreSQL
@@ -196,9 +196,9 @@ class TreeNodeService:
     ) -> dict:
         """
         Get impact analysis for node using RefMemTree.
-        
+
         ⭐ REAL RefMemTree-powered analysis!
-        
+
         This is THE FIRST "Read Path" endpoint using RefMemTree's power!
         """
         # Get node to find project

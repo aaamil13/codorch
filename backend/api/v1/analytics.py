@@ -29,15 +29,15 @@ async def get_most_critical_nodes(
 ):
     """
     Get most critical nodes (architectural hotspots).
-    
+
     ⭐ POWERED BY REFMEMTREE - This is IMPOSSIBLE with SQL alone!
-    
+
     Criticality = How many other modules depend on this module
-    
+
     Uses:
     - graph.get_all_nodes()
     - dependency_tracker.get_all_dependents()
-    
+
     Performance: Milliseconds for entire analysis!
     """
     graph_manager = get_graph_manager()
@@ -57,7 +57,7 @@ async def get_most_critical_nodes(
 
         # Calculate "architectural weight"
         dependent_count = len(dependents)
-        
+
         # Weight by dependency strength
         total_weight = sum(getattr(dep, "strength", 1.0) for dep in dependents)
 
@@ -70,10 +70,9 @@ async def get_most_critical_nodes(
                 "architectural_weight": total_weight,
                 "is_critical": dependent_count > 5,
                 "risk_level": (
-                    "critical" if dependent_count > 10
-                    else "high" if dependent_count > 5
-                    else "medium" if dependent_count > 2
-                    else "low"
+                    "critical"
+                    if dependent_count > 10
+                    else "high" if dependent_count > 5 else "medium" if dependent_count > 2 else "low"
                 ),
             }
         )
@@ -99,11 +98,11 @@ async def get_dependency_hotspots(
 ):
     """
     Find dependency hotspots (over-coupled modules).
-    
+
     ⭐ POWERED BY REFMEMTREE!
-    
+
     Hotspot = Module with too many dependencies (high coupling)
-    
+
     Uses RefMemTree to instantly analyze coupling.
     """
     graph_manager = get_graph_manager()
@@ -161,26 +160,26 @@ async def get_architecture_health(
 ):
     """
     Overall architecture health score.
-    
+
     ⭐ POWERED BY REFMEMTREE - Comprehensive analysis!
-    
+
     Checks:
     - Circular dependencies
     - Complexity
     - Coupling
     - Rule compliance
     - Broken dependencies
-    
+
     Returns health score (0-100) with detailed breakdown.
     """
     graph_manager = get_graph_manager()
-    
+
     # Use RefMemTree validation
     validation = await graph_manager.validate_rules(project_id, db)
-    
+
     # Detect issues
     graph = await graph_manager.get_or_create_graph(project_id, db)
-    
+
     health_checks = {
         "no_circular_deps": True,
         "complexity_ok": True,
@@ -188,29 +187,26 @@ async def get_architecture_health(
         "no_broken_deps": True,
         "coupling_ok": True,
     }
-    
+
     issues = []
-    
+
     if graph:
         # Check for circular dependencies
         cycles = await graph_manager.detect_circular_dependencies(project_id, db)
         if cycles:
             health_checks["no_circular_deps"] = False
             issues.append(f"Circular dependencies detected: {len(cycles)} cycles")
-        
+
         # Get all nodes for analysis
         all_nodes = graph.get_all_nodes()
-        
+
         # Check coupling
-        high_coupling = sum(
-            1 for node in all_nodes 
-            if len(node.get_dependencies(direction="outgoing")) > 8
-        )
-        
+        high_coupling = sum(1 for node in all_nodes if len(node.get_dependencies(direction="outgoing")) > 8)
+
         if high_coupling > 0:
             health_checks["coupling_ok"] = False
             issues.append(f"{high_coupling} modules with high coupling")
-    
+
     # Calculate health score
     score = sum(1 for v in health_checks.values() if v) / len(health_checks) * 100
 
@@ -218,16 +214,13 @@ async def get_architecture_health(
         "project_id": str(project_id),
         "health_score": round(score, 1),
         "health_grade": (
-            "A" if score >= 90
-            else "B" if score >= 80
-            else "C" if score >= 70
-            else "D" if score >= 60
-            else "F"
+            "A" if score >= 90 else "B" if score >= 80 else "C" if score >= 70 else "D" if score >= 60 else "F"
         ),
         "checks": health_checks,
         "issues": issues,
         "recommendations": (
-            ["Architecture is healthy!"] if score >= 90
+            ["Architecture is healthy!"]
+            if score >= 90
             else ["Review and fix identified issues", "Run validation checks"]
         ),
         "powered_by": "RefMemTree",

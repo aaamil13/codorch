@@ -15,7 +15,7 @@ from backend.core.event_emitter import get_event_emitter
 class ChangeMonitor:
     """
     Monitors changes in architecture nodes using RefMemTree.
-    
+
     Uses REAL RefMemTree API: node.on_change(callback)
     """
 
@@ -33,15 +33,15 @@ class ChangeMonitor:
     ) -> bool:
         """
         Register watcher for node changes using RefMemTree.
-        
+
         ⭐ Uses REAL RefMemTree API: node.on_change()
-        
+
         Args:
             project_id: Project UUID
             node_id: Node to watch
             callback: Function to call on change
             session: DB session
-            
+
         Returns:
             True if registered successfully
         """
@@ -58,11 +58,7 @@ class ChangeMonitor:
                 return False
 
             # ⭐ REAL RefMemTree API: node.on_change()
-            node.on_change(
-                lambda old_data, new_data: self._handle_change(
-                    node_id, old_data, new_data, callback
-                )
-            )
+            node.on_change(lambda old_data, new_data: self._handle_change(node_id, old_data, new_data, callback))
 
             # Store callback reference
             if node_id not in self.callbacks:
@@ -85,7 +81,7 @@ class ChangeMonitor:
     ) -> None:
         """
         Handle node change event from RefMemTree.
-        
+
         Called automatically by RefMemTree when node changes.
         """
         # Build change info
@@ -126,7 +122,7 @@ class ChangeMonitor:
     ) -> None:
         """
         Find dependent nodes and notify them of change.
-        
+
         This is the CASCADE UPDATE feature.
         """
         try:
@@ -177,7 +173,7 @@ async def watch_module_changes(
 ) -> bool:
     """
     Convenience function to watch module changes.
-    
+
     Usage:
         await watch_module_changes(
             project_id,
@@ -191,6 +187,4 @@ async def watch_module_changes(
     graph_manager = get_graph_manager()
     monitor = ChangeMonitor(graph_manager)
 
-    return await monitor.register_node_watcher(
-        project_id, module_id, on_change, session
-    )
+    return await monitor.register_node_watcher(project_id, module_id, on_change, session)

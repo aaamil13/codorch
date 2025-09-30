@@ -42,9 +42,7 @@ class CodeGenerationService:
         if not gen_session:
             raise ValueError("Session not found")
 
-        validation = await self.validation_pipeline.validate_project_readiness(
-            gen_session.project_id
-        )
+        validation = await self.validation_pipeline.validate_project_readiness(gen_session.project_id)
 
         gen_session.validation_result = validation.model_dump()
         gen_session.status = "ready" if validation.can_proceed else "failed"

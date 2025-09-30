@@ -33,7 +33,7 @@ class AlertService:
     ) -> str:
         """
         Send alert to user(s).
-        
+
         Args:
             project_id: Project UUID
             alert_type: Type of alert (circular_deps, high_complexity, etc)
@@ -42,7 +42,7 @@ class AlertService:
             severity: critical|error|warning|info
             actions: Suggested actions
             metadata: Additional data
-            
+
         Returns:
             Alert ID
         """
@@ -149,7 +149,7 @@ async def send_alert(
 ) -> str:
     """
     Convenience function to send alert.
-    
+
     Usage:
         await send_alert(
             project_id,
@@ -160,6 +160,4 @@ async def send_alert(
         )
     """
     service = get_alert_service()
-    return await service.send_alert(
-        project_id, alert_type, title, message, severity, actions
-    )
+    return await service.send_alert(project_id, alert_type, title, message, severity, actions)

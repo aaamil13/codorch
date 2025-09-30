@@ -2,7 +2,20 @@
 
 from fastapi import APIRouter
 
-from backend.api.v1 import analytics, architecture, auth, code_generation, goals, opportunities, projects, research, requirements, tree_nodes, users, websocket
+from backend.api.v1 import (
+    analytics,
+    architecture,
+    auth,
+    code_generation,
+    goals,
+    opportunities,
+    projects,
+    research,
+    requirements,
+    tree_nodes,
+    users,
+    websocket,
+)
 
 api_router = APIRouter()
 

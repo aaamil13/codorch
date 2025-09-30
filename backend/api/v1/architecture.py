@@ -482,7 +482,7 @@ def analyze_module_impact_advanced(
 ):
     """
     ADVANCED RefMemTree: Analyze change impact with dependency tracking.
-    
+
     Uses RefMemTree's internal dependency tracking for deeper analysis:
     - Propagation paths
     - Coupling strength analysis
@@ -501,13 +501,13 @@ def simulate_module_change(
 ):
     """
     ADVANCED RefMemTree: Simulate changes before applying.
-    
+
     Simulates proposed change and returns:
     - Risk level (low/medium/high/critical)
     - Success probability
     - Side effects
     - Affected modules
-    
+
     Use case: "What if I change this module's type?"
     """
     service = ArchitectureService(db)
@@ -522,7 +522,7 @@ def get_dependency_analysis(
 ):
     """
     ADVANCED RefMemTree: Comprehensive dependency analysis.
-    
+
     Provides:
     - Dependency chain depth
     - Coupling scores
@@ -541,7 +541,7 @@ def validate_module_rules(
 ):
     """
     ADVANCED RefMemTree: Validate against architecture rules.
-    
+
     Checks module compliance with:
     - Naming conventions
     - Dependency constraints
@@ -567,23 +567,23 @@ async def execute_ai_architecture_plan(
 ):
     """
     Execute AI-generated architecture plan using AI Governor.
-    
+
     ⭐ Uses REAL RefMemTree AIGovernor.execute_refactoring_plan()
-    
+
     This is THE endpoint that makes AI architecture generation SAFE!
-    
+
     Features:
     - Validates plan before execution
     - Creates snapshot for rollback
     - Atomic execution (all-or-nothing)
     - Auto-rollback on failure
     - Syncs to PostgreSQL after success
-    
+
     Args:
         project_id: Project UUID
         plan: AI-generated plan (list of actions)
         dry_run: If True, simulates without applying
-        
+
     Returns:
         Execution result with status, created nodes, rollback info
     """

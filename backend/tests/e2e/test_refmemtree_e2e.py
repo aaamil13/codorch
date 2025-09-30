@@ -23,12 +23,10 @@ from backend.core.graph_manager import get_graph_manager, reset_graph_manager
 class TestRefMemTreeE2E:
     """End-to-end tests for RefMemTree integration."""
 
-    async def test_e2e_module_creation_syncs_to_refmemtree(
-        self, async_client, auth_headers, sample_project
-    ):
+    async def test_e2e_module_creation_syncs_to_refmemtree(self, async_client, auth_headers, sample_project):
         """
         E2E: Create module → Verify in both PostgreSQL and RefMemTree.
-        
+
         Flow:
         1. POST /architecture/modules (API)
         2. Check PostgreSQL (via API)
@@ -66,12 +64,10 @@ class TestRefMemTreeE2E:
         # node = graph.get_node(module_id)
         # assert node.data['name'] == 'UserService'
 
-    async def test_e2e_dependency_with_circular_detection(
-        self, async_client, auth_headers, sample_project
-    ):
+    async def test_e2e_dependency_with_circular_detection(self, async_client, auth_headers, sample_project):
         """
         E2E: Create dependency with RefMemTree circular detection.
-        
+
         Flow:
         1. Create Module A
         2. Create Module B
@@ -132,12 +128,10 @@ class TestRefMemTreeE2E:
         assert response_dep2.status_code == 400
         assert "circular" in response_dep2.json()["detail"].lower()
 
-    async def test_e2e_impact_analysis_endpoint(
-        self, async_client, auth_headers, sample_project
-    ):
+    async def test_e2e_impact_analysis_endpoint(self, async_client, auth_headers, sample_project):
         """
         E2E: Test RefMemTree impact analysis endpoint.
-        
+
         Flow:
         1. Create Module A (Database)
         2. Create Module B (Service) depending on A
@@ -194,12 +188,10 @@ class TestRefMemTreeE2E:
         assert "affected_modules" in impact
         # assert svc_module_id in impact["affected_modules"]
 
-    async def test_e2e_analytics_critical_nodes(
-        self, async_client, auth_headers, sample_project
-    ):
+    async def test_e2e_analytics_critical_nodes(self, async_client, auth_headers, sample_project):
         """
         E2E: Test RefMemTree analytics endpoint.
-        
+
         Flow:
         1. Create multiple modules with dependencies
         2. GET /analytics/most-critical-nodes
@@ -244,12 +236,10 @@ class TestRefMemTreeE2E:
         assert "critical_nodes" in analytics
         # Module0 should be in critical nodes (4 modules depend on it)
 
-    async def test_e2e_ai_governor_plan_execution(
-        self, async_client, auth_headers, sample_project
-    ):
+    async def test_e2e_ai_governor_plan_execution(self, async_client, auth_headers, sample_project):
         """
         E2E: Test AI Governor safe plan execution.
-        
+
         Flow:
         1. AI generates architecture plan
         2. POST /execute-ai-plan with dry_run=True
@@ -298,12 +288,10 @@ class TestRefMemTreeE2E:
         # response_real = await async_client.post(...)
         # assert response_real["status"] == "success"
 
-    async def test_e2e_refmemtree_protection_on_delete(
-        self, async_client, auth_headers, sample_project
-    ):
+    async def test_e2e_refmemtree_protection_on_delete(self, async_client, auth_headers, sample_project):
         """
         E2E: RefMemTree protects critical module from deletion.
-        
+
         Flow:
         1. Create Database module
         2. Create 3 services depending on Database
@@ -357,12 +345,10 @@ class TestRefMemTreeE2E:
         # assert response.status_code == 400
         # assert "high impact" in response.json()["detail"].lower()
 
-    async def test_e2e_real_time_monitoring(
-        self, async_client, auth_headers, sample_project
-    ):
+    async def test_e2e_real_time_monitoring(self, async_client, auth_headers, sample_project):
         """
         E2E: Test real-time monitoring setup.
-        
+
         Flow:
         1. Open project (triggers monitor setup)
         2. Monitors should be active
@@ -372,17 +358,15 @@ class TestRefMemTreeE2E:
         # ws_client = await async_client.websocket_connect(
         #     f"/api/v1/ws/project/{sample_project.id}"
         # )
-        # 
+        #
         # # Make a change that triggers alert
         # # Should receive WebSocket message
         pass
 
-    async def test_e2e_snapshot_and_rollback(
-        self, async_client, auth_headers, sample_project
-    ):
+    async def test_e2e_snapshot_and_rollback(self, async_client, auth_headers, sample_project):
         """
         E2E: Test snapshot creation and rollback.
-        
+
         Flow:
         1. Create initial architecture
         2. Create snapshot
