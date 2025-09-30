@@ -466,8 +466,6 @@ def get_shared_modules(
     """Get shared modules (used by multiple modules)."""
     service = ArchitectureService(db)
     return service.get_shared_modules(project_id)
-<<<<<<< Current (Your changes)
-=======
 
 
 # ============================================================================
@@ -552,4 +550,3 @@ def validate_module_rules(
     """
     service = ArchitectureService(db)
     return service.validate_module_rules(module_id)
->>>>>>> Incoming (Background Agent changes)
