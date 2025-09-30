@@ -151,12 +151,12 @@ async def validate_requirement(
 ):
     """Validate single requirement with AI."""
     service = RequirementsService(session)
-
+    
     # Get requirement
     requirement = await service.get_requirement(requirement_id)
     if not requirement:
         raise HTTPException(status_code=404, detail="Requirement not found")
-
+    
     # Run AI validation
     result = await RequirementsTeam.full_analysis_workflow(
         requirement.title,
@@ -164,15 +164,15 @@ async def validate_requirement(
         requirement.type,
         requirement.acceptance_criteria or [],
     )
-
+    
     # Store validation result
     requirement.ai_validation_result = result
     await service.req_repo.update(requirement)
-
+    
     # Convert to validation result
     analysis = result["analysis"]
     validation = result["validation"]
-
+    
     return RequirementValidationResult(
         requirement_id=requirement_id,
         overall_score=result["overall_score"],
@@ -218,7 +218,7 @@ async def get_suggestions(
     requirement = await service.get_requirement(requirement_id)
     if not requirement:
         raise HTTPException(status_code=404, detail="Requirement not found")
-
+    
     return {
         "requirement_id": requirement_id,
         "suggestions": requirement.ai_suggestions or [],
@@ -243,39 +243,38 @@ async def generate_technology_recommendations(
 ):
     """Generate technology recommendations using AI."""
     service = RequirementsService(session)
-
+    
     # Get requirements
     if data.requirements:
         requirements = []
         for req_id in data.requirements:
             req = await service.get_requirement(req_id)
             if req:
-                requirements.append(
-                    {
-                        "type": req.type,
-                        "title": req.title,
-                        "description": req.description,
-                    }
-                )
+                requirements.append({
+                    "type": req.type,
+                    "title": req.title,
+                    "description": req.description,
+                })
     else:
         all_reqs = await service.list_requirements(project_id)
         requirements = [
-            {"type": r.type, "title": r.title, "description": r.description} for r in all_reqs[:20]  # Limit to 20
+            {"type": r.type, "title": r.title, "description": r.description}
+            for r in all_reqs[:20]  # Limit to 20
         ]
-
+    
     # Get module name if module_id provided
     module_name = "General"
     if data.module_id:
         # Would get from architecture module
         module_name = f"Module {data.module_id}"
-
+    
     # Generate recommendations
     tech_recs = await RequirementsTeam.technology_recommendation_workflow(
         requirements,
         module_name,
         data.preferences,
     )
-
+    
     # Save recommendations to database
     saved_recs = []
     for rec in tech_recs.recommendations:
@@ -293,11 +292,11 @@ async def generate_technology_recommendations(
         )
         saved_rec = await service.create_technology_recommendation(tech_data)
         saved_recs.append(saved_rec)
-
+    
     by_type: dict[str, int] = {}
     for rec in saved_recs:
         by_type[rec.technology_type] = by_type.get(rec.technology_type, 0) + 1
-
+    
     return TechnologyRecommendationSummary(
         recommendations=saved_recs,
         total_count=len(saved_recs),
@@ -318,7 +317,9 @@ async def list_technology_recommendations(
 ):
     """List technology recommendations."""
     service = RequirementsService(session)
-    recommendations = await service.list_technology_recommendations(project_id, technology_type, status_filter)
+    recommendations = await service.list_technology_recommendations(
+        project_id, technology_type, status_filter
+    )
     return recommendations
 
 

@@ -19,7 +19,7 @@ from backend.core.event_emitter import get_event_emitter
 class TreeMonitoringService:
     """
     Tree-wide monitoring using RefMemTree's add_monitor() API.
-
+    
     Automatically checks conditions and triggers alerts.
     """
 
@@ -35,9 +35,9 @@ class TreeMonitoringService:
     ) -> Dict:
         """
         Setup automatic monitoring for project.
-
+        
         Uses REAL RefMemTree API: tree.add_monitor()
-
+        
         Call this when project is opened/loaded.
         """
         try:
@@ -226,7 +226,7 @@ async def setup_monitoring_for_project(
 ) -> Dict:
     """
     Setup automatic monitoring for project.
-
+    
     Call this when project is opened.
     """
     from backend.core.graph_manager import get_graph_manager

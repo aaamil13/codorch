@@ -1,7 +1,7 @@
 """
 GraphManagerService - Bridge between PostgreSQL and RefMemTree.
 
-This is the CORE service that transforms Codorch from code generator
+This is the CORE service that transforms Codorch from code generator 
 into business policy engine.
 
 Key Responsibilities:
@@ -11,7 +11,7 @@ Key Responsibilities:
 4. Manage graph lifecycle per project
 """
 
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 from uuid import UUID
 
 from sqlalchemy import select
@@ -22,7 +22,6 @@ from backend.db.models import ArchitectureModule, ArchitectureRule, ModuleDepend
 # RefMemTree imports (will fail gracefully if not installed)
 try:
     from refmemtree import GraphSystem, GraphNode
-
     REFMEMTREE_AVAILABLE = True
 except ImportError:
     print("⚠️  RefMemTree not installed - using fallback mode")
@@ -34,7 +33,7 @@ except ImportError:
 class GraphManagerService:
     """
     Manages RefMemTree GraphSystem instances for projects.
-
+    
     One GraphSystem instance per project, cached in memory.
     """
 
@@ -50,12 +49,12 @@ class GraphManagerService:
     ):
         """
         Get or create RefMemTree GraphSystem for project.
-
+        
         Args:
             project_id: Project UUID
             session: Database session
             force_reload: Force reload from DB
-
+            
         Returns:
             GraphSystem instance or None if RefMemTree not available
         """
@@ -87,9 +86,9 @@ class GraphManagerService:
     ) -> None:
         """
         Hydrate GraphSystem from PostgreSQL data FOR SPECIFIC PROJECT.
-
+        
         ⚡ OPTIMIZED: Only loads data for one project, not all projects!
-
+        
         This is THE critical method that bridges SQL → RefMemTree!
         """
         # Step 1: Load ONLY modules for THIS project ⚡
@@ -118,7 +117,9 @@ class GraphManagerService:
             )
 
         # Step 2: Load all dependencies between modules
-        deps_result = await session.execute(select(ModuleDependency).where(ModuleDependency.project_id == project_id))
+        deps_result = await session.execute(
+            select(ModuleDependency).where(ModuleDependency.project_id == project_id)
+        )
         dependencies = deps_result.scalars().all()
 
         print(f"  Loading {len(dependencies)} dependencies into RefMemTree...")
@@ -140,7 +141,9 @@ class GraphManagerService:
                 print(f"  ⚠️  Failed to add dependency: {e}")
 
         # Step 3: Load and apply architecture rules
-        rules_result = await session.execute(select(ArchitectureRule).where(ArchitectureRule.project_id == project_id))
+        rules_result = await session.execute(
+            select(ArchitectureRule).where(ArchitectureRule.project_id == project_id)
+        )
         rules = rules_result.scalars().all()
 
         print(f"  Loading {len(rules)} rules into RefMemTree...")
@@ -149,7 +152,7 @@ class GraphManagerService:
             # ⭐ REAL RefMemTree API: Add rule to graph
             try:
                 rule_definition = rule.rule_definition or {}
-
+                
                 graph_system.add_rule(
                     name=f"{rule.rule_type}_{rule.id}",
                     rule_type=rule.rule_type,
@@ -165,7 +168,7 @@ class GraphManagerService:
     def _create_validator_from_rule(self, rule: ArchitectureRule):
         """
         Create validator function from ArchitectureRule.
-
+        
         This converts DB rule definition into executable validator.
         """
         rule_def = rule.rule_definition or {}
@@ -227,7 +230,9 @@ class GraphManagerService:
             return False
 
         try:
-            graph.add_node(node_id=str(node_id), node_type=node_type, data=data)
+            graph.add_node(
+                node_id=str(node_id), node_type=node_type, data=data
+            )
             return True
         except Exception as e:
             print(f"Failed to add node to RefMemTree: {e}")
@@ -266,7 +271,7 @@ class GraphManagerService:
     ) -> list:
         """
         Detect circular dependencies using RefMemTree.
-
+        
         ⭐ REAL RefMemTree API: tree.detect_cycles()
         """
         graph = await self.get_or_create_graph(project_id, session)
@@ -290,7 +295,7 @@ class GraphManagerService:
     ) -> dict:
         """
         Calculate impact of changing a node using RefMemTree.
-
+        
         ⭐ REAL RefMemTree API: node.calculate_impact()
         """
         graph = await self.get_or_create_graph(project_id, session)
@@ -330,7 +335,7 @@ class GraphManagerService:
     ) -> dict:
         """
         Simulate change using RefMemTree without applying it.
-
+        
         ⭐ REAL RefMemTree API: tree.simulate_change()
         """
         graph = await self.get_or_create_graph(project_id, session)
@@ -366,7 +371,7 @@ class GraphManagerService:
     ) -> dict:
         """
         Validate all architecture rules using RefMemTree.
-
+        
         ⭐ REAL RefMemTree API: tree.validate_rules()
         """
         graph = await self.get_or_create_graph(project_id, session)
@@ -429,9 +434,9 @@ class GraphManagerService:
     ) -> str:
         """
         Create architecture snapshot using RefMemTree.
-
+        
         ⭐ REAL RefMemTree API: tree.create_version()
-
+        
         Returns:
             Snapshot ID (version_id)
         """
@@ -440,7 +445,9 @@ class GraphManagerService:
             raise ValueError("Graph not available")
 
         # ⭐ REAL RefMemTree API
-        version_id = graph.create_version(name=name, description=description, include_metadata=True)
+        version_id = graph.create_version(
+            name=name, description=description, include_metadata=True
+        )
 
         print(f"📸 Snapshot created: {version_id} for project {project_id}")
         return version_id
@@ -453,9 +460,9 @@ class GraphManagerService:
     ) -> Dict:
         """
         Rollback architecture to previous snapshot.
-
+        
         ⭐ REAL RefMemTree API: tree.rollback_to_version()
-
+        
         Returns:
             Rollback result with restored counts
         """
@@ -481,10 +488,12 @@ class GraphManagerService:
         else:
             return {"status": "failed", "error": result.error}
 
-    async def list_snapshots(self, project_id: UUID, session: AsyncSession) -> List[Dict]:
+    async def list_snapshots(
+        self, project_id: UUID, session: AsyncSession
+    ) -> List[Dict]:
         """
         List all snapshots for project.
-
+        
         ⭐ REAL RefMemTree API: tree.get_versions()
         """
         graph = await self.get_or_create_graph(project_id, session)
@@ -518,12 +527,12 @@ class GraphManagerService:
     ) -> Dict:
         """
         Get full dependency chains (transitive dependencies).
-
+        
         ⭐ REAL RefMemTree API: node.get_transitive_dependencies()
-
+        
         Example:
             UI → Service → Logic → Database
-
+            
         Returns all paths from node to leaf dependencies.
         """
         graph = await self.get_or_create_graph(project_id, session)
@@ -548,11 +557,16 @@ class GraphManagerService:
                     {
                         "path": [n.id for n in chain],
                         "length": len(chain),
-                        "total_strength": sum(getattr(dep, "strength", 1.0) for dep in self._get_deps_in_chain(chain)),
+                        "total_strength": sum(
+                            getattr(dep, "strength", 1.0)
+                            for dep in self._get_deps_in_chain(chain)
+                        ),
                     }
                     for chain in chains
                 ],
-                "total_unique_dependencies": len(set(node.id for chain in chains for node in chain)),
+                "total_unique_dependencies": len(
+                    set(node.id for chain in chains for node in chain)
+                ),
                 "max_depth": max(len(chain) for chain in chains) if chains else 0,
             }
 
@@ -565,17 +579,19 @@ class GraphManagerService:
         # Simplified for now
         return []
 
-    async def _sync_graph_to_database(self, project_id: UUID, graph, session: AsyncSession) -> None:
+    async def _sync_graph_to_database(
+        self, project_id: UUID, graph, session: AsyncSession
+    ) -> None:
         """
         Sync RefMemTree state back to PostgreSQL after rollback.
-
+        
         This ensures DB matches RefMemTree after rollback.
         """
         # This is complex - for now, we'll force reload
         # In production, you'd want to diff and apply minimal changes
-
+        
         print(f"⚠️ Full DB sync after rollback - reload project to see changes")
-
+        
         # Option 1: Delete all and recreate (simple but works)
         # Option 2: Smart diff and apply (complex but optimal)
         # For MVP, we'll document that user should reload project
@@ -591,10 +607,10 @@ _graph_manager_instance: Optional[GraphManagerService] = None
 def get_graph_manager() -> GraphManagerService:
     """
     Get global GraphManagerService instance (Singleton).
-
+    
     This ensures ONE instance manages ALL project graphs in memory.
     Provides caching and performance optimization.
-
+    
     Use with FastAPI Depends:
         graph_manager: GraphManagerService = Depends(get_graph_manager)
     """

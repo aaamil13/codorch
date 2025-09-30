@@ -61,6 +61,8 @@ class GeneratedFileRepository:
 
     async def get_by_session(self, session_id: UUID) -> list[GeneratedFile]:
         result = await self.session.execute(
-            select(GeneratedFile).where(GeneratedFile.session_id == session_id).order_by(GeneratedFile.file_path)
+            select(GeneratedFile)
+            .where(GeneratedFile.session_id == session_id)
+            .order_by(GeneratedFile.file_path)
         )
         return list(result.scalars().all())

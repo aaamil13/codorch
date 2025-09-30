@@ -15,7 +15,7 @@ import asyncio
 class EventEmitter:
     """
     Central event emission system.
-
+    
     Allows components to subscribe to events and receive notifications
     when those events occur.
     """
@@ -27,14 +27,14 @@ class EventEmitter:
     def on(self, event_name: str, callback: Callable) -> None:
         """
         Register event listener.
-
+        
         Args:
             event_name: Name of event to listen for
             callback: Function to call when event occurs
         """
         if event_name not in self.listeners:
             self.listeners[event_name] = []
-
+        
         self.listeners[event_name].append(callback)
 
     def off(self, event_name: str, callback: Callable) -> None:
@@ -48,7 +48,7 @@ class EventEmitter:
     def emit(self, event_name: str, data: Any) -> None:
         """
         Emit event to all listeners synchronously.
-
+        
         Args:
             event_name: Name of event
             data: Event data to send to listeners
@@ -63,7 +63,7 @@ class EventEmitter:
     async def emit_async(self, event_name: str, data: Any) -> None:
         """
         Emit event to all listeners asynchronously.
-
+        
         For async callbacks.
         """
         if event_name in self.listeners:
@@ -76,17 +76,16 @@ class EventEmitter:
                         callback(data)
                 except Exception as e:
                     print(f"Error in async event listener for {event_name}: {e}")
-
+            
             if tasks:
                 await asyncio.gather(*tasks, return_exceptions=True)
 
     def once(self, event_name: str, callback: Callable) -> None:
         """Register one-time event listener."""
-
         def wrapper(data):
             callback(data)
             self.off(event_name, wrapper)
-
+        
         self.on(event_name, wrapper)
 
     def remove_all_listeners(self, event_name: str = None) -> None:

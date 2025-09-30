@@ -24,7 +24,7 @@ active_connections: dict[str, list[WebSocket]] = {}
 async def project_websocket(websocket: WebSocket, project_id: str):
     """
     WebSocket endpoint for real-time project updates.
-
+    
     Broadcasts:
     - Module changes
     - Dependency changes
@@ -44,7 +44,9 @@ async def project_websocket(websocket: WebSocket, project_id: str):
     def send_module_change(data):
         """Send module change event to this WebSocket."""
         if data.get("project_id") == project_id:
-            asyncio.create_task(safe_send(websocket, {"type": "module_changed", "data": data}))
+            asyncio.create_task(
+                safe_send(websocket, {"type": "module_changed", "data": data})
+            )
 
     def send_alert(data):
         """Send alert event to this WebSocket."""
@@ -54,7 +56,9 @@ async def project_websocket(websocket: WebSocket, project_id: str):
     def send_dependency_change(data):
         """Send dependency change event."""
         if data.get("project_id") == project_id:
-            asyncio.create_task(safe_send(websocket, {"type": "dependency_changed", "data": data}))
+            asyncio.create_task(
+                safe_send(websocket, {"type": "dependency_changed", "data": data})
+            )
 
     # Subscribe to events
     event_emitter.on("module_changed", send_module_change)
@@ -99,7 +103,7 @@ async def safe_send(websocket: WebSocket, message: dict) -> None:
 async def broadcast_to_project(project_id: str, message: dict) -> None:
     """
     Broadcast message to all WebSocket clients for project.
-
+    
     Usage:
         await broadcast_to_project(
             project_id,

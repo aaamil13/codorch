@@ -28,19 +28,19 @@ async def get_node_impact_analysis(
 ):
     """
     Get impact analysis for node.
-
+    
     ⭐ POWERED BY REFMEMTREE!
-
+    
     This is THE FIRST endpoint that uses RefMemTree's graph analysis
     for instant results!
-
+    
     Returns:
     - Impact score (0-100)
     - Affected nodes list
     - Directly vs indirectly affected
     - Breaking changes
     - Recommendations
-
+    
     Performance: Milliseconds (vs seconds with SQL recursive queries)
     """
     service = TreeNodeService(session)
@@ -60,9 +60,9 @@ async def get_node_dependents(
 ):
     """
     Get all nodes that depend on this node.
-
+    
     ⭐ POWERED BY REFMEMTREE - Instant graph traversal!
-
+    
     Returns all dependents in milliseconds using in-memory graph.
     """
     from backend.core.graph_manager import get_graph_manager
@@ -81,7 +81,9 @@ async def get_node_dependents(
     graph = await graph_manager.get_or_create_graph(node.project_id, session)
 
     if not graph:
-        raise HTTPException(status_code=503, detail="RefMemTree not available")
+        raise HTTPException(
+            status_code=503, detail="RefMemTree not available"
+        )
 
     refmem_node = graph.get_node(str(node_id))
     if not refmem_node:
@@ -114,12 +116,12 @@ async def get_dependency_chain(
 ):
     """
     Get full dependency chain for node.
-
+    
     ⭐ POWERED BY REFMEMTREE!
-
+    
     Shows transitive dependencies:
     Example: UI → Service → Logic → Database
-
+    
     Impossible to do efficiently with SQL!
     RefMemTree does it in milliseconds!
     """

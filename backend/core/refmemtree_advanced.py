@@ -120,7 +120,7 @@ class ChangeSimulation:
 class RefMemTreeManager:
     """
     Advanced RefMemTree Manager with full feature utilization.
-
+    
     Features:
     1. Internal rule tracking and enforcement
     2. Node change monitoring with history
@@ -270,7 +270,7 @@ class RefMemTreeManager:
     ) -> ImpactAnalysisResult:
         """
         Analyze impact of changing a node.
-
+        
         Returns which nodes would be affected and how severely.
         """
         # Find all dependent nodes
@@ -301,7 +301,9 @@ class RefMemTreeManager:
         high_impact_nodes = [nid for nid, score in impact_scores.items() if score > 0.7]
 
         if high_impact_nodes:
-            recommendations.append(f"⚠️ HIGH IMPACT: {len(high_impact_nodes)} nodes heavily affected")
+            recommendations.append(
+                f"⚠️ HIGH IMPACT: {len(high_impact_nodes)} nodes heavily affected"
+            )
         if change_type == "delete":
             recommendations.append("Consider archiving instead of deleting")
         if len(affected_nodes) > 10:
@@ -356,7 +358,7 @@ class RefMemTreeManager:
     ) -> ChangeSimulation:
         """
         Simulate a proposed change without actually applying it.
-
+        
         Returns predicted effects, risks, and success probability.
         """
         simulation_id = uuid4()
@@ -457,7 +459,7 @@ class RefMemTreeManager:
     ) -> dict[str, Any]:
         """
         Get comprehensive context for a node.
-
+        
         Unlike basic context, this includes:
         - Active rules
         - Dependencies (upstream and downstream)
@@ -551,7 +553,7 @@ def analyze_architecture_change_impact(
 ) -> dict[str, Any]:
     """
     Analyze impact of changing an architecture module.
-
+    
     Use case: Before modifying/deleting a module, see what breaks.
     """
     impact = manager.analyze_change_impact(module_id, change_type)
@@ -572,7 +574,7 @@ def simulate_requirement_change(
 ) -> dict[str, Any]:
     """
     Simulate changing a requirement.
-
+    
     Use case: See what happens if we modify a requirement.
     """
     simulation = manager.simulate_change(
@@ -588,7 +590,9 @@ def simulate_requirement_change(
         "affected_nodes": [str(nid) for nid in simulation.affected_nodes],
         "side_effects": simulation.side_effects,
         "recommended_action": (
-            "Proceed with caution" if simulation.success_probability > 0.7 else "Review thoroughly before applying"
+            "Proceed with caution"
+            if simulation.success_probability > 0.7
+            else "Review thoroughly before applying"
         ),
     }
 
@@ -599,11 +603,11 @@ def enforce_architecture_rules(
 ) -> dict[str, Any]:
     """
     Check if module complies with architecture rules.
-
+    
     Use case: Ensure module follows defined architectural constraints.
     """
     rules = manager.get_rules(module_id)
-
+    
     # Simulate checking current state against rules
     valid, violations = manager.validate_against_rules(module_id, {})
 
