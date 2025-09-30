@@ -660,7 +660,13 @@ class GeneratedFile(Base):
     # File info
     file_path: Mapped[str] = mapped_column(String(500), nullable=False)
 <<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
     file_type: Mapped[str] = mapped_column(String(50), nullable=False)  # source, test, config, documentation
+=======
+    file_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # source, test, config, documentation
+>>>>>>> Incoming (Background Agent changes)
 =======
     file_type: Mapped[str] = mapped_column(
         String(50), nullable=False
