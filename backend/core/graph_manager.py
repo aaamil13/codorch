@@ -85,17 +85,21 @@ class GraphManagerService:
         graph_system,
     ) -> None:
         """
-        Hydrate GraphSystem from PostgreSQL data.
+        Hydrate GraphSystem from PostgreSQL data FOR SPECIFIC PROJECT.
+        
+        ⚡ OPTIMIZED: Only loads data for one project, not all projects!
         
         This is THE critical method that bridges SQL → RefMemTree!
         """
-        # Step 1: Load all architecture modules as graph nodes
+        # Step 1: Load ONLY modules for THIS project ⚡
         modules_result = await session.execute(
-            select(ArchitectureModule).where(ArchitectureModule.project_id == project_id)
+            select(ArchitectureModule)
+            .where(ArchitectureModule.project_id == project_id)
+            .order_by(ArchitectureModule.level)  # ⚡ Load in order for hierarchy
         )
         modules = modules_result.scalars().all()
 
-        print(f"  Loading {len(modules)} modules into RefMemTree...")
+        print(f"  Loading {len(modules)} modules for project {project_id} into RefMemTree...")
 
         for module in modules:
             # ⭐ REAL RefMemTree API: Add node to graph
@@ -419,15 +423,32 @@ class GraphManagerService:
 
 
 # ============================================================================
-# Global Instance (Singleton)
+# Global Instance (Singleton Pattern for FastAPI)
 # ============================================================================
 
 _graph_manager_instance: Optional[GraphManagerService] = None
 
 
 def get_graph_manager() -> GraphManagerService:
-    """Get global GraphManagerService instance."""
+    """
+    Get global GraphManagerService instance (Singleton).
+    
+    This ensures ONE instance manages ALL project graphs in memory.
+    Provides caching and performance optimization.
+    
+    Use with FastAPI Depends:
+        graph_manager: GraphManagerService = Depends(get_graph_manager)
+    """
     global _graph_manager_instance
     if _graph_manager_instance is None:
         _graph_manager_instance = GraphManagerService()
+        print("✅ GraphManagerService singleton created")
     return _graph_manager_instance
+
+
+def reset_graph_manager() -> None:
+    """Reset singleton (for testing)."""
+    global _graph_manager_instance
+    if _graph_manager_instance:
+        _graph_manager_instance._graph_cache.clear()
+    _graph_manager_instance = None
