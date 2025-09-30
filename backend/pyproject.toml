@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "codorch-backend"
-version = "0.1.0"
+version = "0.2.0"
 description = "Codorch Backend - AI-Powered Business Orchestration Platform"
 authors = ["Codorch Team"]
 readme = "README.md"
