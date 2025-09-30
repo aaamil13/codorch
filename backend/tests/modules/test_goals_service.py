@@ -126,9 +126,7 @@ class TestGoalService:
             )
         )
 
-        with patch(
-            "backend.modules.goals.service.GoalAnalystAgent"
-        ) as mock_agent_class:
+        with patch("backend.modules.goals.service.GoalAnalystAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.analyze_goal = AsyncMock(
                 return_value={
@@ -161,9 +159,7 @@ class TestGoalService:
             )
         )
 
-        with patch(
-            "backend.modules.goals.service.GoalAnalystAgent"
-        ) as mock_agent_class:
+        with patch("backend.modules.goals.service.GoalAnalystAgent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent.suggest_subgoals = AsyncMock(
                 return_value={

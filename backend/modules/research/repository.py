@@ -44,19 +44,12 @@ class ResearchSessionRepository:
         status: Optional[str] = None,
     ) -> list[ResearchSession]:
         """Get research sessions by project ID."""
-        query = self.db.query(ResearchSession).filter(
-            ResearchSession.project_id == project_id
-        )
+        query = self.db.query(ResearchSession).filter(ResearchSession.project_id == project_id)
 
         if status:
             query = query.filter(ResearchSession.status == status)
 
-        return (
-            query.order_by(desc(ResearchSession.updated_at))
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+        return query.order_by(desc(ResearchSession.updated_at)).offset(skip).limit(limit).all()
 
     def get_by_goal(self, goal_id: UUID) -> list[ResearchSession]:
         """Get research sessions by goal ID."""
@@ -89,11 +82,7 @@ class ResearchSessionRepository:
 
     def count_by_project(self, project_id: UUID) -> int:
         """Count research sessions for a project."""
-        return (
-            self.db.query(func.count(ResearchSession.id))
-            .filter(ResearchSession.project_id == project_id)
-            .scalar()
-        )
+        return self.db.query(func.count(ResearchSession.id)).filter(ResearchSession.project_id == project_id).scalar()
 
     def get_active_sessions(self, user_id: UUID) -> list[ResearchSession]:
         """Get all active sessions for a user."""
@@ -124,11 +113,7 @@ class ResearchMessageRepository:
 
     def get_by_id(self, message_id: UUID) -> Optional[ResearchMessage]:
         """Get research message by ID."""
-        return (
-            self.db.query(ResearchMessage)
-            .filter(ResearchMessage.id == message_id)
-            .first()
-        )
+        return self.db.query(ResearchMessage).filter(ResearchMessage.id == message_id).first()
 
     def get_by_session(
         self,
@@ -148,15 +133,9 @@ class ResearchMessageRepository:
 
     def count_by_session(self, session_id: UUID) -> int:
         """Count messages in a session."""
-        return (
-            self.db.query(func.count(ResearchMessage.id))
-            .filter(ResearchMessage.session_id == session_id)
-            .scalar()
-        )
+        return self.db.query(func.count(ResearchMessage.id)).filter(ResearchMessage.session_id == session_id).scalar()
 
-    def get_latest_messages(
-        self, session_id: UUID, limit: int = 10
-    ) -> list[ResearchMessage]:
+    def get_latest_messages(self, session_id: UUID, limit: int = 10) -> list[ResearchMessage]:
         """Get latest N messages from a session."""
         return (
             self.db.query(ResearchMessage)
@@ -183,11 +162,7 @@ class ResearchFindingRepository:
 
     def get_by_id(self, finding_id: UUID) -> Optional[ResearchFinding]:
         """Get research finding by ID."""
-        return (
-            self.db.query(ResearchFinding)
-            .filter(ResearchFinding.id == finding_id)
-            .first()
-        )
+        return self.db.query(ResearchFinding).filter(ResearchFinding.id == finding_id).first()
 
     def get_by_session(
         self,
@@ -195,9 +170,7 @@ class ResearchFindingRepository:
         finding_type: Optional[str] = None,
     ) -> list[ResearchFinding]:
         """Get findings for a research session."""
-        query = self.db.query(ResearchFinding).filter(
-            ResearchFinding.session_id == session_id
-        )
+        query = self.db.query(ResearchFinding).filter(ResearchFinding.session_id == session_id)
 
         if finding_type:
             query = query.filter(ResearchFinding.finding_type == finding_type)
@@ -211,18 +184,12 @@ class ResearchFindingRepository:
         limit: int = 100,
     ) -> list[ResearchFinding]:
         """Get findings for all sessions in a project."""
-        query = (
-            self.db.query(ResearchFinding)
-            .join(ResearchSession)
-            .filter(ResearchSession.project_id == project_id)
-        )
+        query = self.db.query(ResearchFinding).join(ResearchSession).filter(ResearchSession.project_id == project_id)
 
         if finding_type:
             query = query.filter(ResearchFinding.finding_type == finding_type)
 
-        return (
-            query.order_by(desc(ResearchFinding.created_at)).limit(limit).all()
-        )
+        return query.order_by(desc(ResearchFinding.created_at)).limit(limit).all()
 
     def update(self, finding: ResearchFinding) -> ResearchFinding:
         """Update research finding."""
@@ -237,11 +204,7 @@ class ResearchFindingRepository:
 
     def count_by_session(self, session_id: UUID) -> int:
         """Count findings in a session."""
-        return (
-            self.db.query(func.count(ResearchFinding.id))
-            .filter(ResearchFinding.session_id == session_id)
-            .scalar()
-        )
+        return self.db.query(func.count(ResearchFinding.id)).filter(ResearchFinding.session_id == session_id).scalar()
 
     def count_by_type(self, session_id: UUID) -> dict[str, int]:
         """Count findings by type in a session."""

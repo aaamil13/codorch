@@ -87,9 +87,7 @@ class OpportunityGenerateRequest(BaseSchema):
     goal_id: Optional[UUID] = Field(None, description="Base on specific goal")
     context: Optional[str] = Field(None, description="Additional context")
     num_opportunities: int = Field(5, ge=1, le=10, description="Number to generate")
-    creativity_level: str = Field(
-        "balanced", description="Creativity level: conservative, balanced, creative"
-    )
+    creativity_level: str = Field("balanced", description="Creativity level: conservative, balanced, creative")
     include_scoring: bool = Field(True, description="Include automatic scoring")
 
 
@@ -120,9 +118,7 @@ class OpportunityCompareRequest(BaseSchema):
     """Request schema for opportunity comparison."""
 
     opportunity_ids: list[UUID] = Field(..., min_length=2, max_length=10)
-    criteria: list[str] = Field(
-        default_factory=lambda: ["feasibility", "impact", "innovation", "resources"]
-    )
+    criteria: list[str] = Field(default_factory=lambda: ["feasibility", "impact", "innovation", "resources"])
 
 
 class OpportunityComparison(BaseSchema):

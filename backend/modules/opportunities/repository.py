@@ -27,9 +27,7 @@ class OpportunityRepository:
         """Get opportunity by ID."""
         return self.db.query(Opportunity).filter(Opportunity.id == opportunity_id).first()
 
-    def get_by_project(
-        self, project_id: UUID, skip: int = 0, limit: int = 100
-    ) -> list[Opportunity]:
+    def get_by_project(self, project_id: UUID, skip: int = 0, limit: int = 100) -> list[Opportunity]:
         """Get all opportunities for a project."""
         return (
             self.db.query(Opportunity)
@@ -42,12 +40,7 @@ class OpportunityRepository:
 
     def get_by_goal(self, goal_id: UUID) -> list[Opportunity]:
         """Get opportunities related to a goal."""
-        return (
-            self.db.query(Opportunity)
-            .filter(Opportunity.goal_id == goal_id)
-            .order_by(desc(Opportunity.score))
-            .all()
-        )
+        return self.db.query(Opportunity).filter(Opportunity.goal_id == goal_id).order_by(desc(Opportunity.score)).all()
 
     def get_by_status(self, project_id: UUID, status: str) -> list[Opportunity]:
         """Get opportunities by status."""
@@ -62,9 +55,7 @@ class OpportunityRepository:
         """Get AI-generated opportunities."""
         return (
             self.db.query(Opportunity)
-            .filter(
-                and_(Opportunity.project_id == project_id, Opportunity.ai_generated == True)  # noqa: E712
-            )
+            .filter(and_(Opportunity.project_id == project_id, Opportunity.ai_generated == True))  # noqa: E712
             .order_by(desc(Opportunity.score))
             .all()
         )

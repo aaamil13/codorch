@@ -73,9 +73,7 @@ class AdvancedProjectTree:
         self._node_cache[node_id] = self.root
         return self.root
 
-    def add_child_node(
-        self, parent_id: UUID, node_type: str, data: dict[str, Any]
-    ) -> ProjectTreeNode:
+    def add_child_node(self, parent_id: UUID, node_type: str, data: dict[str, Any]) -> ProjectTreeNode:
         """Add child node to parent."""
         from uuid import uuid4
 
@@ -84,9 +82,7 @@ class AdvancedProjectTree:
             raise ValueError(f"Parent node {parent_id} not found")
 
         node_id = uuid4()
-        child = ProjectTreeNode(
-            node_id=node_id, node_type=node_type, data=data, parent_id=parent_id
-        )
+        child = ProjectTreeNode(node_id=node_id, node_type=node_type, data=data, parent_id=parent_id)
 
         parent.children.append(child)
         self._node_cache[node_id] = child
@@ -135,9 +131,7 @@ class AdvancedProjectTree:
         if include_siblings and node.parent_id:
             parent = self.get_node(node.parent_id)
             if parent:
-                context["siblings"] = [
-                    child.to_dict() for child in parent.children if child.id != node_id
-                ]
+                context["siblings"] = [child.to_dict() for child in parent.children if child.id != node_id]
 
         # Get children
         context["children"] = [child.to_dict() for child in node.children]
@@ -201,9 +195,7 @@ class AdvancedProjectTree:
 
         self._load_node_recursive(snapshot["root"], None)
 
-    def _load_node_recursive(
-        self, node_data: dict[str, Any], parent_id: Optional[UUID]
-    ) -> ProjectTreeNode:
+    def _load_node_recursive(self, node_data: dict[str, Any], parent_id: Optional[UUID]) -> ProjectTreeNode:
         """Recursively load nodes from snapshot."""
         from uuid import UUID as parse_uuid
 

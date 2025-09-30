@@ -72,9 +72,7 @@ class ArchitectureModuleRepository:
 
     def get_children(self, parent_id: UUID) -> list[ArchitectureModule]:
         """Get child modules of a parent."""
-        return (
-            self.db.query(ArchitectureModule).filter(ArchitectureModule.parent_id == parent_id).all()
-        )
+        return self.db.query(ArchitectureModule).filter(ArchitectureModule.parent_id == parent_id).all()
 
     def update(self, module_id: UUID, data: ArchitectureModuleUpdate) -> Optional[ArchitectureModule]:
         """Update architecture module."""
@@ -166,9 +164,7 @@ class ModuleDependencyRepository:
 
     def get_dependencies_from(self, module_id: UUID) -> list[ModuleDependency]:
         """Get dependencies FROM a module (what this module depends on)."""
-        return (
-            self.db.query(ModuleDependency).filter(ModuleDependency.from_module_id == module_id).all()
-        )
+        return self.db.query(ModuleDependency).filter(ModuleDependency.from_module_id == module_id).all()
 
     def get_dependencies_to(self, module_id: UUID) -> list[ModuleDependency]:
         """Get dependencies TO a module (what depends on this module)."""

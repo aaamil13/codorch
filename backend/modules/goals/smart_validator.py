@@ -63,9 +63,7 @@ class SMARTValidator:
         return min(score, 10.0)
 
     @staticmethod
-    def validate_measurable(
-        description: Optional[str], metrics: Optional[dict]
-    ) -> float:
+    def validate_measurable(description: Optional[str], metrics: Optional[dict]) -> float:
         """
         Validate if goal is measurable.
 
@@ -96,9 +94,7 @@ class SMARTValidator:
         return min(score, 10.0)
 
     @staticmethod
-    def validate_achievable(
-        description: Optional[str], title: str
-    ) -> float:
+    def validate_achievable(description: Optional[str], title: str) -> float:
         """
         Validate if goal is achievable.
 
@@ -136,9 +132,7 @@ class SMARTValidator:
         return min(max(score, 0.0), 10.0)
 
     @staticmethod
-    def validate_relevant(
-        title: str, description: Optional[str], category: Optional[str]
-    ) -> float:
+    def validate_relevant(title: str, description: Optional[str], category: Optional[str]) -> float:
         """
         Validate if goal is relevant.
 

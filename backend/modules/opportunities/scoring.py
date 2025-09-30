@@ -147,9 +147,7 @@ class OpportunityScorer:
         return min(score, 10.0)
 
     @staticmethod
-    def score_resources(
-        required_resources: Optional[dict], estimated_effort: Optional[str]
-    ) -> float:
+    def score_resources(required_resources: Optional[dict], estimated_effort: Optional[str]) -> float:
         """
         Score resource availability (0-10).
 
@@ -199,7 +197,7 @@ class OpportunityScorer:
         resources = cls.score_resources(required_resources, estimated_effort)
 
         # Weighted average (impact and feasibility more important)
-        overall = (feasibility * 0.3 + impact * 0.35 + innovation * 0.20 + resources * 0.15)
+        overall = feasibility * 0.3 + impact * 0.35 + innovation * 0.20 + resources * 0.15
 
         return {
             "feasibility_score": round(feasibility, 2),

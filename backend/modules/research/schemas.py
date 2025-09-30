@@ -48,9 +48,7 @@ class ResearchSessionResponse(ResearchSessionBase):
     id: UUID
     project_id: UUID
     status: str
-    context_summary: Optional[dict[str, Any]] = Field(
-        default=None, description="Aggregated context from RefMemTree"
-    )
+    context_summary: Optional[dict[str, Any]] = Field(default=None, description="Aggregated context from RefMemTree")
     message_count: int = Field(default=0, description="Number of messages")
     finding_count: int = Field(default=0, description="Number of findings")
     created_by: UUID
@@ -105,12 +103,8 @@ class ResearchFindingBase(BaseSchema):
     title: str = Field(..., min_length=1, max_length=255, description="Finding title")
     description: str = Field(..., min_length=1, description="Finding description")
     sources: list[str] = Field(default_factory=list, description="Source references")
-    confidence_score: float = Field(
-        default=0.0, ge=0.0, le=1.0, description="AI confidence score"
-    )
-    relevance_score: float = Field(
-        default=0.0, ge=0.0, le=1.0, description="Relevance to research context"
-    )
+    confidence_score: float = Field(default=0.0, ge=0.0, le=1.0, description="AI confidence score")
+    relevance_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Relevance to research context")
 
 
 class ResearchFindingCreate(ResearchFindingBase):
@@ -122,9 +116,7 @@ class ResearchFindingCreate(ResearchFindingBase):
 class ResearchFindingUpdate(BaseSchema):
     """Schema for updating a research finding."""
 
-    finding_type: Optional[str] = Field(
-        None, pattern="^(technical|market|user|competitor|other)$"
-    )
+    finding_type: Optional[str] = Field(None, pattern="^(technical|market|user|competitor|other)$")
     title: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, min_length=1)
     sources: Optional[list[str]] = None
@@ -190,9 +182,7 @@ class SemanticSearchRequest(BaseSchema):
     query: str = Field(..., min_length=1, description="Search query")
     project_id: Optional[UUID] = Field(None, description="Limit to project")
     session_id: Optional[UUID] = Field(None, description="Limit to session")
-    finding_types: Optional[list[str]] = Field(
-        None, description="Filter by finding types"
-    )
+    finding_types: Optional[list[str]] = Field(None, description="Filter by finding types")
     limit: int = Field(default=10, ge=1, le=100, description="Number of results")
 
 

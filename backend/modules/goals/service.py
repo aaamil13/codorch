@@ -60,9 +60,7 @@ class GoalService:
             category=goal_data.category,
             target_date=goal_data.target_date,
             priority=goal_data.priority,
-            metrics={"metrics": [m.model_dump() for m in goal_data.metrics]}
-            if goal_data.metrics
-            else None,
+            metrics={"metrics": [m.model_dump() for m in goal_data.metrics]} if goal_data.metrics else None,
             status="draft",
         )
 
@@ -94,9 +92,7 @@ class GoalService:
         """Get goal with subgoals."""
         return self.repository.get_by_id_with_subgoals(goal_id)
 
-    def list_goals(
-        self, project_id: UUID, skip: int = 0, limit: int = 100
-    ) -> list[Goal]:
+    def list_goals(self, project_id: UUID, skip: int = 0, limit: int = 100) -> list[Goal]:
         """List goals for project."""
         return self.repository.get_by_project(project_id, skip, limit)
 
@@ -172,9 +168,7 @@ class GoalService:
 
         self.repository.delete(goal)
 
-    async def analyze_goal(
-        self, goal_id: UUID, request: GoalAnalysisRequest
-    ) -> GoalAnalysisResponse:
+    async def analyze_goal(self, goal_id: UUID, request: GoalAnalysisRequest) -> GoalAnalysisResponse:
         """
         Analyze goal with AI.
 
@@ -248,9 +242,7 @@ class GoalService:
 
         return response
 
-    async def decompose_goal(
-        self, goal_id: UUID, request: GoalDecomposeRequest
-    ) -> GoalDecomposeResponse:
+    async def decompose_goal(self, goal_id: UUID, request: GoalDecomposeRequest) -> GoalDecomposeResponse:
         """
         Decompose goal into subgoals.
 

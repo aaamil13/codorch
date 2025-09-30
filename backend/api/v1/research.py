@@ -238,9 +238,7 @@ async def chat_with_research_team(
 
     # Get previous messages for context
     previous_messages = service.get_latest_messages(session_id=session_id, limit=10)
-    message_history = [
-        {"role": msg.role, "content": msg.content} for msg in reversed(previous_messages)
-    ]
+    message_history = [{"role": msg.role, "content": msg.content} for msg in reversed(previous_messages)]
 
     # Conduct research with AI team
     research_team = ResearchTeam()

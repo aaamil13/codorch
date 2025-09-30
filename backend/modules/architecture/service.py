@@ -260,10 +260,10 @@ class ArchitectureService:
 
         # Overall complexity (0-10 scale)
         overall_complexity = (
-            (module_count / 50.0 * 3) +  # More modules = more complex
-            (avg_dependencies / 5.0 * 3) +  # More dependencies = more complex
-            (max_depth / 5.0 * 2) +  # Deeper = more complex
-            (len(hotspots) / 5.0 * 2)  # More hotspots = more complex
+            (module_count / 50.0 * 3)  # More modules = more complex
+            + (avg_dependencies / 5.0 * 3)  # More dependencies = more complex
+            + (max_depth / 5.0 * 2)  # Deeper = more complex
+            + (len(hotspots) / 5.0 * 2)  # More hotspots = more complex
         )
         overall_complexity = min(10.0, overall_complexity)
 

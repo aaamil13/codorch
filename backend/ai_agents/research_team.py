@@ -28,9 +28,7 @@ class DomainAnalysis(BaseModel):
     """Domain analysis from DomainExpertAgent."""
 
     technical_feasibility: str = Field(description="Technical feasibility assessment")
-    architecture_recommendations: list[str] = Field(
-        description="Architecture and design recommendations"
-    )
+    architecture_recommendations: list[str] = Field(description="Architecture and design recommendations")
     best_practices: list[str] = Field(description="Industry best practices")
     risks: list[str] = Field(description="Potential risks and challenges")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence score")

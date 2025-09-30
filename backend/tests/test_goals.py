@@ -15,9 +15,7 @@ def auth_headers(client: TestClient, sample_user_data: dict[str, str]) -> dict[s
 
 
 @pytest.fixture
-def project_id(
-    client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]
-) -> str:
+def project_id(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> str:
     """Create a project and return its ID."""
     response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
     return response.json()["id"]
@@ -32,9 +30,7 @@ def test_create_goal(client: TestClient, auth_headers: dict[str, str], project_i
         "priority": "high",
     }
 
-    response = client.post(
-        f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers
-    )
+    response = client.post(f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers)
 
     assert response.status_code == 201
     data = response.json()
@@ -47,9 +43,7 @@ def test_list_goals(client: TestClient, auth_headers: dict[str, str], project_id
     """Test listing goals."""
     # Create a goal
     goal_data = {"title": "Test Goal", "description": "Test description"}
-    client.post(
-        f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers
-    )
+    client.post(f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers)
 
     # List goals
     response = client.get(f"/api/v1/goals/projects/{project_id}/goals", headers=auth_headers)
@@ -64,9 +58,7 @@ def test_get_goal(client: TestClient, auth_headers: dict[str, str], project_id: 
     """Test getting goal by ID."""
     # Create goal
     goal_data = {"title": "Test Goal", "description": "Test description"}
-    create_response = client.post(
-        f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers
-    )
+    create_response = client.post(f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers)
     goal_id = create_response.json()["id"]
 
     # Get goal
@@ -82,16 +74,12 @@ def test_update_goal(client: TestClient, auth_headers: dict[str, str], project_i
     """Test updating goal."""
     # Create goal
     goal_data = {"title": "Original Title", "description": "Original description"}
-    create_response = client.post(
-        f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers
-    )
+    create_response = client.post(f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers)
     goal_id = create_response.json()["id"]
 
     # Update goal
     update_data = {"title": "Updated Title", "priority": "high"}
-    response = client.put(
-        f"/api/v1/goals/goals/{goal_id}", json=update_data, headers=auth_headers
-    )
+    response = client.put(f"/api/v1/goals/goals/{goal_id}", json=update_data, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -103,9 +91,7 @@ def test_delete_goal(client: TestClient, auth_headers: dict[str, str], project_i
     """Test deleting goal."""
     # Create goal
     goal_data = {"title": "To Delete", "description": "Will be deleted"}
-    create_response = client.post(
-        f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers
-    )
+    create_response = client.post(f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers)
     goal_id = create_response.json()["id"]
 
     # Delete goal
@@ -127,16 +113,12 @@ def test_analyze_goal(client: TestClient, auth_headers: dict[str, str], project_
         "description": "Achieve 20% revenue growth in Q4 2025",
         "category": "business",
     }
-    create_response = client.post(
-        f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers
-    )
+    create_response = client.post(f"/api/v1/goals/projects/{project_id}/goals", json=goal_data, headers=auth_headers)
     goal_id = create_response.json()["id"]
 
     # Analyze goal
     analysis_request = {"include_suggestions": True, "include_metrics": True}
-    response = client.post(
-        f"/api/v1/goals/goals/{goal_id}/analyze", json=analysis_request, headers=auth_headers
-    )
+    response = client.post(f"/api/v1/goals/goals/{goal_id}/analyze", json=analysis_request, headers=auth_headers)
 
     # This might fail if AI is not available, so we just check structure
     if response.status_code == 200:

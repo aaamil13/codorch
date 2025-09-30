@@ -14,9 +14,7 @@ class EventBus:
 
     def __init__(self) -> None:
         """Initialize event bus."""
-        self._subscribers: dict[str, list[Callable[..., Coroutine[Any, Any, None]]]] = (
-            defaultdict(list)
-        )
+        self._subscribers: dict[str, list[Callable[..., Coroutine[Any, Any, None]]]] = defaultdict(list)
 
     def subscribe(self, event_type: str, handler: Callable[..., Coroutine[Any, Any, None]]) -> None:
         """
@@ -28,9 +26,7 @@ class EventBus:
         """
         self._subscribers[event_type].append(handler)
 
-    def unsubscribe(
-        self, event_type: str, handler: Callable[..., Coroutine[Any, Any, None]]
-    ) -> None:
+    def unsubscribe(self, event_type: str, handler: Callable[..., Coroutine[Any, Any, None]]) -> None:
         """
         Unsubscribe from event type.
 

@@ -47,13 +47,7 @@ def list_projects(
     current_user: User = Depends(get_current_active_user),
 ) -> list[ProjectResponse]:
     """List user's projects."""
-    projects = (
-        db.query(Project)
-        .filter(Project.created_by == current_user.id)
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    projects = db.query(Project).filter(Project.created_by == current_user.id).offset(skip).limit(limit).all()
 
     return [ProjectResponse.model_validate(project) for project in projects]
 

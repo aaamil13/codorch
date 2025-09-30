@@ -68,9 +68,7 @@ class CreativeIdeaGenerator:
         self.ai_client = get_ai_client()
         self.temperature = 0.9  # High creativity
 
-    async def generate_ideas(
-        self, context: str, goal: Optional[str], num_ideas: int = 5
-    ) -> GeneratorResult:
+    async def generate_ideas(self, context: str, goal: Optional[str], num_ideas: int = 5) -> GeneratorResult:
         """Generate creative opportunity ideas."""
         system_prompt = """You are a highly creative innovation consultant.
 
@@ -114,9 +112,7 @@ Focus on CREATIVE and INNOVATIVE ideas."""
             content = self.ai_client.extract_text_from_completion(response)
             ideas = self._parse_ideas(content)
 
-            return GeneratorResult(
-                ideas=ideas, creativity_score=8.5, generator_type="creative"
-            )
+            return GeneratorResult(ideas=ideas, creativity_score=8.5, generator_type="creative")
 
         except Exception:
             # Fallback
@@ -152,24 +148,14 @@ Focus on CREATIVE and INNOVATIVE ideas."""
                     ideas.append(
                         OpportunityIdea(
                             title=current_idea.get("title", "Opportunity")[:100],
-                            description=current_idea.get(
-                                "description", "Innovative opportunity"
-                            )[:500],
+                            description=current_idea.get("description", "Innovative opportunity")[:500],
                             category=current_idea.get("category", "business")[:50],
-                            target_market=current_idea.get("target_market", "General market")[
-                                :200
-                            ],
-                            value_proposition=current_idea.get(
-                                "value_proposition", "Value creation"
-                            )[:300],
+                            target_market=current_idea.get("target_market", "General market")[:200],
+                            value_proposition=current_idea.get("value_proposition", "Value creation")[:300],
                             estimated_effort=current_idea.get("estimated_effort", "medium")[:50],
-                            estimated_timeline=current_idea.get("estimated_timeline", "3 months")[
-                                :50
-                            ],
+                            estimated_timeline=current_idea.get("estimated_timeline", "3 months")[:50],
                             innovation_level=current_idea.get("innovation_level", "moderate")[:50],
-                            reasoning=current_idea.get("reasoning", "Strategic opportunity")[
-                                :300
-                            ],
+                            reasoning=current_idea.get("reasoning", "Strategic opportunity")[:300],
                         )
                     )
                     current_idea = {}
@@ -196,19 +182,23 @@ Focus on CREATIVE and INNOVATIVE ideas."""
                 elif "reasoning" in key_lower:
                     current_idea["reasoning"] = value.strip()
 
-        return ideas[:5] if ideas else [
-            OpportunityIdea(
-                title="Generated Opportunity",
-                description="AI-generated opportunity",
-                category="business",
-                target_market="Market segment",
-                value_proposition="Value delivery",
-                estimated_effort="medium",
-                estimated_timeline="3 months",
-                innovation_level="moderate",
-                reasoning="Strategic fit",
-            )
-        ]
+        return (
+            ideas[:5]
+            if ideas
+            else [
+                OpportunityIdea(
+                    title="Generated Opportunity",
+                    description="AI-generated opportunity",
+                    category="business",
+                    target_market="Market segment",
+                    value_proposition="Value delivery",
+                    estimated_effort="medium",
+                    estimated_timeline="3 months",
+                    innovation_level="moderate",
+                    reasoning="Strategic fit",
+                )
+            ]
+        )
 
 
 class StructuredIdeaGenerator:
@@ -223,9 +213,7 @@ class StructuredIdeaGenerator:
         self.ai_client = get_ai_client()
         self.temperature = 0.5  # Balanced
 
-    async def generate_ideas(
-        self, context: str, goal: Optional[str], num_ideas: int = 5
-    ) -> GeneratorResult:
+    async def generate_ideas(self, context: str, goal: Optional[str], num_ideas: int = 5) -> GeneratorResult:
         """Generate structured opportunity ideas."""
         system_prompt = """You are a strategic business consultant.
 
@@ -259,9 +247,7 @@ Focus on PRACTICAL and ACHIEVABLE ideas."""
             content = self.ai_client.extract_text_from_completion(response)
             ideas = self._parse_ideas(content)
 
-            return GeneratorResult(
-                ideas=ideas, creativity_score=6.0, generator_type="structured"
-            )
+            return GeneratorResult(ideas=ideas, creativity_score=6.0, generator_type="structured")
 
         except Exception:
             return GeneratorResult(
@@ -288,9 +274,7 @@ class OpportunityAnalyzer:
         """Initialize analyzer."""
         self.ai_client = get_advanced_ai_client()  # Use advanced model
 
-    async def analyze_opportunity(
-        self, opportunity: OpportunityIdea, opportunity_id: int
-    ) -> AnalysisResult:
+    async def analyze_opportunity(self, opportunity: OpportunityIdea, opportunity_id: int) -> AnalysisResult:
         """Analyze a single opportunity."""
         system_prompt = """You are an expert business analyst.
 

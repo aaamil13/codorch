@@ -139,9 +139,7 @@ class AIClient:
                     await asyncio.sleep(wait_time)
                 continue
 
-        raise AIClientError(
-            f"Failed after {max_retries} retries: {last_error}"
-        ) from last_error
+        raise AIClientError(f"Failed after {max_retries} retries: {last_error}") from last_error
 
     def extract_text_from_completion(self, completion: ChatCompletion) -> str:
         """Extract text content from completion response."""

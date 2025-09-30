@@ -31,9 +31,7 @@ class OpportunityService:
         self.repository = OpportunityRepository(db)
         self.scorer = OpportunityScorer()
 
-    def create_opportunity(
-        self, project_id: UUID, opportunity_data: OpportunityCreate
-    ) -> Opportunity:
+    def create_opportunity(self, project_id: UUID, opportunity_data: OpportunityCreate) -> Opportunity:
         """Create new opportunity."""
         # Verify project exists
         project = self.db.query(Project).filter(Project.id == project_id).first()
@@ -85,15 +83,11 @@ class OpportunityService:
         """Get opportunity by ID."""
         return self.repository.get_by_id(opportunity_id)
 
-    def list_opportunities(
-        self, project_id: UUID, skip: int = 0, limit: int = 100
-    ) -> list[Opportunity]:
+    def list_opportunities(self, project_id: UUID, skip: int = 0, limit: int = 100) -> list[Opportunity]:
         """List opportunities for project."""
         return self.repository.get_by_project(project_id, skip, limit)
 
-    def update_opportunity(
-        self, opportunity_id: UUID, opportunity_update: OpportunityUpdate
-    ) -> Opportunity:
+    def update_opportunity(self, opportunity_id: UUID, opportunity_update: OpportunityUpdate) -> Opportunity:
         """Update opportunity."""
         opportunity = self.repository.get_by_id(opportunity_id)
         if not opportunity:
@@ -277,13 +271,15 @@ class OpportunityService:
                 }
                 for i, opp in enumerate(sorted_opps)
             ],
-            "winner": {
-                "id": str(sorted_opps[0].id),
-                "title": sorted_opps[0].title,
-                "score": sorted_opps[0].score,
-            }
-            if sorted_opps
-            else None,
+            "winner": (
+                {
+                    "id": str(sorted_opps[0].id),
+                    "title": sorted_opps[0].title,
+                    "score": sorted_opps[0].score,
+                }
+                if sorted_opps
+                else None
+            ),
         }
 
         return comparison

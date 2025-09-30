@@ -12,9 +12,7 @@ def auth_headers(client: TestClient, sample_user_data: dict[str, str]) -> dict[s
     return {"Authorization": f"Bearer {token}"}
 
 
-def test_create_project(
-    client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]
-) -> None:
+def test_create_project(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
     """Test project creation."""
     response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
 
@@ -25,9 +23,7 @@ def test_create_project(
     assert "id" in data
 
 
-def test_list_projects(
-    client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]
-) -> None:
+def test_list_projects(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
     """Test listing projects."""
     # Create a project
     client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
@@ -41,14 +37,10 @@ def test_list_projects(
     assert len(data) >= 1
 
 
-def test_get_project(
-    client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]
-) -> None:
+def test_get_project(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
     """Test getting project by ID."""
     # Create project
-    create_response = client.post(
-        "/api/v1/projects/", json=sample_project_data, headers=auth_headers
-    )
+    create_response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
     project_id = create_response.json()["id"]
 
     # Get project
@@ -60,35 +52,25 @@ def test_get_project(
     assert data["name"] == sample_project_data["name"]
 
 
-def test_update_project(
-    client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]
-) -> None:
+def test_update_project(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
     """Test updating project."""
     # Create project
-    create_response = client.post(
-        "/api/v1/projects/", json=sample_project_data, headers=auth_headers
-    )
+    create_response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
     project_id = create_response.json()["id"]
 
     # Update project
     update_data = {"name": "Updated Project Name"}
-    response = client.put(
-        f"/api/v1/projects/{project_id}", json=update_data, headers=auth_headers
-    )
+    response = client.put(f"/api/v1/projects/{project_id}", json=update_data, headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
     assert data["name"] == update_data["name"]
 
 
-def test_delete_project(
-    client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]
-) -> None:
+def test_delete_project(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
     """Test deleting project."""
     # Create project
-    create_response = client.post(
-        "/api/v1/projects/", json=sample_project_data, headers=auth_headers
-    )
+    create_response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
     project_id = create_response.json()["id"]
 
     # Delete project

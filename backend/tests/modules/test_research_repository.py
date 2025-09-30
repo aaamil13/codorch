@@ -96,9 +96,7 @@ class TestResearchSessionRepository:
         assert len(sessions) == 3
         assert all(s.project_id == test_project.id for s in sessions)
 
-    def test_get_by_project_with_status_filter(
-        self, session_repo, test_project, test_user
-    ):
+    def test_get_by_project_with_status_filter(self, session_repo, test_project, test_user):
         """Test filtering sessions by status."""
         active_session = ResearchSession(
             project_id=test_project.id,
@@ -115,9 +113,7 @@ class TestResearchSessionRepository:
         session_repo.create(active_session)
         session_repo.create(archived_session)
 
-        active_sessions = session_repo.get_by_project(
-            test_project.id, status="active"
-        )
+        active_sessions = session_repo.get_by_project(test_project.id, status="active")
 
         assert len(active_sessions) == 1
         assert active_sessions[0].status == "active"
@@ -198,9 +194,7 @@ class TestResearchMessageRepository:
 
         assert len(messages) == 3
 
-    def test_get_latest_messages(
-        self, message_repo, session_repo, test_project, test_user
-    ):
+    def test_get_latest_messages(self, message_repo, session_repo, test_project, test_user):
         """Test getting latest messages."""
         from backend.db.models import ResearchMessage
 
@@ -223,9 +217,7 @@ class TestResearchMessageRepository:
 
         assert len(latest) == 3
 
-    def test_count_by_session(
-        self, message_repo, session_repo, test_project, test_user
-    ):
+    def test_count_by_session(self, message_repo, session_repo, test_project, test_user):
         """Test counting messages."""
         from backend.db.models import ResearchMessage
 
@@ -252,9 +244,7 @@ class TestResearchMessageRepository:
 class TestResearchFindingRepository:
     """Test ResearchFindingRepository."""
 
-    def test_create_finding(
-        self, finding_repo, session_repo, test_project, test_user
-    ):
+    def test_create_finding(self, finding_repo, session_repo, test_project, test_user):
         """Test creating finding."""
         from backend.db.models import ResearchFinding
 
@@ -301,9 +291,7 @@ class TestResearchFindingRepository:
 
         assert len(findings) == 3
 
-    def test_get_by_session_with_type_filter(
-        self, finding_repo, session_repo, test_project, test_user
-    ):
+    def test_get_by_session_with_type_filter(self, finding_repo, session_repo, test_project, test_user):
         """Test filtering findings by type."""
         from backend.db.models import ResearchFinding
 
@@ -329,16 +317,12 @@ class TestResearchFindingRepository:
         finding_repo.create(technical)
         finding_repo.create(market)
 
-        technical_findings = finding_repo.get_by_session(
-            session.id, finding_type="technical"
-        )
+        technical_findings = finding_repo.get_by_session(session.id, finding_type="technical")
 
         assert len(technical_findings) == 1
         assert technical_findings[0].finding_type == "technical"
 
-    def test_get_high_confidence_findings(
-        self, finding_repo, session_repo, test_project, test_user
-    ):
+    def test_get_high_confidence_findings(self, finding_repo, session_repo, test_project, test_user):
         """Test getting high-confidence findings."""
         from backend.db.models import ResearchFinding
 
@@ -366,9 +350,7 @@ class TestResearchFindingRepository:
         finding_repo.create(high_conf)
         finding_repo.create(low_conf)
 
-        high_findings = finding_repo.get_high_confidence_findings(
-            session.id, min_confidence=0.7
-        )
+        high_findings = finding_repo.get_high_confidence_findings(session.id, min_confidence=0.7)
 
         assert len(high_findings) == 1
         assert high_findings[0].confidence_score >= 0.7

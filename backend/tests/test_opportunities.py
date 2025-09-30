@@ -23,9 +23,7 @@ def test_score_feasibility_high():
 
 def test_score_feasibility_low():
     """Test low feasibility scoring."""
-    score = OpportunityScorer.score_feasibility(
-        description=None, estimated_effort=None, required_resources=None
-    )
+    score = OpportunityScorer.score_feasibility(description=None, estimated_effort=None, required_resources=None)
     assert score <= 6.0
 
 
@@ -114,9 +112,7 @@ async def test_list_opportunities(client: TestClient, auth_headers: dict, projec
     )
 
     # List opportunities
-    response = client.get(
-        f"/api/v1/opportunities/projects/{project_id}/opportunities", headers=auth_headers
-    )
+    response = client.get(f"/api/v1/opportunities/projects/{project_id}/opportunities", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -140,9 +136,7 @@ async def test_get_opportunity(client: TestClient, auth_headers: dict, project_i
     opportunity_id = create_response.json()["id"]
 
     # Get opportunity
-    response = client.get(
-        f"/api/v1/opportunities/opportunities/{opportunity_id}", headers=auth_headers
-    )
+    response = client.get(f"/api/v1/opportunities/opportunities/{opportunity_id}", headers=auth_headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -197,16 +191,12 @@ async def test_delete_opportunity(client: TestClient, auth_headers: dict, projec
     opportunity_id = create_response.json()["id"]
 
     # Delete opportunity
-    response = client.delete(
-        f"/api/v1/opportunities/opportunities/{opportunity_id}", headers=auth_headers
-    )
+    response = client.delete(f"/api/v1/opportunities/opportunities/{opportunity_id}", headers=auth_headers)
 
     assert response.status_code == 204
 
     # Verify deleted
-    get_response = client.get(
-        f"/api/v1/opportunities/opportunities/{opportunity_id}", headers=auth_headers
-    )
+    get_response = client.get(f"/api/v1/opportunities/opportunities/{opportunity_id}", headers=auth_headers)
     assert get_response.status_code == 404
 
 
@@ -322,7 +312,5 @@ async def test_compare_opportunities(client: TestClient, auth_headers: dict, pro
 async def test_opportunity_not_found(client: TestClient, auth_headers: dict):
     """Test 404 for non-existent opportunity."""
     fake_id = str(uuid4())
-    response = client.get(
-        f"/api/v1/opportunities/opportunities/{fake_id}", headers=auth_headers
-    )
+    response = client.get(f"/api/v1/opportunities/opportunities/{fake_id}", headers=auth_headers)
     assert response.status_code == 404

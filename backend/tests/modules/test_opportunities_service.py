@@ -129,9 +129,7 @@ class TestOpportunityService:
             count=3,
         )
 
-        with patch(
-            "backend.modules.opportunities.service.OpportunityTeam"
-        ) as mock_team_class:
+        with patch("backend.modules.opportunities.service.OpportunityTeam") as mock_team_class:
             mock_team = MagicMock()
             mock_team.generate_opportunities = AsyncMock(
                 return_value={
@@ -178,9 +176,7 @@ class TestOpportunityService:
             opportunity_ids=[opp1.id, opp2.id],
         )
 
-        with patch(
-            "backend.modules.opportunities.service.OpportunityTeam"
-        ) as mock_team_class:
+        with patch("backend.modules.opportunities.service.OpportunityTeam") as mock_team_class:
             mock_team = MagicMock()
             mock_team.compare_opportunities = AsyncMock(
                 return_value={

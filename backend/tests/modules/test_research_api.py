@@ -392,8 +392,6 @@ class TestResearchAPI:
 
     def test_unauthorized_access(self, client, test_project):
         """Test accessing without authentication."""
-        response = client.get(
-            f"/api/v1/research/sessions?project_id={test_project.id}"
-        )
+        response = client.get(f"/api/v1/research/sessions?project_id={test_project.id}")
 
         assert response.status_code == 401

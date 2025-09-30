@@ -104,9 +104,7 @@ class TestGoalRepository:
             )
         )
 
-        business_goals = goal_repo.get_by_project(
-            test_project.id, category="business"
-        )
+        business_goals = goal_repo.get_by_project(test_project.id, category="business")
 
         assert len(business_goals) == 1
         assert business_goals[0].category == "business"

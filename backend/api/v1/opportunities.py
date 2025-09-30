@@ -138,9 +138,7 @@ def delete_opportunity(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post(
-    "/projects/{project_id}/opportunities/generate", response_model=OpportunityGenerateResponse
-)
+@router.post("/projects/{project_id}/opportunities/generate", response_model=OpportunityGenerateResponse)
 async def generate_opportunities(
     project_id: UUID,
     request: OpportunityGenerateRequest,

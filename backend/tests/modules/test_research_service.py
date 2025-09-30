@@ -77,9 +77,7 @@ class TestResearchService:
 
         assert len(sessions) == 3
 
-    def test_list_sessions_with_status_filter(
-        self, research_service, test_project, test_user
-    ):
+    def test_list_sessions_with_status_filter(self, research_service, test_project, test_user):
         """Test filtering sessions by status."""
         # Create active session
         data1 = ResearchSessionCreate(
@@ -96,9 +94,7 @@ class TestResearchService:
         session2 = research_service.create_session(data2, test_user)
         research_service.archive_session(session2.id)
 
-        active_sessions = research_service.list_sessions(
-            test_project.id, status="active"
-        )
+        active_sessions = research_service.list_sessions(test_project.id, status="active")
 
         assert len(active_sessions) == 1
         assert active_sessions[0].status == "active"
@@ -129,9 +125,7 @@ class TestResearchService:
             content="Test message",
         )
 
-        message = research_service.create_message(
-            session.id, message_data, metadata={"test": "data"}
-        )
+        message = research_service.create_message(session.id, message_data, metadata={"test": "data"})
 
         assert message.id is not None
         assert message.content == "Test message"
@@ -199,9 +193,7 @@ class TestResearchService:
 
         assert len(findings) == 3
 
-    def test_get_high_confidence_findings(
-        self, research_service, test_project, test_user
-    ):
+    def test_get_high_confidence_findings(self, research_service, test_project, test_user):
         """Test getting high-confidence findings."""
         session_data = ResearchSessionCreate(
             project_id=test_project.id,
@@ -231,16 +223,12 @@ class TestResearchService:
             )
         )
 
-        high_findings = research_service.get_high_confidence_findings(
-            session.id, min_confidence=0.7
-        )
+        high_findings = research_service.get_high_confidence_findings(session.id, min_confidence=0.7)
 
         assert len(high_findings) == 1
         assert high_findings[0].confidence_score >= 0.7
 
-    def test_get_session_statistics(
-        self, research_service, test_project, test_user
-    ):
+    def test_get_session_statistics(self, research_service, test_project, test_user):
         """Test getting session statistics."""
         session_data = ResearchSessionCreate(
             project_id=test_project.id,

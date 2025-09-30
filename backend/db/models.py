@@ -56,9 +56,7 @@ class Project(Base):
     owner: Mapped["User"] = relationship("User", back_populates="projects")
     tree_nodes: Mapped[list["TreeNode"]] = relationship("TreeNode", back_populates="project")
     goals: Mapped[list["Goal"]] = relationship("Goal", back_populates="project")
-    opportunities: Mapped[list["Opportunity"]] = relationship(
-        "Opportunity", back_populates="project"
-    )
+    opportunities: Mapped[list["Opportunity"]] = relationship("Opportunity", back_populates="project")
 
 
 class TreeNode(Base):
@@ -85,9 +83,7 @@ class TreeNode(Base):
 
     # Relationships
     project: Mapped["Project"] = relationship("Project", back_populates="tree_nodes")
-    parent: Mapped[Optional["TreeNode"]] = relationship(
-        "TreeNode", remote_side=[id], back_populates="children"
-    )
+    parent: Mapped[Optional["TreeNode"]] = relationship("TreeNode", remote_side=[id], back_populates="children")
     children: Mapped[list["TreeNode"]] = relationship("TreeNode", back_populates="parent")
 
 
@@ -142,9 +138,7 @@ class Goal(Base):
 
     # Relationships
     project: Mapped["Project"] = relationship("Project", back_populates="goals")
-    parent_goal: Mapped[Optional["Goal"]] = relationship(
-        "Goal", remote_side=[id], back_populates="subgoals"
-    )
+    parent_goal: Mapped[Optional["Goal"]] = relationship("Goal", remote_side=[id], back_populates="subgoals")
     subgoals: Mapped[list["Goal"]] = relationship("Goal", back_populates="parent_goal")
 
 
@@ -192,9 +186,7 @@ class Opportunity(Base):
     # Validation and approval
     status: Mapped[str] = mapped_column(String(50), default="proposed", nullable=False)
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
-    )
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
@@ -238,9 +230,7 @@ class ResearchSession(Base):
     )
 
     # Timestamps
-    created_by: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
-    )
+    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
@@ -294,9 +284,7 @@ class ResearchFinding(Base):
     )
 
     # Finding content
-    finding_type: Mapped[str] = mapped_column(
-        String(50), nullable=False
-    )  # technical, market, user, competitor, other
+    finding_type: Mapped[str] = mapped_column(String(50), nullable=False)  # technical, market, user, competitor, other
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -358,9 +346,7 @@ class ArchitectureModule(Base):
     # Status and approval
     status: Mapped[str] = mapped_column(String(50), default="draft", nullable=False)  # draft, approved, implemented
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
-    )
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
 
     # Metadata (technologies, patterns, notes, etc.)
     module_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
@@ -450,9 +436,7 @@ class ArchitectureRule(Base):
 
     # Rule information
     level: Mapped[str] = mapped_column(String(50), nullable=False)  # global, module, component
-    rule_type: Mapped[str] = mapped_column(
-        String(50), nullable=False
-    )  # naming, dependency, layer, tech, security
+    rule_type: Mapped[str] = mapped_column(String(50), nullable=False)  # naming, dependency, layer, tech, security
     rule_definition: Mapped[dict] = mapped_column(JSON, nullable=False)  # Rule specification
 
     # AI and status
@@ -515,9 +499,7 @@ class Requirement(Base):
     status: Mapped[str] = mapped_column(
         String(50), default="draft", nullable=False
     )  # draft, validated, approved, implemented
-    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
-    )
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # Timestamps
@@ -525,9 +507,7 @@ class Requirement(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
     )
-    created_by: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
-    )
+    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
 
     # Relationships
     project: Mapped["Project"] = relationship("Project")
@@ -553,9 +533,7 @@ class TechnologyRecommendation(Base):
     )
 
     # Recommendation
-    technology_type: Mapped[str] = mapped_column(
-        String(50), nullable=False
-    )  # framework, library, database, tool, etc.
+    technology_type: Mapped[str] = mapped_column(String(50), nullable=False)  # framework, library, database, tool, etc.
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     version: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     reasoning: Mapped[str] = mapped_column(Text, nullable=False)

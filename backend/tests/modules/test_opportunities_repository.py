@@ -102,16 +102,12 @@ class TestOpportunityRepository:
         )
 
         # Filter by category
-        product_opps = opp_repo.get_by_project(
-            test_project.id, category="product"
-        )
+        product_opps = opp_repo.get_by_project(test_project.id, category="product")
         assert len(product_opps) == 1
         assert product_opps[0].category == "product"
 
         # Filter by AI generated
-        ai_opps = opp_repo.get_by_project(
-            test_project.id, ai_generated=True
-        )
+        ai_opps = opp_repo.get_by_project(test_project.id, ai_generated=True)
         assert len(ai_opps) == 1
         assert ai_opps[0].ai_generated is True
 

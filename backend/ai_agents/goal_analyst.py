@@ -135,16 +135,13 @@ Provide:
         lines = content.strip().split("\n")
 
         result = GoalAnalysisResult(
-            is_smart_compliant="smart compliant" in content.lower()
-            or "meets smart" in content.lower(),
+            is_smart_compliant="smart compliant" in content.lower() or "meets smart" in content.lower(),
             specific_feedback=self._extract_criterion_feedback(content, "specific"),
             measurable_feedback=self._extract_criterion_feedback(content, "measurable"),
             achievable_feedback=self._extract_criterion_feedback(content, "achievable"),
             relevant_feedback=self._extract_criterion_feedback(content, "relevant"),
             time_bound_feedback=self._extract_criterion_feedback(content, "time"),
-            overall_feedback=[line.strip("- ") for line in lines if line.strip().startswith("-")][
-                :3
-            ],
+            overall_feedback=[line.strip("- ") for line in lines if line.strip().startswith("-")][:3],
             suggestions=self._extract_section(content, "suggestion"),
             strengths=self._extract_section(content, "strength"),
             weaknesses=self._extract_section(content, "weakness"),
@@ -332,11 +329,7 @@ For each subgoal provide:
             if not line:
                 continue
 
-            if (
-                line.startswith("-")
-                or line.startswith("•")
-                or (line[0].isdigit() and "." in line[:3])
-            ):
+            if line.startswith("-") or line.startswith("•") or (line[0].isdigit() and "." in line[:3]):
                 # New subgoal
                 if current_subgoal:
                     subgoals.append(current_subgoal)

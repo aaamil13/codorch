@@ -35,9 +35,7 @@ def test_add_child_node() -> None:
     tree = AdvancedProjectTree(project_id)
 
     root = tree.create_root_node(node_type="goal", data={"title": "Main Goal"})
-    child = tree.add_child_node(
-        parent_id=root.id, node_type="opportunity", data={"title": "Opportunity 1"}
-    )
+    child = tree.add_child_node(parent_id=root.id, node_type="opportunity", data={"title": "Opportunity 1"})
 
     assert child.parent_id == root.id
     assert child in root.children
@@ -50,12 +48,8 @@ def test_get_smart_context() -> None:
     tree = AdvancedProjectTree(project_id)
 
     root = tree.create_root_node(node_type="goal", data={"title": "Main Goal"})
-    child1 = tree.add_child_node(
-        parent_id=root.id, node_type="opportunity", data={"title": "Opportunity 1"}
-    )
-    child2 = tree.add_child_node(
-        parent_id=root.id, node_type="opportunity", data={"title": "Opportunity 2"}
-    )
+    child1 = tree.add_child_node(parent_id=root.id, node_type="opportunity", data={"title": "Opportunity 1"})
+    child2 = tree.add_child_node(parent_id=root.id, node_type="opportunity", data={"title": "Opportunity 2"})
 
     context = tree.get_smart_context(child1.id)
 
