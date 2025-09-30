@@ -550,8 +550,6 @@ def validate_module_rules(
     """
     service = ArchitectureService(db)
     return service.validate_module_rules(module_id)
-<<<<<<< Current (Your changes)
-=======
 
 
 # ============================================================================
@@ -594,4 +592,3 @@ async def execute_ai_architecture_plan(
     result = await execute_ai_plan(project_id, plan, db, dry_run=dry_run)
 
     return result
->>>>>>> Incoming (Background Agent changes)
