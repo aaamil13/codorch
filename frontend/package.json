@@ -19,6 +19,10 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.9",
+    "@vue-flow/background": "^1.3.2",
+    "@vue-flow/controls": "^1.1.3",
+    "@vue-flow/core": "^1.46.5",
+    "@vue-flow/minimap": "^1.5.4",
     "axios": "^1.6.5",
     "pinia": "^2.1.7",
     "quasar": "^2.18.5",
