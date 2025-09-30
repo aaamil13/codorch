@@ -15,6 +15,10 @@ api_router.include_router(opportunities.router, prefix="/opportunities", tags=["
 api_router.include_router(research.router, prefix="/research", tags=["research"])
 api_router.include_router(architecture.router, prefix="/architecture", tags=["architecture"])
 <<<<<<< Current (Your changes)
+<<<<<<< Current (Your changes)
+=======
+api_router.include_router(requirements.router, prefix="/requirements", tags=["requirements"])
+>>>>>>> Incoming (Background Agent changes)
 =======
 api_router.include_router(requirements.router, prefix="/requirements", tags=["requirements"])
 >>>>>>> Incoming (Background Agent changes)

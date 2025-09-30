@@ -596,3 +596,90 @@ class APISpecification(Base):
 
     # Relationships
     requirement: Mapped["Requirement"] = relationship("Requirement", back_populates="api_specifications")
+<<<<<<< Current (Your changes)
+=======
+
+
+class CodeGenerationSession(Base):
+    """Code generation session model for Module 6."""
+
+    __tablename__ = "code_generation_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    architecture_module_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("architecture_modules.id", ondelete="SET NULL"), nullable=True
+    )
+
+    # Status workflow
+    status: Mapped[str] = mapped_column(
+        String(50), default="validating", nullable=False
+    )  # validating, ready, generating_scaffold, reviewing_scaffold, generating_code, reviewing_code, generating_tests, completed, failed
+
+    # Generation data
+    validation_result: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    scaffold_code: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    generated_code: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    test_code: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    documentation: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Approval
+    human_approved_scaffold: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    human_approved_code: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    approved_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    approved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Error handling
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project")
+    module: Mapped[Optional["ArchitectureModule"]] = relationship("ArchitectureModule")
+    approver: Mapped[Optional["User"]] = relationship("User")
+    generated_files: Mapped[list["GeneratedFile"]] = relationship(
+        "GeneratedFile", back_populates="session", cascade="all, delete-orphan"
+    )
+
+
+class GeneratedFile(Base):
+    """Generated file model for Module 6."""
+
+    __tablename__ = "generated_files"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("code_generation_sessions.id", ondelete="CASCADE"), nullable=False
+    )
+
+    # File info
+    file_path: Mapped[str] = mapped_column(String(500), nullable=False)
+    file_type: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # source, test, config, documentation
+    language: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # AI & Review
+    ai_generated: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    review_status: Mapped[str] = mapped_column(
+        String(50), default="pending", nullable=False
+    )  # pending, approved, rejected
+    review_comments: Mapped[Optional[list]] = mapped_column(JSON, nullable=True, default=list)
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    session: Mapped["CodeGenerationSession"] = relationship("CodeGenerationSession", back_populates="generated_files")
+>>>>>>> Incoming (Background Agent changes)
