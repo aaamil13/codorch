@@ -57,7 +57,16 @@ class ArchitectureService:
                 # Set level to parent level + 1
                 data.level = parent.level + 1
 
-        return self.module_repo.create(data)
+        module = self.module_repo.create(data)
+        
+        # ⭐ ACTIVATE RefMemTree: Auto-sync module with rules
+        try:
+            self.sync_module_to_refmemtree(module)
+        except Exception as e:
+            # Non-blocking if RefMemTree fails
+            print(f"RefMemTree sync warning: {e}")
+        
+        return module
 
     def get_module(self, module_id: UUID) -> Optional[ArchitectureModule]:
         """Get module by ID."""
@@ -91,7 +100,21 @@ class ArchitectureService:
         return self.module_repo.update(module_id, data)
 
     def delete_module(self, module_id: UUID) -> bool:
-        """Delete module."""
+        """Delete module with RefMemTree impact check."""
+        # ⭐ ACTIVATE RefMemTree: Check impact before deleting
+        try:
+            impact = self.analyze_module_change_impact_advanced(module_id, "delete")
+            
+            # Block deletion if high impact
+            if impact.get('high_impact_count', 0) > 0:
+                raise ValueError(
+                    f"⚠️ Cannot delete: {impact['high_impact_count']} modules critically depend on this! "
+                    f"Affected modules: {impact['affected_modules'][:3]}"
+                )
+        except Exception as e:
+            # If RefMemTree not available, proceed with warning
+            print(f"RefMemTree impact check warning: {e}")
+        
         return self.module_repo.delete(module_id)
 
     def approve_module(self, module_id: UUID, user: User) -> Optional[ArchitectureModule]:
@@ -116,7 +139,20 @@ class ArchitectureService:
         if self._would_create_circular_dependency(data.from_module_id, data.to_module_id):
             raise ValueError("Would create circular dependency")
 
-        return self.dependency_repo.create(data)
+        dependency = self.dependency_repo.create(data)
+        
+        # ⭐ ACTIVATE RefMemTree: Auto-track dependency
+        try:
+            self.sync_dependency_to_refmemtree(
+                data.from_module_id,
+                data.to_module_id,
+                data.dependency_type
+            )
+        except Exception as e:
+            # Non-blocking if RefMemTree fails
+            print(f"RefMemTree dependency tracking warning: {e}")
+        
+        return dependency
 
     def get_dependency(self, dependency_id: UUID):
         """Get dependency by ID."""
