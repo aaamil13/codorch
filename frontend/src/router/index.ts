@@ -50,6 +50,11 @@ const routes: RouteRecordRaw[] = [
         name: 'architecture-canvas',
         component: () => import('../pages/ArchitectureCanvasPage.vue'),
       },
+      {
+        path: '/project/:projectId/requirements',
+        name: 'project-requirements',
+        component: () => import('../pages/RequirementsPage.vue'),
+      },
     ],
   },
   {
