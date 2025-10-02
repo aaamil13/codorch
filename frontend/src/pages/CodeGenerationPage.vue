@@ -192,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useCodeGenerationStore } from 'src/stores/codeGeneration';
 import { Notify } from 'quasar';

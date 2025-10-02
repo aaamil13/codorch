@@ -144,7 +144,7 @@ async function handleCreateSession() {
   }
 
   const session = await researchStore.createSession(newSession.value);
-  if (session) {
+  if (session) { // Ensure session is not null
     showCreateDialog.value = false;
     newSession.value = {
       project_id: newSession.value.project_id,

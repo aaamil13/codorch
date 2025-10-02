@@ -92,7 +92,7 @@
           <q-btn
             color="primary"
             label="Create"
-            @click="createProject"
+            @click="void createProject()"
             :loading="creating"
           />
         </q-card-actions>
@@ -150,14 +150,13 @@ function openProject(id: string): void {
   router.push({ name: 'project-detail', params: { id } });
 }
 
-function createProject(): void {
+async function createProject(): Promise<void> {
   creating.value = true;
   // TODO: Create project via API
-  setTimeout(() => {
-    creating.value = false;
-    showCreateDialog.value = false;
-    newProject.value = { name: '', description: '', goal: '' };
-    loadProjects();
-  }, 1000);
+  void await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+  creating.value = false;
+  showCreateDialog.value = false;
+  newProject.value = { name: '', description: '', goal: '' };
+  loadProjects();
 }
 </script>

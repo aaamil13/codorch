@@ -139,8 +139,8 @@ const editingGoal = ref<Goal | null>(null);
 
 const goalForm = ref<GoalCreate>({
   title: '',
-  description: '',
-  category: '',
+  description: undefined,
+  category: undefined,
   priority: 'medium',
 });
 
@@ -162,14 +162,14 @@ async function loadGoals() {
 async function saveGoal() {
   try {
     if (editingGoal.value) {
-      await goalsStore.updateGoal(editingGoal.value.id, goalForm.value);
+      void await goalsStore.updateGoal(editingGoal.value.id, goalForm.value);
     } else {
-      await goalsStore.createGoal(projectId.value, goalForm.value);
+      void await goalsStore.createGoal(projectId.value, goalForm.value);
     }
     showCreateDialog.value = false;
     resetForm();
   } catch (error) {
-    console.error('Error saving goal:', error);
+    console.error('Error saving goal:', (error as Error).message);
   }
 }
 
@@ -177,21 +177,21 @@ function editGoal(goal: Goal) {
   editingGoal.value = goal;
   goalForm.value = {
     title: goal.title,
-    description: goal.description,
-    category: goal.category,
-    priority: goal.priority,
-    target_date: goal.target_date,
+    description: goal.description ?? '',
+    category: goal.category ?? '',
+    priority: goal.priority ?? 'medium', // Ensure a default priority
+    target_date: goal.target_date ?? undefined,
   };
   showCreateDialog.value = true;
 }
 
-async function deleteGoal(goalId: string) {
+function deleteGoal(goalId: string) {
   $q.dialog({
     title: 'Confirm Delete',
     message: 'Are you sure you want to delete this goal?',
     cancel: true,
-  }).onOk(async () => {
-    await goalsStore.deleteGoal(goalId);
+  }).onOk(() => {
+    void goalsStore.deleteGoal(goalId);
   });
 }
 
@@ -218,9 +218,10 @@ function resetForm() {
   editingGoal.value = null;
   goalForm.value = {
     title: '',
-    description: '',
-    category: '',
+    description: undefined,
+    category: undefined,
     priority: 'medium',
+    target_date: undefined,
   };
 }
 </script>

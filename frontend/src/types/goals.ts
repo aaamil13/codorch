@@ -54,21 +54,21 @@ export interface Goal {
 
 export interface GoalCreate {
   title: string;
-  description?: string;
-  category?: string;
-  target_date?: string;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
+  description?: string | undefined; // Allow undefined
+  category?: string | undefined;    // Allow undefined
+  target_date?: string | undefined; // Allow undefined
+  priority?: 'low' | 'medium' | 'high' | 'critical' | undefined; // Allow undefined
   metrics?: MetricDefinition[];
   parent_goal_id?: string;
 }
 
 export interface GoalUpdate {
-  title?: string;
-  description?: string;
-  category?: string;
-  target_date?: string;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
-  status?: 'draft' | 'active' | 'completed' | 'archived';
+  title?: string | undefined;
+  description?: string | undefined;
+  category?: string | undefined;
+  target_date?: string | undefined;
+  priority?: 'low' | 'medium' | 'high' | 'critical' | undefined;
+  status?: 'draft' | 'active' | 'completed' | 'archived' | undefined;
   completion_percentage?: number;
   metrics?: MetricDefinition[];
 }

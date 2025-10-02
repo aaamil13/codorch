@@ -1,6 +1,6 @@
 /**
  * Tests for Architecture Pinia Store (RefMemTree-powered)
- * 
+ *
  * Critical tests for RefMemTree frontend integration!
  */
 
@@ -46,14 +46,43 @@ describe('Architecture Store (RefMemTree)', () => {
 
       const mockResponse = {
         modules: [
-          { id: 'm1', name: 'UserService', module_type: 'service' },
-          { id: 'm2', name: 'Database', module_type: 'database' },
+          {
+            id: 'm1',
+            project_id: 'project-1',
+            name: 'UserService',
+            module_type: 'service',
+            level: 1,
+            ai_generated: true,
+            status: 'draft' as const,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            id: 'm2',
+            project_id: 'project-1',
+            name: 'Database',
+            module_type: 'database',
+            level: 1,
+            ai_generated: true,
+            status: 'draft' as const,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
         ],
         dependencies: [
-          { id: 'd1', from_module_id: 'm1', to_module_id: 'm2', dependency_type: 'uses' },
+          {
+            id: 'd1',
+            project_id: 'project-1',
+            from_module_id: 'm1',
+            to_module_id: 'm2',
+            dependency_type: 'uses',
+            created_at: new Date().toISOString(),
+          },
         ],
         rules: [],
         overall_score: 8.5,
+        architectural_style: 'Layered', // Add missing property
+        reasoning: 'AI generated architecture', // Add missing property
       };
 
       vi.mocked(architectureApi.generateArchitecture).mockResolvedValue(mockResponse);
@@ -77,9 +106,10 @@ describe('Architecture Store (RefMemTree)', () => {
         issues: [
           {
             type: 'circular_dependency',
-            severity: 'critical',
+            severity: 'critical' as const,
             message: 'Circular dependency detected',
             affected_modules: ['m1', 'm2'],
+            suggestions: ['Break down m1 and m2'], // Add missing property
           },
         ],
         errors_count: 1,
@@ -114,6 +144,7 @@ describe('Architecture Store (RefMemTree)', () => {
             module_name: 'CoreEngine',
             complexity_score: 9.2,
             reason: 'Too many dependencies',
+            suggestions: ['Split CoreEngine into smaller modules'], // Add missing property
           },
         ],
         recommendations: ['Split CoreEngine into smaller modules'],
@@ -139,7 +170,10 @@ describe('Architecture Store (RefMemTree)', () => {
         name: 'NewService',
         module_type: 'service',
         level: 0,
-        status: 'draft',
+        ai_generated: false,
+        status: 'draft' as const,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
       vi.mocked(architectureApi.createModule).mockResolvedValue(newModule);
@@ -151,32 +185,72 @@ describe('Architecture Store (RefMemTree)', () => {
       });
 
       expect(result).toEqual(newModule);
-      expect(store.modules).toContain(newModule);
+      expect(store.modules).toEqual([newModule]);
     });
 
     it('should update module and maintain consistency', async () => {
       const store = useArchitectureStore();
 
       store.modules = [
-        { id: 'm1', name: 'OldName', module_type: 'service', status: 'draft' },
+        {
+          id: 'm1',
+          project_id: 'p1',
+          name: 'OldName',
+          module_type: 'service',
+          level: 0,
+          ai_generated: false,
+          status: 'draft' as const,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
       ];
 
-      const updated = { id: 'm1', name: 'NewName', module_type: 'service', status: 'approved' };
+      const updated = {
+        id: 'm1',
+        project_id: 'p1',
+        name: 'NewName',
+        module_type: 'service',
+        level: 0,
+        ai_generated: false,
+        status: 'approved' as const,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
 
       vi.mocked(architectureApi.updateModule).mockResolvedValue(updated);
 
       await store.updateModule('m1', { name: 'NewName' });
 
-      expect(store.modules[0].name).toBe('NewName');
-      expect(store.modules[0].status).toBe('approved');
+      expect(store.modules[0]!.name).toBe('NewName');
+      expect(store.modules[0]!.status).toBe('approved');
     });
 
     it('should delete module and remove from state', async () => {
       const store = useArchitectureStore();
 
       store.modules = [
-        { id: 'm1', name: 'Module1', module_type: 'module' },
-        { id: 'm2', name: 'Module2', module_type: 'module' },
+        {
+          id: 'm1',
+          project_id: 'p1',
+          name: 'Module1',
+          module_type: 'module',
+          level: 0,
+          ai_generated: false,
+          status: 'draft' as const,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: 'm2',
+          project_id: 'p1',
+          name: 'Module2',
+          module_type: 'module',
+          level: 0,
+          ai_generated: false,
+          status: 'draft' as const,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
       ];
 
       vi.mocked(architectureApi.deleteModule).mockResolvedValue(undefined);
@@ -184,7 +258,7 @@ describe('Architecture Store (RefMemTree)', () => {
       await store.deleteModule('m1');
 
       expect(store.modules.length).toBe(1);
-      expect(store.modules[0].id).toBe('m2');
+      expect(store.modules[0]!.id).toBe('m2');
     });
   });
 
@@ -198,6 +272,7 @@ describe('Architecture Store (RefMemTree)', () => {
         from_module_id: 'm1',
         to_module_id: 'm2',
         dependency_type: 'uses',
+        created_at: new Date().toISOString(),
       };
 
       vi.mocked(architectureApi.createDependency).mockResolvedValue(newDep);
@@ -210,13 +285,20 @@ describe('Architecture Store (RefMemTree)', () => {
       });
 
       expect(result).toEqual(newDep);
-      expect(store.dependencies).toContain(newDep);
+      expect(store.dependencies).toEqual([newDep]);
     });
 
     it('should maintain dependency consistency', async () => {
       const store = useArchitectureStore();
 
-      store.dependencies = [{ id: 'd1', from_module_id: 'm1', to_module_id: 'm2' }];
+      store.dependencies = [{
+        id: 'd1',
+        project_id: 'p1',
+        from_module_id: 'm1',
+        to_module_id: 'm2',
+        dependency_type: 'uses',
+        created_at: new Date().toISOString(),
+      }];
 
       vi.mocked(architectureApi.deleteDependency).mockResolvedValue(undefined);
 
@@ -259,14 +341,31 @@ describe('Architecture Store (RefMemTree)', () => {
 
       // Load modules
       vi.mocked(architectureApi.listModules).mockResolvedValue([
-        { id: 'm1', name: 'Module1' },
+        {
+          id: 'm1',
+          project_id: 'p1',
+          name: 'Module1',
+          module_type: 'module',
+          level: 0,
+          ai_generated: false,
+          status: 'draft' as const,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
       ]);
 
       await store.fetchModules('p1');
 
       // Load dependencies
       vi.mocked(architectureApi.listDependencies).mockResolvedValue([
-        { id: 'd1', from_module_id: 'm1', to_module_id: 'm2' },
+        {
+          id: 'd1',
+          project_id: 'p1',
+          from_module_id: 'm1',
+          to_module_id: 'm2',
+          dependency_type: 'uses',
+          created_at: new Date().toISOString(),
+        },
       ]);
 
       await store.fetchDependencies('p1');

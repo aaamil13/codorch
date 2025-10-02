@@ -11,7 +11,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import Session
+from sqlalchemy.orm import Session
 
 from backend.api.deps import get_current_user, get_db
 from backend.core.graph_manager import get_graph_manager

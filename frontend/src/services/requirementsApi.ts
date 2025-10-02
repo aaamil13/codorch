@@ -9,7 +9,6 @@ import type {
   RequirementUpdate,
   RequirementValidationResult,
   TechnologyRecommendation,
-  TechnologyRecommendationCreate,
   TechnologyRecommendationUpdate,
   TechnologyRecommendationRequest,
   TechnologyRecommendationSummary,

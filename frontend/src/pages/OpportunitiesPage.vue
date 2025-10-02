@@ -76,6 +76,7 @@
             hint="Describe your project or business domain"
             class="q-mb-md"
           />
+          <span class="text-caption">Number of opportunities:</span>
           <q-slider
             v-model="generateForm.num_opportunities"
             :min="1"
@@ -84,11 +85,7 @@
             label-always
             markers
             class="q-mb-md"
-          >
-            <template #prepend>
-              <span class="text-caption">Number of opportunities:</span>
-            </template>
-          </q-slider>
+          />
           <q-select
             v-model="generateForm.creativity_level"
             label="Creativity Level"
@@ -206,7 +203,7 @@ async function generateOpportunities() {
     });
     showGenerateDialog.value = false;
   } catch (error) {
-    console.error('Error generating opportunities:', error);
+    console.error('Error generating opportunities:', (error as Error).message);
   }
 }
 
@@ -216,7 +213,7 @@ async function saveOpportunity() {
     showCreateDialog.value = false;
     resetForm();
   } catch (error) {
-    console.error('Error creating opportunity:', error);
+    console.error('Error creating opportunity:', (error as Error).message);
   }
 }
 
@@ -230,13 +227,13 @@ function editOpportunity(opportunity: Opportunity) {
   console.log('Edit opportunity:', opportunity);
 }
 
-async function deleteOpportunity(opportunityId: string) {
+function deleteOpportunity(opportunityId: string) {
   $q.dialog({
     title: 'Confirm Delete',
-    message: 'Are you sure you want to delete this opportunity?',
+    message: 'Are_you sure you want to delete this opportunity?',
     cancel: true,
-  }).onOk(async () => {
-    await opportunitiesStore.deleteOpportunity(opportunityId);
+  }).onOk(() => {
+    void opportunitiesStore.deleteOpportunity(opportunityId);
   });
 }
 

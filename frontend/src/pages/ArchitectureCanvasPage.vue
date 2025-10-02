@@ -59,7 +59,7 @@
           icon="psychology"
           label="Simulate Change"
           color="deep-purple"
-          @click="showSimulateDialog = true"
+          @click="handleSimulateChange"
           :disable="!selectedModule"
         >
           <q-tooltip>RefMemTree Advanced: Simulate before changing</q-tooltip>
@@ -148,9 +148,9 @@
         <div class="q-pa-md">
           <div v-if="selectedModule" class="module-details">
             <div class="text-h6 q-mb-md">
-              {{ selectedModule.data.name }}
+              {{ selectedModule.data?.name }}
               <q-badge
-                v-if="selectedModule.data.ai_generated"
+                v-if="selectedModule.data?.ai_generated"
                 color="purple"
                 class="q-ml-sm"
               >
@@ -163,24 +163,24 @@
             <!-- Module Info -->
             <div class="q-mb-md">
               <div class="text-subtitle2">Type</div>
-              <q-chip>{{ selectedModule.data.module_type }}</q-chip>
+              <q-chip>{{ selectedModule.data?.module_type }}</q-chip>
             </div>
 
             <div class="q-mb-md">
               <div class="text-subtitle2">Status</div>
-              <q-chip :color="getStatusColor(selectedModule.data.status)">
-                {{ selectedModule.data.status }}
+              <q-chip :color="getStatusColor(selectedModule.data?.status)">
+                {{ selectedModule.data?.status }}
               </q-chip>
             </div>
 
             <div class="q-mb-md">
               <div class="text-subtitle2">Description</div>
-              <div>{{ selectedModule.data.description || 'No description' }}</div>
+              <div>{{ selectedModule.data?.description || 'No description' }}</div>
             </div>
 
             <div class="q-mb-md">
               <div class="text-subtitle2">Level</div>
-              <div>{{ selectedModule.data.level }}</div>
+              <div>{{ selectedModule.data?.level }}</div>
             </div>
 
             <!-- Actions -->
@@ -192,7 +192,7 @@
                 @click="handleEditModule"
               />
               <q-btn
-                v-if="selectedModule.data.status === 'draft'"
+                v-if="selectedModule.data?.status === 'draft'"
                 color="positive"
                 label="Approve"
                 class="q-mr-sm"
@@ -312,7 +312,7 @@
 
         <q-card-section class="q-pt-none">
           <div class="q-mb-md">
-            <strong>From:</strong> {{ selectedModule?.data.name }}
+            <strong>From:</strong> {{ selectedModule?.data?.name }}
           </div>
           <q-select
             v-model="newDependency.to_module_id"
@@ -453,12 +453,12 @@
           <div v-if="impactResult.affected_modules?.length > 0">
             <div class="text-subtitle2 q-mb-sm">Affected Modules:</div>
             <q-list bordered>
-              <q-item v-for="moduleId in impactResult.affected_modules" :key="moduleId">
+              <q-item v-for="affectedModule in impactResult.affected_modules" :key="affectedModule.module_id">
                 <q-item-section avatar>
                   <q-icon name="account_tree" color="orange" />
                 </q-item-section>
                 <q-item-section>
-                  {{ getModuleName(moduleId) }}
+                  {{ getModuleName(affectedModule.module_id) }}
                 </q-item-section>
               </q-item>
             </q-list>
@@ -493,8 +493,8 @@
 
         <q-card-section v-if="simulationResult">
           <div class="text-h5 q-mb-md">
-            Risk Level: 
-            <q-chip 
+            Risk Level:
+            <q-chip
               :color="getRiskColor(simulationResult.risk_level)"
               text-color="white"
               size="lg"
@@ -533,11 +533,11 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancel" v-close-popup />
-          <q-btn 
+          <q-btn
             v-if="simulationResult?.risk_level === 'low'"
-            color="positive" 
-            label="Proceed with Change" 
-            v-close-popup 
+            color="positive"
+            label="Proceed with Change"
+            v-close-popup
           />
         </q-card-actions>
       </q-card>
@@ -631,11 +631,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 import { VueFlow, useVueFlow } from '@vue-flow/core';
+import { api } from 'src/boot/axios';
 import { Background } from '@vue-flow/background';
 import { Controls, ControlButton } from '@vue-flow/controls';
 import { MiniMap } from '@vue-flow/minimap';
-import type { Node, Edge, Connection } from '@vue-flow/core';
+import type { Node, Edge, Connection, NodeChange, EdgeChange } from '@vue-flow/core';
 import { useArchitectureStore } from 'src/stores/architecture';
 import ModuleNode from 'src/components/ModuleNode.vue';
 import type {
@@ -643,10 +645,20 @@ import type {
   ArchitectureModuleCreate,
   ArchitectureGenerationRequest,
   ModuleDependencyCreate,
+  ImpactAnalysisResponse,
 } from 'src/types/architecture';
+
+interface SimulationResult {
+  risk_level: 'low' | 'medium' | 'high' | 'critical';
+  success_probability: number;
+  affected_modules: number;
+  side_effects: string[];
+  recommendation: string;
+}
 
 const route = useRoute();
 const router = useRouter();
+const $q = useQuasar();
 const architectureStore = useArchitectureStore();
 const { fitView: vueFlowFitView, zoomIn: vueFlowZoomIn, zoomOut: vueFlowZoomOut } = useVueFlow();
 
@@ -662,8 +674,8 @@ const showValidationDialog = ref(false);
 const showComplexityDialog = ref(false);
 const showImpactDialog = ref(false);
 const showSimulateDialog = ref(false);
-const impactResult = ref<any>(null);
-const simulationResult = ref<any>(null);
+const impactResult = ref<ImpactAnalysisResponse | null>(null);
+const simulationResult = ref<SimulationResult | null>(null);
 
 const projectId = computed(() => route.params.projectId as string);
 
@@ -787,22 +799,28 @@ function onPaneClick() {
   showSidePanel.value = false;
 }
 
-function onNodesChange(changes: any) {
+async function onNodesChange(changes: NodeChange[]) { // Made async
   // Update positions in store when nodes are dragged
-  changes.forEach((change: any) => {
+  for (const change of changes) { // Changed to for...of for await in loop
     if (change.type === 'position' && change.position) {
       const module = architectureStore.modules.find((m) => m.id === change.id);
       if (module) {
-        architectureStore.updateModule(change.id, {
+        void await architectureStore.updateModule(change.id, {
           position_x: Math.round(change.position.x),
           position_y: Math.round(change.position.y),
+        }).catch((error) => {
+          console.error('Error updating module position:', error);
+          $q.notify({
+            type: 'negative',
+            message: 'Failed to update module position.',
+          });
         });
       }
     }
-  });
+  }
 }
 
-function onEdgesChange(changes: any) {
+function onEdgesChange(changes: EdgeChange[]) {
   console.log('Edges changed:', changes);
 }
 
@@ -817,7 +835,13 @@ async function onConnect(connection: Connection) {
     description: '',
   };
 
-  await architectureStore.createDependency(dep);
+  void await architectureStore.createDependency(dep).catch((error) => {
+    console.error('Error creating dependency:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to create dependency.',
+    });
+  });
 }
 
 function fitView() {
@@ -836,7 +860,14 @@ async function handleGenerate() {
   const result = await architectureStore.generateArchitecture(
     projectId.value,
     generateRequest.value
-  );
+  ).catch((error) => {
+    console.error('Error generating architecture:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to generate architecture.',
+    });
+    return null;
+  });
 
   if (result) {
     showGenerateDialog.value = false;
@@ -847,7 +878,14 @@ async function handleGenerate() {
 async function handleAddModule() {
   if (!newModule.value.name) return;
 
-  const module = await architectureStore.createModule(newModule.value);
+  const module = await architectureStore.createModule(newModule.value).catch((error) => {
+    console.error('Error adding module:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to add module.',
+    });
+    return null;
+  });
   if (module) {
     showAddModuleDialog.value = false;
     newModule.value = {
@@ -864,7 +902,14 @@ async function handleAddDependency() {
 
   newDependency.value.from_module_id = selectedModule.value.id;
 
-  const dep = await architectureStore.createDependency(newDependency.value);
+  const dep = await architectureStore.createDependency(newDependency.value).catch((error) => {
+    console.error('Error adding dependency:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to add dependency.',
+    });
+    return null;
+  });
   if (dep) {
     showAddDependencyDialog.value = false;
     newDependency.value = {
@@ -878,12 +923,24 @@ async function handleAddDependency() {
 }
 
 async function handleValidate() {
-  await architectureStore.validateArchitecture(projectId.value);
+  void await architectureStore.validateArchitecture(projectId.value).catch((error) => {
+    console.error('Error validating architecture:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to validate architecture.',
+    });
+  });
   showValidationDialog.value = true;
 }
 
 async function handleComplexity() {
-  await architectureStore.analyzeComplexity(projectId.value);
+  void await architectureStore.analyzeComplexity(projectId.value).catch((error) => {
+    console.error('Error analyzing complexity:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to analyze complexity.',
+    });
+  });
   showComplexityDialog.value = true;
 }
 
@@ -899,20 +956,38 @@ function handleEditModule() {
 
 async function handleApproveModule() {
   if (!selectedModule.value) return;
-  await architectureStore.approveModule(selectedModule.value.id);
+  void await architectureStore.approveModule(selectedModule.value.id).catch((error) => {
+    console.error('Error approving module:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to approve module.',
+    });
+  });
 }
 
 async function handleDeleteModule() {
   if (!selectedModule.value) return;
   if (confirm('Are you sure you want to delete this module?')) {
-    await architectureStore.deleteModule(selectedModule.value.id);
+    void await architectureStore.deleteModule(selectedModule.value.id).catch((error) => {
+      console.error('Error deleting module:', error);
+      $q.notify({
+        type: 'negative',
+        message: 'Failed to delete module.',
+      });
+    });
     selectedModule.value = null;
     showSidePanel.value = false;
   }
 }
 
 async function handleRemoveDependency(depId: string) {
-  await architectureStore.deleteDependency(depId);
+  void await architectureStore.deleteDependency(depId).catch((error) => {
+    console.error('Error removing dependency:', error);
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to remove dependency.',
+    });
+  });
 }
 
 function getModuleDependencies(moduleId: string) {
@@ -924,7 +999,8 @@ function getModuleName(moduleId: string): string {
   return module?.name || 'Unknown';
 }
 
-function getStatusColor(status: string): string {
+function getStatusColor(status: string | undefined): string {
+  if (!status) return 'grey';
   const colors: Record<string, string> = {
     draft: 'orange',
     approved: 'green',
@@ -973,9 +1049,9 @@ async function handleImpactAnalysisAdvanced() {
     impactResult.value = response.data;
     showImpactDialog.value = true;
   } catch (err) {
-    Notify.create({
+    $q.notify({
       type: 'negative',
-      message: 'RefMemTree impact analysis unavailable: ' + err,
+      message: 'RefMemTree impact analysis unavailable: ' + (err as Error).message,
     });
   }
 }
@@ -997,9 +1073,9 @@ async function handleSimulateChange() {
     simulationResult.value = response.data;
     showSimulateDialog.value = true;
   } catch (err) {
-    Notify.create({
+    $q.notify({
       type: 'negative',
-      message: 'RefMemTree simulation unavailable: ' + err,
+      message: 'RefMemTree simulation unavailable: ' + (err as Error).message,
     });
   }
 }

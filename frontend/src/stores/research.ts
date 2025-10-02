@@ -38,7 +38,7 @@ export const useResearchStore = defineStore('research', () => {
     try {
       sessions.value = await researchApi.listResearchSessions(projectId);
     } catch (err) {
-      error.value = `Failed to fetch sessions: ${err}`;
+      error.value = `Failed to fetch sessions: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -51,7 +51,7 @@ export const useResearchStore = defineStore('research', () => {
     try {
       currentSession.value = await researchApi.getResearchSession(sessionId);
     } catch (err) {
-      error.value = `Failed to fetch session: ${err}`;
+      error.value = `Failed to fetch session: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -66,7 +66,7 @@ export const useResearchStore = defineStore('research', () => {
       sessions.value.unshift(session);
       return session;
     } catch (err) {
-      error.value = `Failed to create session: ${err}`;
+      error.value = `Failed to create session: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -87,7 +87,7 @@ export const useResearchStore = defineStore('research', () => {
         currentSession.value = updated;
       }
     } catch (err) {
-      error.value = `Failed to archive session: ${err}`;
+      error.value = `Failed to archive session: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -101,7 +101,7 @@ export const useResearchStore = defineStore('research', () => {
     try {
       messages.value = await researchApi.getSessionMessages(sessionId);
     } catch (err) {
-      error.value = `Failed to fetch messages: ${err}`;
+      error.value = `Failed to fetch messages: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -113,7 +113,7 @@ export const useResearchStore = defineStore('research', () => {
     error.value = null;
     try {
       const response = await researchApi.sendChatMessage(sessionId, request);
-      
+
       // Add user message
       messages.value.push({
         id: crypto.randomUUID(),
@@ -129,13 +129,13 @@ export const useResearchStore = defineStore('research', () => {
         session_id: sessionId,
         role: 'assistant',
         content: response.content,
-        metadata: response.metadata,
+        metadata: response.metadata ?? null,
         created_at: new Date().toISOString(),
       });
 
       return response;
     } catch (err) {
-      error.value = `Failed to send message: ${err}`;
+      error.value = `Failed to send message: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -150,7 +150,7 @@ export const useResearchStore = defineStore('research', () => {
     try {
       findings.value = await researchApi.getSessionFindings(sessionId);
     } catch (err) {
-      error.value = `Failed to fetch findings: ${err}`;
+      error.value = `Failed to fetch findings: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;

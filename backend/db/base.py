@@ -1,7 +1,7 @@
 """SQLAlchemy base configuration."""
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
@@ -20,7 +20,8 @@ engine = create_engine(
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Create base class for models
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
 
 def get_db():

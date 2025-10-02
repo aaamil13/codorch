@@ -8,8 +8,6 @@ import type {
   Goal,
   GoalCreate,
   GoalUpdate,
-  GoalAnalysisResponse,
-  GoalDecomposeResponse,
 } from 'src/types/goals';
 import { goalsApi } from 'src/services/goalsApi';
 import { Notify } from 'quasar';
@@ -17,7 +15,7 @@ import { Notify } from 'quasar';
 export const useGoalsStore = defineStore('goals', () => {
   // State
   const goals = ref<Goal[]>([]);
-  const currentGoal = ref<Goal | null>(null);
+  const currentGoal = ref<Omit<Goal, 'subgoals'> | null>(null);
   const loading = ref(false);
   const analyzing = ref(false);
   const decomposing = ref(false);

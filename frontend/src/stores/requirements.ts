@@ -11,7 +11,6 @@ import type {
   RequirementValidationResult,
   TechnologyRecommendation,
   TechnologyRecommendationRequest,
-  TechnologyRecommendationSummary,
   APISpecification,
   APISpecificationCreate,
   RequirementsSummary,
@@ -44,7 +43,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
     try {
       requirements.value = await requirementsApi.listRequirements(projectId, filters);
     } catch (err) {
-      error.value = `Failed to fetch requirements: ${err}`;
+      error.value = `Failed to fetch requirements: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -57,7 +56,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
     try {
       currentRequirement.value = await requirementsApi.getRequirement(id);
     } catch (err) {
-      error.value = `Failed to fetch requirement: ${err}`;
+      error.value = `Failed to fetch requirement: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -72,7 +71,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
       requirements.value.unshift(requirement);
       return requirement;
     } catch (err) {
-      error.value = `Failed to create requirement: ${err}`;
+      error.value = `Failed to create requirement: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -94,7 +93,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
       }
       return updated;
     } catch (err) {
-      error.value = `Failed to update requirement: ${err}`;
+      error.value = `Failed to update requirement: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -112,7 +111,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
         currentRequirement.value = null;
       }
     } catch (err) {
-      error.value = `Failed to delete requirement: ${err}`;
+      error.value = `Failed to delete requirement: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -130,7 +129,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
       }
       return approved;
     } catch (err) {
-      error.value = `Failed to approve requirement: ${err}`;
+      error.value = `Failed to approve requirement: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -147,7 +146,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
       validationResults.value.set(id, result);
       return result;
     } catch (err) {
-      error.value = `Failed to validate requirement: ${err}`;
+      error.value = `Failed to validate requirement: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -167,7 +166,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
       technologies.value = summary.recommendations;
       return summary;
     } catch (err) {
-      error.value = `Failed to generate recommendations: ${err}`;
+      error.value = `Failed to generate recommendations: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -181,7 +180,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
     try {
       technologies.value = await requirementsApi.listTechnologyRecommendations(projectId);
     } catch (err) {
-      error.value = `Failed to fetch technology recommendations: ${err}`;
+      error.value = `Failed to fetch technology recommendations: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -199,7 +198,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
       }
       return updated;
     } catch (err) {
-      error.value = `Failed to update technology recommendation: ${err}`;
+      error.value = `Failed to update technology recommendation: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -216,7 +215,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
       apiSpecs.value.push(spec);
       return spec;
     } catch (err) {
-      error.value = `Failed to create API specification: ${err}`;
+      error.value = `Failed to create API specification: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -230,7 +229,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
     try {
       apiSpecs.value = await requirementsApi.listAPISpecifications(requirementId);
     } catch (err) {
-      error.value = `Failed to fetch API specifications: ${err}`;
+      error.value = `Failed to fetch API specifications: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -244,7 +243,7 @@ export const useRequirementsStore = defineStore('requirements', () => {
     try {
       summary.value = await requirementsApi.getRequirementsSummary(projectId);
     } catch (err) {
-      error.value = `Failed to fetch summary: ${err}`;
+      error.value = `Failed to fetch summary: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;

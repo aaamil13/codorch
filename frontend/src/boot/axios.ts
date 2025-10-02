@@ -1,7 +1,8 @@
 import { boot } from 'quasar/wrappers';
-import axios, { AxiosInstance } from 'axios';
+import type { AxiosInstance } from 'axios';
+import axios from 'axios';
 
-declare module '@vue/runtime-core' {
+declare module 'vue' {
   interface ComponentCustomProperties {
     $axios: AxiosInstance;
     $api: AxiosInstance;
@@ -28,7 +29,7 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    return Promise.reject(error);
+    return Promise.reject(new Error(error));
   }
 );
 
@@ -41,7 +42,7 @@ api.interceptors.response.use(
       localStorage.removeItem('auth_token');
       window.location.href = '/login';
     }
-    return Promise.reject(error);
+    return Promise.reject(new Error(error));
   }
 );
 

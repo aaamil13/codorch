@@ -371,7 +371,7 @@ async function handleCreateModule() {
 }
 
 async function handleValidate() {
-  await architectureStore.validateArchitecture(
+  void await architectureStore.validateArchitecture(
     generateRequest.value.project_id
   );
 }

@@ -1,7 +1,8 @@
 import { boot } from 'quasar/wrappers';
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 
-declare module '@vue/runtime-core' {
+declare module 'vue' {
   interface ComponentCustomProperties {
     $socket: Socket;
   }

@@ -15,9 +15,14 @@ describe('GoalCard Component', () => {
           id: '1',
           title: 'Test Goal',
           description: 'Test description',
-          smart_score: 8.5,
-          status: 'active',
-          priority: 'high',
+          overall_smart_score: 8.5,
+          status: 'active' as const, // Explicitly cast status
+          priority: 'high' as const, // Explicitly cast priority
+          project_id: 'project-1', // Add missing property
+          is_smart_validated: true, // Add missing property
+          completion_percentage: 0, // Add missing property
+          created_at: new Date().toISOString(), // Add missing property
+          updated_at: new Date().toISOString(), // Add missing property
           ...props,
         },
       },
@@ -55,8 +60,8 @@ describe('GoalCard Component', () => {
   });
 
   it('should display different colors for different scores', () => {
-    const lowScore = mountComponent({ smart_score: 3.0 });
-    const highScore = mountComponent({ smart_score: 9.0 });
+    const lowScore = mountComponent({ overall_smart_score: 3.0 });
+    const highScore = mountComponent({ overall_smart_score: 9.0 });
 
     // Different visual treatment based on score
     // (exact implementation depends on component)

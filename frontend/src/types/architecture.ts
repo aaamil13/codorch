@@ -162,6 +162,8 @@ export interface ImpactAnalysisResponse {
   module_id: string;
   change_type: string;
   affected_modules: AffectedModule[];
+  high_impact_count: number;
+  safe_to_proceed: boolean;
   breaking_changes: boolean;
   testing_scope: string[];
   recommendations: string[];

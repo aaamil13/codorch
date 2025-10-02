@@ -36,6 +36,8 @@ export default defineConfig({
   resolve: {
     alias: {
       src: path.resolve(__dirname, './src'),
+      // Add this alias to ensure consistent Vite instance
+      'vite': path.resolve(__dirname, 'node_modules/vite'),
     },
   },
 });

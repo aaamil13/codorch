@@ -28,23 +28,19 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(email: string, password: string): Promise<void> {
-      try {
-        const response = await api.post<{ access_token: string; user: User }>(
-          '/auth/login',
-          {
-            email,
-            password,
-          }
-        );
+      const response = await api.post<{ access_token: string; user: User }>(
+        '/auth/login',
+        {
+          email,
+          password,
+        }
+      );
 
-        this.token = response.data.access_token;
-        this.user = response.data.user;
-        this.isAuthenticated = true;
+      this.token = response.data.access_token;
+      this.user = response.data.user;
+      this.isAuthenticated = true;
 
-        localStorage.setItem('auth_token', this.token);
-      } catch (error) {
-        throw error;
-      }
+      localStorage.setItem('auth_token', this.token);
     },
 
     async register(
@@ -53,25 +49,21 @@ export const useAuthStore = defineStore('auth', {
       password: string,
       fullName?: string
     ): Promise<void> {
-      try {
-        const response = await api.post<{ access_token: string; user: User }>(
-          '/auth/register',
-          {
-            email,
-            username,
-            password,
-            full_name: fullName,
-          }
-        );
+      const response = await api.post<{ access_token: string; user: User }>(
+        '/auth/register',
+        {
+          email,
+          username,
+          password,
+          full_name: fullName,
+        }
+      );
 
-        this.token = response.data.access_token;
-        this.user = response.data.user;
-        this.isAuthenticated = true;
+      this.token = response.data.access_token;
+      this.user = response.data.user;
+      this.isAuthenticated = true;
 
-        localStorage.setItem('auth_token', this.token);
-      } catch (error) {
-        throw error;
-      }
+      localStorage.setItem('auth_token', this.token);
     },
 
     logout(): void {
@@ -84,13 +76,8 @@ export const useAuthStore = defineStore('auth', {
     async fetchUser(): Promise<void> {
       if (!this.isAuthenticated) return;
 
-      try {
-        const response = await api.get<User>('/auth/me');
-        this.user = response.data;
-      } catch (error) {
-        this.logout();
-        throw error;
-      }
+      const response = await api.get<User>('/auth/me');
+      this.user = response.data;
     },
   },
 });

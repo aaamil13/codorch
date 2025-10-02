@@ -1,6 +1,6 @@
 /**
  * Tests for Goals Pinia Store
- * 
+ *
  * Tests:
  * - State management
  * - Actions (CRUD)
@@ -9,26 +9,51 @@
  * - Consistency
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useGoalsStore } from 'src/stores/goals';
+import * as goalsApiModule from 'src/services/goalsApi'; // Import as module
 
-// Mock API module properly
-vi.mock('src/services/goalsApi', () => ({
-  listGoals: vi.fn(),
-  createGoal: vi.fn(),
-  updateGoal: vi.fn(),
-  deleteGoal: vi.fn(),
-  analyzeGoal: vi.fn(),
-  decomposeGoal: vi.fn(),
-}));
-
-import * as goalsApi from 'src/services/goalsApi';
+// Mock the goalsApi object directly
+vi.mock('src/services/goalsApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof goalsApiModule>();
+  return {
+    goalsApi: {
+      ...actual.goalsApi, // Keep original non-mocked methods if any
+      list: vi.fn(),
+      create: vi.fn(),
+      get: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+      analyze: vi.fn(),
+      decompose: vi.fn(),
+    },
+  };
+});
 
 describe('Goals Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
-    vi.clearAllMocks();
+    // Clear mocks on the specific functions, as goalsApi itself is now mocked
+    (
+      goalsApiModule.goalsApi.create as MockedFunction<typeof goalsApiModule.goalsApi.create>
+    ).mockClear();
+    (
+      goalsApiModule.goalsApi.list as MockedFunction<typeof goalsApiModule.goalsApi.list>
+    ).mockClear();
+    (goalsApiModule.goalsApi.get as MockedFunction<typeof goalsApiModule.goalsApi.get>).mockClear();
+    (
+      goalsApiModule.goalsApi.update as MockedFunction<typeof goalsApiModule.goalsApi.update>
+    ).mockClear();
+    (
+      goalsApiModule.goalsApi.delete as MockedFunction<typeof goalsApiModule.goalsApi.delete>
+    ).mockClear();
+    (
+      goalsApiModule.goalsApi.analyze as MockedFunction<typeof goalsApiModule.goalsApi.analyze>
+    ).mockClear();
+    (
+      goalsApiModule.goalsApi.decompose as MockedFunction<typeof goalsApiModule.goalsApi.decompose>
+    ).mockClear();
   });
 
   describe('State Management', () => {
@@ -38,7 +63,6 @@ describe('Goals Store', () => {
       expect(store.goals).toEqual([]);
       expect(store.currentGoal).toBeNull();
       expect(store.loading).toBe(false);
-      expect(store.error).toBeNull();
     });
 
     it('should maintain state consistency', () => {
@@ -54,36 +78,59 @@ describe('Goals Store', () => {
     it('should fetch goals successfully', async () => {
       const store = useGoalsStore();
       const mockGoals = [
-        { id: '1', title: 'Goal 1', description: 'Test', smart_score: 8.5 },
-        { id: '2', title: 'Goal 2', description: 'Test', smart_score: 7.0 },
+        {
+          id: '1',
+          title: 'Goal 1',
+          description: 'Test',
+          overall_smart_score: 8.5,
+          is_smart_validated: true,
+          completion_percentage: 0,
+          status: 'active' as const, // Explicit literal type
+          project_id: 'p1',
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          title: 'Goal 2',
+          description: 'Test',
+          overall_smart_score: 7.0,
+          is_smart_validated: true,
+          completion_percentage: 0,
+          status: 'active' as const, // Explicit literal type
+          project_id: 'p1',
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
       ];
 
-      vi.mocked(goalsApi.listGoals).mockResolvedValue(mockGoals);
+      (
+        goalsApiModule.goalsApi.list as MockedFunction<typeof goalsApiModule.goalsApi.list>
+      ).mockResolvedValue(mockGoals);
 
       await store.fetchGoals('project-123');
 
       expect(store.goals).toEqual(mockGoals);
       expect(store.loading).toBe(false);
-      expect(store.error).toBeNull();
     });
 
     it('should handle fetch errors', async () => {
       const store = useGoalsStore();
 
-      vi.mocked(goalsApi.listGoals).mockRejectedValue(new Error('API Error'));
+      (
+        goalsApiModule.goalsApi.list as MockedFunction<typeof goalsApiModule.goalsApi.list>
+      ).mockRejectedValue(new Error('API Error'));
 
-      await store.fetchGoals('project-123');
-
-      expect(store.goals).toEqual([]);
-      expect(store.error).toContain('Failed to fetch goals');
+      await expect(store.fetchGoals('project-123')).rejects.toThrow('API Error');
+      expect(store.goals).toEqual([]); // Ensure state is still empty after error
     });
 
     it('should set loading state correctly', async () => {
       const store = useGoalsStore();
 
-      vi.mocked(goalsApi.listGoals).mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
+      (
+        goalsApiModule.goalsApi.list as MockedFunction<typeof goalsApiModule.goalsApi.list>
+      ).mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
       const promise = store.fetchGoals('project-123');
 
@@ -107,30 +154,36 @@ describe('Goals Store', () => {
       const createdGoal = {
         id: 'goal-123',
         ...newGoal,
-        smart_score: 0,
+        overall_smart_score: 0,
+        is_smart_validated: false,
+        completion_percentage: 0,
+        status: 'draft' as const, // Explicit literal type
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
       };
 
-      vi.mocked(goalsApi.createGoal).mockResolvedValue(createdGoal);
+      (
+        goalsApiModule.goalsApi.create as MockedFunction<typeof goalsApiModule.goalsApi.create>
+      ).mockResolvedValue(createdGoal);
 
-      const result = await store.createGoal(newGoal);
+      await store.createGoal(newGoal.project_id, newGoal);
 
-      expect(result).toEqual(createdGoal);
-      expect(store.goals).toContain(createdGoal);
+      expect(store.goals).toEqual([createdGoal]);
     });
 
     it('should handle create errors', async () => {
       const store = useGoalsStore();
 
-      vi.mocked(goalsApi.createGoal).mockRejectedValue(new Error('Create failed'));
+      (
+        goalsApiModule.goalsApi.create as MockedFunction<typeof goalsApiModule.goalsApi.create>
+      ).mockRejectedValue(new Error('Create failed'));
 
-      const result = await store.createGoal({
-        project_id: 'p1',
-        title: 'Test',
-        description: 'Test',
-      });
-
-      expect(result).toBeNull();
-      expect(store.error).toContain('Failed to create goal');
+      await expect(
+        store.createGoal('p1', {
+          title: 'Test',
+          description: 'Test',
+        })
+      ).rejects.toThrow('Create failed');
     });
   });
 
@@ -140,37 +193,95 @@ describe('Goals Store', () => {
 
       // Setup initial state
       store.goals = [
-        { id: '1', title: 'Old Title', description: 'Test', smart_score: 7 },
+        {
+          id: '1',
+          title: 'Old Title',
+          description: 'Test',
+          overall_smart_score: 0,
+          is_smart_validated: false,
+          completion_percentage: 0,
+          status: 'draft' as const, // Explicit literal type
+          project_id: 'p1',
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
       ];
 
-      const updated = { id: '1', title: 'New Title', description: 'Test', smart_score: 8 };
+      const updated = {
+        id: '1',
+        title: 'New Title',
+        description: 'Test',
+        overall_smart_score: 8,
+        is_smart_validated: true,
+        completion_percentage: 0,
+        status: 'active' as const, // Explicit literal type
+        project_id: 'p1',
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+      };
 
-      vi.mocked(goalsApi.updateGoal).mockResolvedValue(updated);
+      (
+        goalsApiModule.goalsApi.update as MockedFunction<typeof goalsApiModule.goalsApi.update>
+      ).mockResolvedValue(updated);
 
       await store.updateGoal('1', { title: 'New Title' });
 
-      expect(store.goals[0].title).toBe('New Title');
-      expect(store.goals[0].smart_score).toBe(8);
+      expect(store.goals[0]!.title).toBe('New Title');
+      expect(store.goals[0]!.overall_smart_score).toBe(8);
     });
 
     it('should maintain consistency after update', async () => {
       const store = useGoalsStore();
 
       store.goals = [
-        { id: '1', title: 'Goal 1', description: 'Test', smart_score: 7 },
-        { id: '2', title: 'Goal 2', description: 'Test', smart_score: 8 },
+        {
+          id: '1',
+          title: 'Goal 1',
+          description: 'Test',
+          overall_smart_score: 7,
+          project_id: 'p1',
+          is_smart_validated: false,
+          completion_percentage: 0,
+          status: 'draft' as const, // Explicit literal type
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          title: 'Goal 2',
+          description: 'Test',
+          overall_smart_score: 8,
+          project_id: 'p1',
+          is_smart_validated: false,
+          completion_percentage: 0,
+          status: 'draft' as const, // Explicit literal type
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
       ];
 
-      const updated = { id: '1', title: 'Updated', description: 'Test', smart_score: 9 };
+      const updated = {
+        id: '1',
+        title: 'Updated',
+        description: 'Test',
+        overall_smart_score: 9,
+        is_smart_validated: true,
+        completion_percentage: 0,
+        status: 'active' as const, // Explicit literal type
+        project_id: 'p1',
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+      };
 
-      vi.mocked(goalsApi.updateGoal).mockResolvedValue(updated);
+      (
+        goalsApiModule.goalsApi.update as MockedFunction<typeof goalsApiModule.goalsApi.update>
+      ).mockResolvedValue(updated);
 
       await store.updateGoal('1', { title: 'Updated' });
 
-      // Should only update goal with id '1'
       expect(store.goals.length).toBe(2);
-      expect(store.goals[0].title).toBe('Updated');
-      expect(store.goals[1].title).toBe('Goal 2'); // Unchanged
+      expect(store.goals[0]!.title).toBe('Updated');
+      expect(store.goals[1]!.title).toBe('Goal 2');
     });
   });
 
@@ -179,16 +290,40 @@ describe('Goals Store', () => {
       const store = useGoalsStore();
 
       store.goals = [
-        { id: '1', title: 'Goal 1', description: 'Test', smart_score: 7 },
-        { id: '2', title: 'Goal 2', description: 'Test', smart_score: 8 },
+        {
+          id: '1',
+          title: 'Goal 1',
+          description: 'Test',
+          overall_smart_score: 7,
+          project_id: 'p1',
+          is_smart_validated: false,
+          completion_percentage: 0,
+          status: 'draft' as const,
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
+        {
+          id: '2',
+          title: 'Goal 2',
+          description: 'Test',
+          overall_smart_score: 8,
+          project_id: 'p1',
+          is_smart_validated: false,
+          completion_percentage: 0,
+          status: 'draft' as const,
+          created_at: '2023-01-01T00:00:00Z',
+          updated_at: '2023-01-01T00:00:00Z',
+        },
       ];
 
-      vi.mocked(goalsApi.deleteGoal).mockResolvedValue(undefined);
+      (
+        goalsApiModule.goalsApi.delete as MockedFunction<typeof goalsApiModule.goalsApi.delete>
+      ).mockResolvedValue(undefined);
 
       await store.deleteGoal('1');
 
       expect(store.goals.length).toBe(1);
-      expect(store.goals[0].id).toBe('2');
+      expect(store.goals[0]!.id).toBe('2');
     });
   });
 
@@ -196,37 +331,52 @@ describe('Goals Store', () => {
     it('should maintain data integrity across operations', async () => {
       const store = useGoalsStore();
 
-      // Create
-      vi.mocked(goalsApi.createGoal).mockResolvedValue({
+      (
+        goalsApiModule.goalsApi.create as MockedFunction<typeof goalsApiModule.goalsApi.create>
+      ).mockResolvedValue({
         id: '1',
         title: 'Goal',
         description: 'Test',
-        smart_score: 7,
+        overall_smart_score: 7,
+        is_smart_validated: false,
+        completion_percentage: 0,
+        status: 'draft' as const, // Explicit literal type
+        project_id: 'p1',
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
       });
 
-      await store.createGoal({ project_id: 'p1', title: 'Goal', description: 'Test' });
+      await store.createGoal('p1', { title: 'Goal', description: 'Test' });
 
       expect(store.goals.length).toBe(1);
 
-      // Update
-      vi.mocked(goalsApi.updateGoal).mockResolvedValue({
+      (
+        goalsApiModule.goalsApi.update as MockedFunction<typeof goalsApiModule.goalsApi.update>
+      ).mockResolvedValue({
         id: '1',
         title: 'Updated',
         description: 'Test',
-        smart_score: 8,
+        overall_smart_score: 8,
+        is_smart_validated: false,
+        completion_percentage: 0,
+        status: 'draft' as const, // Explicit literal type
+        project_id: 'p1',
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
       });
 
       await store.updateGoal('1', { title: 'Updated' });
 
-      expect(store.goals.length).toBe(1); // Same count
-      expect(store.goals[0].title).toBe('Updated'); // Updated
+      expect(store.goals.length).toBe(1);
+      expect(store.goals[0]!.title).toBe('Updated');
 
-      // Delete
-      vi.mocked(goalsApi.deleteGoal).mockResolvedValue(undefined);
+      (
+        goalsApiModule.goalsApi.delete as MockedFunction<typeof goalsApiModule.goalsApi.delete>
+      ).mockResolvedValue(undefined);
 
       await store.deleteGoal('1');
 
-      expect(store.goals.length).toBe(0); // Removed
+      expect(store.goals.length).toBe(0);
     });
   });
 });

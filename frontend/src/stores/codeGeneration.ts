@@ -30,7 +30,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
       validation.value = await codeGenApi.validateProject(projectId);
       return validation.value;
     } catch (err) {
-      error.value = `Validation failed: ${err}`;
+      error.value = `Validation failed: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -47,7 +47,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
       currentSession.value = session;
       return session;
     } catch (err) {
-      error.value = `Failed to create session: ${err}`;
+      error.value = `Failed to create session: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -61,7 +61,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
     try {
       currentSession.value = await codeGenApi.getSession(sessionId);
     } catch (err) {
-      error.value = `Failed to fetch session: ${err}`;
+      error.value = `Failed to fetch session: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -74,7 +74,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
     try {
       sessions.value = await codeGenApi.listSessions(projectId);
     } catch (err) {
-      error.value = `Failed to fetch sessions: ${err}`;
+      error.value = `Failed to fetch sessions: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -89,7 +89,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
       currentSession.value = session;
       return session;
     } catch (err) {
-      error.value = `Scaffold generation failed: ${err}`;
+      error.value = `Scaffold generation failed: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -107,7 +107,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
       }
       return response;
     } catch (err) {
-      error.value = `Approval failed: ${err}`;
+      error.value = `Approval failed: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -123,7 +123,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
       currentSession.value = session;
       return session;
     } catch (err) {
-      error.value = `Code generation failed: ${err}`;
+      error.value = `Code generation failed: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -141,7 +141,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
       }
       return response;
     } catch (err) {
-      error.value = `Approval failed: ${err}`;
+      error.value = `Approval failed: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -155,7 +155,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
     try {
       files.value = await codeGenApi.listFiles(sessionId);
     } catch (err) {
-      error.value = `Failed to fetch files: ${err}`;
+      error.value = `Failed to fetch files: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -172,7 +172,7 @@ export const useCodeGenerationStore = defineStore('codeGeneration', () => {
         currentSession.value = null;
       }
     } catch (err) {
-      error.value = `Failed to delete session: ${err}`;
+      error.value = `Failed to delete session: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;

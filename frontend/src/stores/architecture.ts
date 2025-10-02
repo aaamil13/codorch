@@ -45,7 +45,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
       rules.value = response.rules;
       return response;
     } catch (err) {
-      error.value = `Failed to generate architecture: ${err}`;
+      error.value = `Failed to generate architecture: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -60,7 +60,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
     try {
       modules.value = await architectureApi.listModules(projectId);
     } catch (err) {
-      error.value = `Failed to fetch modules: ${err}`;
+      error.value = `Failed to fetch modules: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -73,7 +73,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
     try {
       currentModule.value = await architectureApi.getModule(moduleId);
     } catch (err) {
-      error.value = `Failed to fetch module: ${err}`;
+      error.value = `Failed to fetch module: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -88,7 +88,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
       modules.value.push(module);
       return module;
     } catch (err) {
-      error.value = `Failed to create module: ${err}`;
+      error.value = `Failed to create module: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -110,7 +110,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
       }
       return updated;
     } catch (err) {
-      error.value = `Failed to update module: ${err}`;
+      error.value = `Failed to update module: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -125,7 +125,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
       await architectureApi.deleteModule(moduleId);
       modules.value = modules.value.filter((m) => m.id !== moduleId);
     } catch (err) {
-      error.value = `Failed to delete module: ${err}`;
+      error.value = `Failed to delete module: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -143,7 +143,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
       }
       return approved;
     } catch (err) {
-      error.value = `Failed to approve module: ${err}`;
+      error.value = `Failed to approve module: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -158,7 +158,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
     try {
       dependencies.value = await architectureApi.listDependencies(projectId);
     } catch (err) {
-      error.value = `Failed to fetch dependencies: ${err}`;
+      error.value = `Failed to fetch dependencies: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -173,7 +173,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
       dependencies.value.push(dependency);
       return dependency;
     } catch (err) {
-      error.value = `Failed to create dependency: ${err}`;
+      error.value = `Failed to create dependency: ${(err as Error).message}`;
       console.error(err);
       return null;
     } finally {
@@ -190,7 +190,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
         (d) => d.id !== dependencyId
       );
     } catch (err) {
-      error.value = `Failed to delete dependency: ${err}`;
+      error.value = `Failed to delete dependency: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -204,7 +204,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
     try {
       validation.value = await architectureApi.validateArchitecture(projectId);
     } catch (err) {
-      error.value = `Failed to validate architecture: ${err}`;
+      error.value = `Failed to validate architecture: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;
@@ -217,7 +217,7 @@ export const useArchitectureStore = defineStore('architecture', () => {
     try {
       complexity.value = await architectureApi.getComplexityAnalysis(projectId);
     } catch (err) {
-      error.value = `Failed to analyze complexity: ${err}`;
+      error.value = `Failed to analyze complexity: ${(err as Error).message}`;
       console.error(err);
     } finally {
       loading.value = false;

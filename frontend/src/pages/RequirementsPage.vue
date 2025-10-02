@@ -372,7 +372,23 @@ function getStatusColor(status: string): string {
 
 async function handleFilterChange() {
   const projectId = route.params.projectId as string;
-  await requirementsStore.fetchRequirements(projectId, filters.value);
+  const requestFilters: {
+    type_filter?: string;
+    status_filter?: string;
+    priority_filter?: string;
+  } = {};
+
+  if (filters.value.type_filter) {
+    requestFilters.type_filter = filters.value.type_filter;
+  }
+  if (filters.value.status_filter) {
+    requestFilters.status_filter = filters.value.status_filter;
+  }
+  if (filters.value.priority_filter) {
+    requestFilters.priority_filter = filters.value.priority_filter;
+  }
+
+  await requirementsStore.fetchRequirements(projectId, requestFilters);
 }
 
 async function handleCreate() {
