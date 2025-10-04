@@ -23,18 +23,18 @@ class OpportunityBase(BaseSchema):
     """Base opportunity schema."""
 
     title: str = Field(..., min_length=1, max_length=255, description="Opportunity title")
-    description: Optional[str] = Field(None, description="Opportunity description")
-    category: Optional[str] = Field(None, max_length=100, description="Category")
-    target_market: Optional[str] = Field(None, description="Target market description")
-    value_proposition: Optional[str] = Field(None, description="Unique value proposition")
-    estimated_effort: Optional[str] = Field(None, description="Estimated effort")
-    estimated_timeline: Optional[str] = Field(None, description="Estimated timeline")
+    description: Optional[str] = Field(default=None, description="Opportunity description")
+    category: Optional[str] = Field(default=None, max_length=100, description="Category")
+    target_market: Optional[str] = Field(default=None, description="Target market description")
+    value_proposition: Optional[str] = Field(default=None, description="Unique value proposition")
+    estimated_effort: Optional[str] = Field(default=None, description="Estimated effort")
+    estimated_timeline: Optional[str] = Field(default=None, description="Estimated timeline")
 
 
 class OpportunityCreate(OpportunityBase):
     """Schema for creating opportunity."""
 
-    goal_id: Optional[UUID] = Field(None, description="Related goal ID")
+    goal_id: Optional[UUID] = Field(default=None, description="Related goal ID")
     required_resources: Optional[dict] = Field(default_factory=dict)
 
 

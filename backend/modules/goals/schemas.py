@@ -43,10 +43,10 @@ class GoalBase(BaseSchema):
     """Base goal schema."""
 
     title: str = Field(..., min_length=1, max_length=255, description="Goal title")
-    description: Optional[str] = Field(None, description="Goal description")
-    category: Optional[str] = Field(None, max_length=100, description="Goal category")
-    target_date: Optional[datetime] = Field(None, description="Target completion date")
-    priority: Optional[str] = Field(None, description="Priority level (low, medium, high, critical)")
+    description: Optional[str] = Field(default=None, description="Goal description")
+    category: Optional[str] = Field(default=None, max_length=100, description="Goal category")
+    target_date: Optional[datetime] = Field(default=None, description="Target completion date")
+    priority: Optional[str] = Field(default=None, description="Priority level (low, medium, high, critical)")
 
     @field_validator("priority")
     @classmethod
@@ -63,7 +63,7 @@ class GoalBase(BaseSchema):
 class GoalCreate(GoalBase):
     """Schema for creating a goal."""
 
-    parent_goal_id: Optional[UUID] = Field(None, description="Parent goal ID")
+    parent_goal_id: Optional[UUID] = Field(default=None, description="Parent goal ID")
     metrics: Optional[list[MetricDefinition]] = Field(default_factory=list, description="Goal metrics")
 
 

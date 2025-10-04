@@ -32,35 +32,29 @@ class TestGraphManagerService:
         assert manager1 is manager2
         assert id(manager1) == id(manager2)
 
-    def test_cache_management(self, graph_manager: GraphManagerService) -> None:
-        """Test graph caching."""
+    @pytest.mark.asyncio
+    async def test_service_instance_caching(self, graph_manager: GraphManagerService, async_session: AsyncSession) -> None:
+        """Test that services are cached per project_id."""
         project_id = uuid4()
 
-        # Initially empty
-        assert project_id not in graph_manager._graph_cache
+        # First call - should create services
+        services1 = await graph_manager.get_or_create_services(project_id, async_session)
+        assert all(s is not None for s in services1)
+        
+        # Second call - should return the same cached instances
+        services2 = await graph_manager.get_or_create_services(project_id, async_session)
+        assert all(s is not None for s in services2)
 
-        # Would be populated by get_or_create_graph
-        # (requires DB session, tested in integration tests)
+        # Check if the instances are identical
+        assert services1[0] is services2[0]  # HydrationService
+        assert services1[1] is services2[1]  # OperationsService
+        assert services1[2] is services2[2]  # AnalyticsService
+        assert services1[3] is services2[3]  # VersioningService
 
-        # Test clear cache
-        graph_manager._graph_cache[project_id] = "test_graph"
-        assert project_id in graph_manager._graph_cache
-
-        graph_manager.clear_cache(project_id)
-        assert project_id not in graph_manager._graph_cache
-
-    def test_clear_all_cache(self, graph_manager: GraphManagerService) -> None:
-        """Test clearing all caches."""
-        project1 = uuid4()
-        project2 = uuid4()
-
-        graph_manager._graph_cache[project1] = "graph1"
-        graph_manager._graph_cache[project2] = "graph2"
-
-        assert len(graph_manager._graph_cache) == 2
-
-        graph_manager.clear_cache()
-        assert len(graph_manager._graph_cache) == 0
+        # Check a different project_id creates new instances
+        other_project_id = uuid4()
+        other_services = await graph_manager.get_or_create_services(other_project_id, async_session)
+        assert services1[0] is not other_services[0]
 
 
 @pytest.mark.asyncio

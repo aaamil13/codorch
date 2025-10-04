@@ -43,3 +43,35 @@ class GraphOperationsService:
             print(f"Failed to add dependency to RefMemTree: {e}")
 
         return False
+
+    async def update_node_in_graph(
+        self,
+        node_id: UUID,
+        node_type: str,
+        data: dict,
+    ) -> bool:
+        """Update node in RefMemTree graph."""
+        try:
+            node = self.graph_system.get_node(str(node_id))
+            if node:
+                node.node_type = node_type
+                node.data = data
+                # Trigger change analysis in RefMemTree if needed
+                # node.on_change() 
+                return True
+            return False
+        except Exception as e:
+            print(f"Failed to update node in RefMemTree: {e}")
+            return False
+
+    async def remove_node_from_graph(
+        self,
+        node_id: UUID,
+    ) -> bool:
+        """Remove node from RefMemTree graph."""
+        try:
+            self.graph_system.remove_node(str(node_id))
+            return True
+        except Exception as e:
+            print(f"Failed to remove node from RefMemTree: {e}")
+            return False

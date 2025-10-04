@@ -42,6 +42,16 @@ class GraphManagerService:
         _, ops, _, _ = await self.get_or_create_services(project_id, session)
         return await ops.add_dependency_to_graph(from_node_id, to_node_id, dependency_type)
 
+    async def update_node_in_graph(self, project_id: UUID, session: AsyncSession, node_id: UUID, node_type: str, data: dict) -> bool:
+        _, ops, _, _ = await self.get_or_create_services(project_id, session)
+        # This method needs to be implemented in GraphOperationsService
+        return await ops.update_node_in_graph(node_id, node_type, data)
+
+    async def remove_node_from_graph(self, project_id: UUID, session: AsyncSession, node_id: UUID) -> bool:
+        _, ops, _, _ = await self.get_or_create_services(project_id, session)
+        # This method needs to be implemented in GraphOperationsService
+        return await ops.remove_node_from_graph(node_id)
+
     async def detect_circular_dependencies(self, project_id: UUID, session: AsyncSession) -> List[List[str]]:
         _, _, analytics, _ = await self.get_or_create_services(project_id, session)
         return await analytics.detect_circular_dependencies()

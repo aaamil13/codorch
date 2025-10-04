@@ -7,6 +7,7 @@ from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import Opportunity
+from backend.modules.opportunities.schemas import OpportunityCreate
 
 
 class OpportunityRepository:
@@ -16,12 +17,16 @@ class OpportunityRepository:
         """Initialize repository with asynchronous database session."""
         self.db = db
 
-    async def create(self, opportunity: Opportunity) -> Opportunity:
+    async def create(self, opportunity_data: OpportunityCreate, project_id: UUID) -> Opportunity:
         """Create new opportunity."""
-        self.db.add(opportunity)
+        db_opportunity = Opportunity(
+            **opportunity_data.model_dump(),
+            project_id=project_id,
+        )
+        self.db.add(db_opportunity)
         await self.db.commit()
-        await self.db.refresh(opportunity)
-        return opportunity
+        await self.db.refresh(db_opportunity)
+        return db_opportunity
 
     async def get_by_id(self, opportunity_id: UUID) -> Optional[Opportunity]:
         """Get opportunity by ID."""

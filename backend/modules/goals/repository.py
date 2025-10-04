@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from backend.db.models import Goal
+from backend.modules.goals.schemas import GoalCreate, GoalUpdate
 
 
 class GoalRepository:
@@ -17,12 +18,16 @@ class GoalRepository:
         """Initialize repository with asynchronous database session."""
         self.db = db
 
-    async def create(self, goal: Goal) -> Goal:
+    async def create(self, goal_data: GoalCreate, project_id: UUID) -> Goal:
         """Create new goal."""
-        self.db.add(goal)
+        db_goal = Goal(
+            **goal_data.model_dump(),
+            project_id=project_id
+        )
+        self.db.add(db_goal)
         await self.db.commit()
-        await self.db.refresh(goal)
-        return goal
+        await self.db.refresh(db_goal)
+        return db_goal
 
     async def get_by_id(self, goal_id: UUID) -> Optional[Goal]:
         """Get goal by ID."""
@@ -56,16 +61,28 @@ class GoalRepository:
         result = await self.db.execute(select(Goal).filter(Goal.parent_goal_id == parent_goal_id))
         return result.scalars().all()
 
-    async def update(self, goal: Goal) -> Goal:
+    async def update(self, goal_id: UUID, update_data: GoalUpdate) -> Optional[Goal]:
         """Update goal."""
+        goal = await self.get_by_id(goal_id)
+        if not goal:
+            return None
+
+        update_dict = update_data.model_dump(exclude_unset=True)
+        for key, value in update_dict.items():
+            setattr(goal, key, value)
+
         await self.db.commit()
         await self.db.refresh(goal)
         return goal
 
-    async def delete(self, goal: Goal) -> None:
+    async def delete(self, goal_id: UUID) -> bool:
         """Delete goal."""
+        goal = await self.get_by_id(goal_id)
+        if not goal:
+            return False
         await self.db.delete(goal)
         await self.db.commit()
+        return True
 
     async def count_by_project(self, project_id: UUID) -> int:
         """Count goals in a project."""

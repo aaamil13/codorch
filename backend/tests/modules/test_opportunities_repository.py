@@ -35,13 +35,12 @@ class TestOpportunityRepository:
     def test_create_opportunity(self, opp_repo, test_project):
         """Test creating an opportunity."""
         opp_data = OpportunityCreate(
-            project_id=test_project.id,
             title="AI Chatbot",
             description="Build AI-powered chatbot",
             category="product",
         )
 
-        opp = opp_repo.create(opp_data)
+        opp = opp_repo.create(opp_data, test_project.id)
 
         assert opp.id is not None
         assert opp.title == "AI Chatbot"
@@ -50,12 +49,8 @@ class TestOpportunityRepository:
 
     def test_get_by_id(self, opp_repo, test_project):
         """Test getting opportunity by ID."""
-        opp = opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Test Opportunity",
-            )
-        )
+        opp_data = OpportunityCreate(title="Test Opportunity")
+        opp = opp_repo.create(opp_data, test_project.id)
 
         retrieved = opp_repo.get_by_id(opp.id)
 
@@ -71,10 +66,8 @@ class TestOpportunityRepository:
         """Test getting opportunities by project."""
         for i in range(3):
             opp_repo.create(
-                OpportunityCreate(
-                    project_id=test_project.id,
-                    title=f"Opportunity {i}",
-                )
+                OpportunityCreate(title=f"Opportunity {i}"),
+                test_project.id
             )
 
         opps = opp_repo.get_by_project(test_project.id)
@@ -84,22 +77,13 @@ class TestOpportunityRepository:
 
     def test_get_by_project_with_filters(self, opp_repo, test_project):
         """Test filtering opportunities."""
-        opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Product Opp",
-                category="product",
-                ai_generated=True,
-            )
-        )
-        opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Market Opp",
-                category="market",
-                ai_generated=False,
-            )
-        )
+        opp1_data = OpportunityCreate(title="Product Opp", category="product")
+        opp1 = opp_repo.create(opp1_data, test_project.id)
+        opp1.ai_generated = True # Manually set for testing filter
+
+        opp2_data = OpportunityCreate(title="Market Opp", category="market")
+        opp2 = opp_repo.create(opp2_data, test_project.id)
+        opp2.ai_generated = False
 
         # Filter by category
         product_opps = opp_repo.get_by_project(test_project.id, category="product")
@@ -113,12 +97,8 @@ class TestOpportunityRepository:
 
     def test_update_opportunity(self, opp_repo, test_project):
         """Test updating opportunity."""
-        opp = opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Original",
-            )
-        )
+        opp_data = OpportunityCreate(title="Original")
+        opp = opp_repo.create(opp_data, test_project.id)
 
         updated = opp_repo.update(
             opp.id,
@@ -134,12 +114,8 @@ class TestOpportunityRepository:
 
     def test_delete_opportunity(self, opp_repo, test_project):
         """Test deleting opportunity."""
-        opp = opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="To Delete",
-            )
-        )
+        opp_data = OpportunityCreate(title="To Delete")
+        opp = opp_repo.create(opp_data, test_project.id)
 
         result = opp_repo.delete(opp.id)
 
@@ -149,27 +125,12 @@ class TestOpportunityRepository:
     def test_get_top_ranked(self, opp_repo, test_project):
         """Test getting top-ranked opportunities."""
         # Create opportunities with scores
-        opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="High Score",
-                score=0.9,
-            )
-        )
-        opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Low Score",
-                score=0.3,
-            )
-        )
-        opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Medium Score",
-                score=0.6,
-            )
-        )
+        opp1 = opp_repo.create(OpportunityCreate(title="High Score"), test_project.id)
+        opp1.score = 0.9
+        opp2 = opp_repo.create(OpportunityCreate(title="Low Score"), test_project.id)
+        opp2.score = 0.3
+        opp3 = opp_repo.create(OpportunityCreate(title="Medium Score"), test_project.id)
+        opp3.score = 0.6
 
         top_opps = opp_repo.get_top_ranked(test_project.id, limit=2)
 
@@ -182,25 +143,16 @@ class TestOpportunityRepository:
     def test_count_by_category(self, opp_repo, test_project):
         """Test counting opportunities by category."""
         opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Product 1",
-                category="product",
-            )
+            OpportunityCreate(title="Product 1", category="product"),
+            test_project.id
         )
         opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Product 2",
-                category="product",
-            )
+            OpportunityCreate(title="Product 2", category="product"),
+            test_project.id
         )
         opp_repo.create(
-            OpportunityCreate(
-                project_id=test_project.id,
-                title="Market 1",
-                category="market",
-            )
+            OpportunityCreate(title="Market 1", category="market"),
+            test_project.id
         )
 
         counts = opp_repo.count_by_category(test_project.id)
@@ -212,10 +164,8 @@ class TestOpportunityRepository:
         """Test pagination."""
         for i in range(10):
             opp_repo.create(
-                OpportunityCreate(
-                    project_id=test_project.id,
-                    title=f"Opp {i}",
-                )
+                OpportunityCreate(title=f"Opp {i}"),
+                test_project.id
             )
 
         page1 = opp_repo.get_by_project(test_project.id, skip=0, limit=5)

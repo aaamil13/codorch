@@ -32,8 +32,7 @@ class TreeNodeService:
         project_id: UUID,
         parent_id: Optional[UUID],
         node_type: str,
-        content: dict,
-        metadata: dict = None,
+        data: dict,
     ) -> TreeNode:
         """
         Create tree node with write-through to RefMemTree.
@@ -47,8 +46,7 @@ class TreeNodeService:
             project_id=project_id,
             parent_id=parent_id,
             node_type=node_type,
-            content=content or {},
-            metadata=metadata or {},
+            data=data,
         )
 
         self.session.add(node)
@@ -63,7 +61,7 @@ class TreeNodeService:
                 session=self.session,
                 node_id=node.id,
                 node_type=node_type,
-                data=content,
+                data=data,
             )
             print(f"✅ Node {node.id} synced to RefMemTree")
         except Exception as e:
@@ -92,38 +90,29 @@ class TreeNodeService:
         if not node:
             return None
 
-        # Store old data for RefMemTree change tracking
-        old_data = {
-            "content": node.content.copy() if node.content else {},
-            "metadata": node.metadata.copy() if node.metadata else {},
-            "node_type": node.node_type,
-        }
-
         # Step 1: Update PostgreSQL
-        if "content" in updates:
-            node.content = updates["content"]
-        if "metadata" in updates:
-            node.metadata = updates["metadata"]
+        node.data.update(updates.get("data", {}))
         if "node_type" in updates:
             node.node_type = updates["node_type"]
+        
+        # Mark as modified to ensure JSON is updated
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(node, "data")
 
         await self.session.commit()
         await self.session.refresh(node)
 
         # Step 2: Update RefMemTree GraphSystem
         try:
-            graph = await self.graph_manager.get_or_create_graph(node.project_id, self.session)
-
-            if graph:
-                refmem_node = graph.get_node(str(node_id))
-
-                if refmem_node:
-                    # Update node data in RefMemTree
-                    refmem_node.data = node.content
-
-                    # ⭐ Trigger change callback (if registered)
-                    # RefMemTree will automatically call node.on_change() callbacks
-                    print(f"✅ Node {node_id} updated in RefMemTree")
+            # The GraphManagerService should handle the update logic
+            await self.graph_manager.update_node_in_graph(
+                project_id=node.project_id,
+                session=self.session,
+                node_id=node.id,
+                node_type=node.node_type,
+                data=node.data,
+            )
+            print(f"✅ Node {node_id} updated in RefMemTree")
         except Exception as e:
             print(f"⚠️ RefMemTree sync failed (non-critical): {e}")
 
@@ -179,12 +168,12 @@ class TreeNodeService:
 
         # Step 2: Delete from RefMemTree
         try:
-            graph = await self.graph_manager.get_or_create_graph(node.project_id, self.session)
-
-            if graph:
-                # Remove node from graph
-                graph.remove_node(str(node_id))
-                print(f"✅ Node {node_id} removed from RefMemTree")
+            await self.graph_manager.remove_node_from_graph(
+                project_id=node.project_id,
+                session=self.session,
+                node_id=node_id
+            )
+            print(f"✅ Node {node_id} removed from RefMemTree")
         except Exception as e:
             print(f"⚠️ RefMemTree delete failed (non-critical): {e}")
 

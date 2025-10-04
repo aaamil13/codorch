@@ -137,10 +137,11 @@ Focus on CREATIVE and INNOVATIVE ideas."""
     def _parse_ideas(self, content: str) -> list[OpportunityIdea]:
         """Parse ideas from AI response (simplified)."""
         # Simple parsing - in production use structured output
+        from typing import Dict, Any
         ideas = []
         lines = content.split("\n")
 
-        current_idea = {}
+        current_idea: Dict[str, Any] = {}
         for line in lines:
             line = line.strip()
             if not line:
