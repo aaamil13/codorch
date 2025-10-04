@@ -4,9 +4,10 @@ Change Monitor - Real-time change tracking using RefMemTree's node.on_change()
 This implements RefMemTree's change monitoring capabilities for Codorch.
 """
 
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 from uuid import UUID
 from datetime import datetime
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.graph_manager import GraphManagerService
 from backend.core.event_emitter import get_event_emitter
@@ -29,7 +30,7 @@ class ChangeMonitor:
         project_id: UUID,
         node_id: UUID,
         callback: Callable,
-        session,
+        session: AsyncSession,
     ) -> bool:
         """
         Register watcher for node changes using RefMemTree.
@@ -47,7 +48,8 @@ class ChangeMonitor:
         """
         try:
             # Get RefMemTree graph
-            graph = await self.graph_manager.get_or_create_graph(project_id, session)
+            _, _, analytics, _ = await self.graph_manager.get_or_create_services(project_id, session)
+            graph = analytics.graph_system
             if not graph:
                 return False
 
@@ -118,7 +120,7 @@ class ChangeMonitor:
         project_id: UUID,
         node_id: UUID,
         change_info: dict,
-        session,
+        session: AsyncSession,
     ) -> None:
         """
         Find dependent nodes and notify them of change.
@@ -126,7 +128,8 @@ class ChangeMonitor:
         This is the CASCADE UPDATE feature.
         """
         try:
-            graph = await self.graph_manager.get_or_create_graph(project_id, session)
+            _, _, analytics, _ = await self.graph_manager.get_or_create_services(project_id, session)
+            graph = analytics.graph_system
             node = graph.get_node(str(node_id))
 
             if not node:
@@ -151,7 +154,7 @@ class ChangeMonitor:
         except Exception as e:
             print(f"Error notifying dependents: {e}")
 
-    def unregister_all(self, node_id: UUID = None) -> None:
+    def unregister_all(self, node_id: Optional[UUID] = None) -> None:
         """Unregister watchers."""
         if node_id:
             if node_id in self.callbacks:
@@ -168,7 +171,7 @@ class ChangeMonitor:
 async def watch_module_changes(
     project_id: UUID,
     module_id: UUID,
-    session,
+    session: AsyncSession,
     on_change: Callable,
 ) -> bool:
     """

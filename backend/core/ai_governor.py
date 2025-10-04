@@ -87,9 +87,11 @@ class AIGovernor:
                 "error": "AIGovernor not available - RefMemTree not installed",
             }
 
+        snapshot_id: Optional[str] = None
         try:
             # Get RefMemTree graph
-            graph = await self.graph_manager.get_or_create_graph(project_id, session)
+            _, _, analytics, _ = await self.graph_manager.get_or_create_services(project_id, session)
+            graph = analytics.graph_system
             if not graph:
                 return {"status": "error", "error": "Failed to load graph"}
 
@@ -100,7 +102,6 @@ class AIGovernor:
                     return {"status": "validation_failed", "errors": validation["errors"]}
 
             # Step 2: Create snapshot if requested
-            snapshot_id: Optional[str] = None # Initialize snapshot_id
             if create_snapshot:
                 # ⭐ REAL RefMemTree API
                 snapshot_id = graph.create_version(
@@ -163,7 +164,8 @@ class AIGovernor:
             # Try to rollback if we have snapshot
             if snapshot_id and not dry_run:
                 try:
-                    graph = await self.graph_manager.get_or_create_graph(project_id, session)
+                    _, _, analytics, _ = await self.graph_manager.get_or_create_services(project_id, session)
+                    graph = analytics.graph_system
                     if graph: # Ensure graph is not None for rollback
                         # ⭐ REAL RefMemTree API
                         graph.rollback_to_version(snapshot_id)

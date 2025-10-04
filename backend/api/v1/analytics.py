@@ -41,7 +41,8 @@ async def get_most_critical_nodes(
     Performance: Milliseconds for entire analysis!
     """
     graph_manager = get_graph_manager()
-    graph = await graph_manager.get_or_create_graph(project_id, db)
+    _, _, analytics, _ = await graph_manager.get_or_create_services(project_id, db)
+    graph = analytics.graph_system
 
     if not graph:
         return {"error": "RefMemTree not available"}
@@ -106,7 +107,8 @@ async def get_dependency_hotspots(
     Uses RefMemTree to instantly analyze coupling.
     """
     graph_manager = get_graph_manager()
-    graph = await graph_manager.get_or_create_graph(project_id, db)
+    _, _, analytics, _ = await graph_manager.get_or_create_services(project_id, db)
+    graph = analytics.graph_system
 
     if not graph:
         return {"error": "RefMemTree not available"}
@@ -176,9 +178,8 @@ async def get_architecture_health(
 
     # Use RefMemTree validation
     validation = await graph_manager.validate_rules(project_id, db)
-
-    # Detect issues
-    graph = await graph_manager.get_or_create_graph(project_id, db)
+    _, _, analytics, _ = await graph_manager.get_or_create_services(project_id, db)
+    graph = analytics.graph_system
 
     health_checks = {
         "no_circular_deps": True,

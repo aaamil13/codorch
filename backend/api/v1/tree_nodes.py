@@ -78,7 +78,8 @@ async def get_node_dependents(
 
     # ⭐ Use RefMemTree for instant query
     graph_manager = get_graph_manager()
-    graph = await graph_manager.get_or_create_graph(node.project_id, session)
+    _, _, analytics, _ = await graph_manager.get_or_create_services(node.project_id, session)
+    graph = analytics.graph_system
 
     if not graph:
         raise HTTPException(status_code=503, detail="RefMemTree not available")
@@ -136,7 +137,8 @@ async def get_dependency_chain(
 
     # Get graph
     graph_manager = get_graph_manager()
-    graph = await graph_manager.get_or_create_graph(node.project_id, session)
+    _, _, analytics, _ = await graph_manager.get_or_create_services(node.project_id, session)
+    graph = analytics.graph_system
 
     if not graph:
         raise HTTPException(status_code=503, detail="RefMemTree not available")

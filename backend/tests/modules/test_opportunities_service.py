@@ -3,6 +3,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import Project, User
 from backend.modules.opportunities.schemas import (
@@ -15,22 +16,22 @@ from backend.modules.opportunities.service import OpportunityService
 
 
 @pytest.fixture
-def test_project(db_session, test_user: User):
+async def test_project(db_session: AsyncSession, test_user: User) -> Project:
     """Create test project."""
     project = Project(
         name="Test Project",
         description="Test",
-        status="active",
-        created_by=test_user.id,
+        goal="Test Goal",
+        owner_id=test_user.id
     )
     db_session.add(project)
-    db_session.commit()
-    db_session.refresh(project)
+    await db_session.commit()
+    await db_session.refresh(project)
     return project
 
 
 @pytest.fixture
-def opp_service(db_session):
+def opp_service(db_session: AsyncSession) -> OpportunityService:
     """Create OpportunityService instance."""
     return OpportunityService(db_session)
 
@@ -38,21 +39,16 @@ def opp_service(db_session):
 class TestOpportunityService:
     """Test OpportunityService methods."""
 
-    def test_create_opportunity_with_scoring(self, opp_service, test_project):
+    @pytest.mark.asyncio
+    async def test_create_opportunity_with_scoring(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test creating opportunity with automatic scoring."""
         opp_data = OpportunityCreate(
             title="AI-powered analytics",
             description="Build analytics dashboard with AI insights",
             category="product",
-            target_market="Test Market",
-            value_proposition="Test Value",
-            estimated_effort="Low",
-            estimated_timeline="Short",
-            required_resources={},
-            goal_id=None,
         )
 
-        opp = opp_service.create_opportunity(test_project.id, opp_data)
+        opp = await opp_service.create_opportunity(test_project.id, opp_data)
 
         assert opp.id is not None
         assert opp.title == opp_data.title
@@ -63,68 +59,53 @@ class TestOpportunityService:
         assert opp.innovation_score is not None
         assert opp.resource_score is not None
 
-    def test_get_opportunity(self, opp_service, test_project):
+    @pytest.mark.asyncio
+    async def test_get_opportunity(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test getting opportunity."""
-        opp = opp_service.create_opportunity(
+        opp = await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="Test Opportunity",
                 description="Test",
                 category="Test",
-                target_market="Test Market",
-                value_proposition="Test Value",
-                estimated_effort="Low",
-                estimated_timeline="Short",
-                required_resources={},
-                goal_id=None,
             ),
         )
 
-        retrieved = opp_service.get_opportunity(opp.id)
+        retrieved = await opp_service.get_opportunity(opp.id)
 
         assert retrieved is not None
         assert retrieved.id == opp.id
 
-    def test_list_opportunities(self, opp_service, test_project):
+    @pytest.mark.asyncio
+    async def test_list_opportunities(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test listing opportunities."""
         for i in range(3):
-            opp_service.create_opportunity(
+            await opp_service.create_opportunity(
                 test_project.id,
                 OpportunityCreate(
                     title=f"Opportunity {i}",
                     description="Test",
                     category="Test",
-                    target_market="Test Market",
-                    value_proposition="Test Value",
-                    estimated_effort="Low",
-                    estimated_timeline="Short",
-                    required_resources={},
-                    goal_id=None,
                 ),
             )
 
-        opps = opp_service.list_opportunities(test_project.id)
+        opps = await opp_service.list_opportunities(test_project.id)
 
         assert len(opps) == 3
 
-    def test_update_opportunity(self, opp_service, test_project):
+    @pytest.mark.asyncio
+    async def test_update_opportunity(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test updating opportunity."""
-        opp = opp_service.create_opportunity(
+        opp = await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="Original",
                 description="Test",
                 category="Test",
-                target_market="Test Market",
-                value_proposition="Test Value",
-                estimated_effort="Low",
-                estimated_timeline="Short",
-                required_resources={},
-                goal_id=None,
             ),
         )
 
-        updated = opp_service.update_opportunity(
+        updated = await opp_service.update_opportunity(
             opp.id,
             OpportunityUpdate(title="Updated"),
         )
@@ -134,33 +115,26 @@ class TestOpportunityService:
         # Scores should be recalculated
         assert updated.score is not None
 
-    def test_delete_opportunity(self, opp_service, test_project):
+    @pytest.mark.asyncio
+    async def test_delete_opportunity(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test deleting opportunity."""
-        opp = opp_service.create_opportunity(
+        opp = await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="To Delete",
                 description="Test",
                 category="Test",
-                target_market="Test Market",
-                value_proposition="Test Value",
-                estimated_effort="Low",
-                estimated_timeline="Short",
-                required_resources={},
-                goal_id=None,
             ),
         )
 
-        result = opp_service.delete_opportunity(opp.id)
+        await opp_service.delete_opportunity(opp.id)
 
-        assert result is True
-        assert opp_service.get_opportunity(opp.id) is None
+        assert await opp_service.get_opportunity(opp.id) is None
 
     @pytest.mark.asyncio
-    async def test_generate_opportunities(self, opp_service, test_project):
+    async def test_generate_opportunities(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test AI opportunity generation."""
         request = OpportunityGenerateRequest(
-            project_id=test_project.id,
             context="SaaS platform for project management",
             num_opportunities=3,
             creativity_level="balanced",
@@ -188,41 +162,29 @@ class TestOpportunityService:
             )
             mock_team_class.return_value = mock_team
 
-            result = await opp_service.generate_opportunities(request)
+            result = await opp_service.generate_opportunities(test_project.id, request)
 
-            assert "opportunities" in result
-            assert len(result["opportunities"]) >= 2
+            assert hasattr(result, "opportunities")
+            assert len(result.opportunities) >= 2
 
     @pytest.mark.asyncio
-    async def test_compare_opportunities(self, opp_service, test_project):
+    async def test_compare_opportunities(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test opportunity comparison."""
         # Create opportunities
-        opp1 = opp_service.create_opportunity(
+        opp1 = await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="Opportunity 1",
                 description="Test",
                 category="Test",
-                target_market="Test Market",
-                value_proposition="Test Value",
-                estimated_effort="Low",
-                estimated_timeline="Short",
-                required_resources={},
-                goal_id=None,
             ),
         )
-        opp2 = opp_service.create_opportunity(
+        opp2 = await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="Opportunity 2",
                 description="Test",
                 category="Test",
-                target_market="Test Market",
-                value_proposition="Test Value",
-                estimated_effort="Low",
-                estimated_timeline="Short",
-                required_resources={},
-                goal_id=None,
             ),
         )
 
@@ -243,80 +205,60 @@ class TestOpportunityService:
             )
             mock_team_class.return_value = mock_team
 
-            result = await opp_service.compare_opportunities(request)
+            result = await opp_service.compare_opportunities(request.opportunity_ids)
 
-            assert "comparison" in result
-            assert "recommendation" in result
+            assert hasattr(result, "comparison")
+            assert hasattr(result, "recommendation")
 
-    def test_get_top_opportunities(self, opp_service, test_project):
+    @pytest.mark.asyncio
+    async def test_get_top_opportunities(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test getting top-ranked opportunities."""
         # Create opportunities with different scores
-        opp_service.create_opportunity(
+        await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="High",
                 description="High impact opportunity with clear benefits",
                 category="Test",
-                target_market="Test Market",
-                value_proposition="Test Value",
-                estimated_effort="Low",
-                estimated_timeline="Short",
-                required_resources={},
-                goal_id=None,
             ),
         )
-        opp_service.create_opportunity(
+        await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="Low",
                 description="Low priority",
                 category="other",
-                target_market="Test Market",
-                value_proposition="Test Value",
-                estimated_effort="Low",
-                estimated_timeline="Short",
-                required_resources={},
-                goal_id=None,
             ),
         )
 
-        top_opps = opp_service.get_top_opportunities(test_project.id, limit=1)
+        top_opps = await opp_service.get_top_opportunities(test_project.id, limit=1)
 
         assert len(top_opps) >= 1
 
-    def test_scoring_calculation(self, opp_service, test_project):
+    @pytest.mark.asyncio
+    async def test_scoring_calculation(self, opp_service: OpportunityService, test_project: Project) -> None:
         """Test scoring calculation logic."""
         # High-quality opportunity
-        good_opp = opp_service.create_opportunity(
+        good_opp = await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="Revolutionary AI Platform",
                 description="Build cutting-edge AI platform with proven technology and clear market demand",
                 category="product",
-                target_market="Enterprise B2B",
-                value_proposition="Reduce costs by 50%",
-                estimated_effort="High",
-                estimated_timeline="Long",
-                required_resources={},
-                goal_id=None,
             ),
         )
 
         # Low-quality opportunity
-        poor_opp = opp_service.create_opportunity(
+        poor_opp = await opp_service.create_opportunity(
             test_project.id,
             OpportunityCreate(
                 title="Something",
                 description="Do something",
                 category="other",
-                target_market="N/A",
-                value_proposition="N/A",
-                estimated_effort="Unknown",
-                estimated_timeline="Unknown",
-                required_resources={},
-                goal_id=None,
             ),
         )
 
         # Good opportunity should have higher score
+        assert good_opp.score is not None
+        assert poor_opp.score is not None
         assert good_opp.score > poor_opp.score

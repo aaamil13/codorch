@@ -4,7 +4,8 @@ Tests for Architecture Service with RefMemTree integration.
 
 import pytest
 from uuid import uuid4
-
+from sqlalchemy.ext.asyncio import AsyncSession
+from backend.db.models import Project
 from backend.modules.architecture.service import ArchitectureService
 from backend.modules.architecture.schemas import (
     ArchitectureModuleCreate,
@@ -16,7 +17,7 @@ from backend.modules.architecture.schemas import (
 class TestArchitectureService:
     """Test Architecture Service."""
 
-    async def test_create_module(self, async_session, sample_project):
+    async def test_create_module(self, async_session: AsyncSession, sample_project: Project) -> None:
         """Test module creation with RefMemTree sync."""
         service = ArchitectureService(async_session)
 
@@ -34,7 +35,7 @@ class TestArchitectureService:
         assert module.module_type == "service"
         assert module.level == 0  # Root level
 
-    async def test_create_module_with_parent(self, async_session, sample_project):
+    async def test_create_module_with_parent(self, async_session: AsyncSession, sample_project: Project) -> None:
         """Test module creation with parent (hierarchy)."""
         service = ArchitectureService(async_session)
 
@@ -50,7 +51,7 @@ class TestArchitectureService:
 
         assert child.level == parent.level + 1
 
-    async def test_create_dependency_prevents_self_reference(self, async_session, sample_project):
+    async def test_create_dependency_prevents_self_reference(self, async_session: AsyncSession, sample_project: Project) -> None:
         """Test that module cannot depend on itself."""
         service = ArchitectureService(async_session)
 
@@ -68,7 +69,7 @@ class TestArchitectureService:
         with pytest.raises(ValueError, match="cannot depend on itself"):
             await service.create_dependency(dep_data)
 
-    async def test_delete_module_checks_impact(self, async_session, sample_project):
+    async def test_delete_module_checks_impact(self, async_session: AsyncSession, sample_project: Project) -> None:
         """Test that delete checks RefMemTree impact."""
         service = ArchitectureService(async_session)
 
@@ -84,7 +85,7 @@ class TestArchitectureService:
 
 
 @pytest.fixture
-async def sample_project(async_session):
+async def sample_project(async_session: AsyncSession) -> Project:
     """Create sample project."""
     from backend.db.models import Project, User
     from datetime import datetime

@@ -1,269 +1,29 @@
-core\graph_manager.py: note: In member "add_node_to_graph" of class "GraphManagerService":
-core\graph_manager.py:39: error: Redundant cast to "bool"  [redundant-cast]
-core\graph_manager.py: note: In member "add_dependency_to_graph" of class "GraphManagerService":
-core\graph_manager.py:43: error: Redundant cast to "bool"  [redundant-cast]
-core\graph_manager.py: note: In member "update_node_in_graph" of class "GraphManagerService":
-core\graph_manager.py:47: error: Redundant cast to "bool"  [redundant-cast]
-core\graph_manager.py: note: In member "remove_node_from_graph" of class "GraphManagerService":
-core\graph_manager.py:51: error: Redundant cast to "bool"  [redundant-cast]
-core\graph_manager.py: note: In member "detect_circular_dependencies" of class "GraphManagerService":
-core\graph_manager.py:55: error: Redundant cast to "list[list[str]]"  [redundant-cast]
-core\graph_manager.py: note: In member "calculate_node_impact" of class "GraphManagerService":
-core\graph_manager.py:59: error: Redundant cast to "dict[Any, Any]"  [redundant-cast]
-core\graph_manager.py: note: In member "simulate_change" of class "GraphManagerService":
-core\graph_manager.py:63: error: Redundant cast to "dict[Any, Any]"  [redundant-cast]
-core\graph_manager.py: note: In member "validate_rules" of class "GraphManagerService":
-core\graph_manager.py:67: error: Redundant cast to "dict[Any, Any]"  [redundant-cast]
-core\graph_manager.py: note: In member "create_snapshot" of class "GraphManagerService":
-core\graph_manager.py:71: error: Redundant cast to "str"  [redundant-cast]
-core\graph_manager.py: note: In member "rollback_to_snapshot" of class "GraphManagerService":
-core\graph_manager.py:75: error: Redundant cast to "dict[Any, Any]"  [redundant-cast]
-core\graph_manager.py: note: In member "list_snapshots" of class "GraphManagerService":
-core\graph_manager.py:79: error: Redundant cast to "list[dict[Any, Any]]"  [redundant-cast]
-core\graph_manager.py: note: In member "get_transitive_dependencies" of class "GraphManagerService":
-core\graph_manager.py:83: error: Redundant cast to "dict[Any, Any]"  [redundant-cast]
-tests\modules\test_research_service.py: note: In function "test_project":
-tests\modules\test_research_service.py:16: error: Function is missing a return type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:16: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-tests\modules\test_research_service.py: note: In function "research_service":
-tests\modules\test_research_service.py:31: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py: note: In member "test_create_session" of class "TestResearchService":
-tests\modules\test_research_service.py:39: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:41: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:41: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:41: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_get_session" of class "TestResearchService":
-tests\modules\test_research_service.py:54: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:56: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:56: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:56: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:56: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_list_sessions" of class "TestResearchService":
-tests\modules\test_research_service.py:67: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:70: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:70: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:70: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:70: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_list_sessions_with_status_filter" of class "TestResearchService":
-tests\modules\test_research_service.py:80: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:83: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:83: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:83: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:83: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:90: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:90: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:90: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:90: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_archive_session" of class "TestResearchService":
-tests\modules\test_research_service.py:102: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:104: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:104: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:104: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:104: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_create_message" of class "TestResearchService":
-tests\modules\test_research_service.py:115: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:117: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:117: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:117: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:117: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_get_messages" of class "TestResearchService":
-tests\modules\test_research_service.py:134: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:136: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:136: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:136: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:136: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_create_finding" of class "TestResearchService":
-tests\modules\test_research_service.py:153: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:155: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:155: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:155: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:155: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_list_findings" of class "TestResearchService":
-tests\modules\test_research_service.py:175: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:177: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:177: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:177: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:177: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_get_high_confidence_findings" of class "TestResearchService":
-tests\modules\test_research_service.py:196: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:198: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:198: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:198: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:198: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py: note: In member "test_get_session_statistics" of class "TestResearchService":
-tests\modules\test_research_service.py:231: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_research_service.py:233: error: Missing named argument "description" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:233: error: Missing named argument "goal_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:233: error: Missing named argument "opportunity_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_research_service.py:233: error: Missing named argument "tree_node_id" for "ResearchSessionCreate"  [call-arg]
-tests\modules\test_requirements_service.py: note: In member "test_create_requirement" of class "TestRequirementsService":
-tests\modules\test_requirements_service.py:16: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_requirements_service.py:20: error: Missing named argument "category" for "RequirementCreate"  [call-arg]
-tests\modules\test_requirements_service.py: note: In member "test_list_requirements_with_filters" of class "TestRequirementsService":
-tests\modules\test_requirements_service.py:36: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_requirements_service.py:42: error: Missing named argument "category" for "RequirementCreate"  [call-arg]
-tests\modules\test_requirements_service.py: note: In member "test_basic_validation" of class "TestRequirementsService":
-tests\modules\test_requirements_service.py:59: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_requirements_service.py:64: error: Missing named argument "category" for "RequirementCreate"  [call-arg]
-tests\modules\test_requirements_service.py: note: In function "sample_user":
-tests\modules\test_requirements_service.py:81: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_requirements_service.py: note: In function "sample_project":
-tests\modules\test_requirements_service.py:99: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In function "test_project":
-tests\modules\test_opportunities_service.py:18: error: Function is missing a return type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py:18: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In function "opp_service":
-tests\modules\test_opportunities_service.py:33: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In member "test_create_opportunity_with_scoring" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:41: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In member "test_get_opportunity" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:66: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In member "test_list_opportunities" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:88: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In member "test_update_opportunity" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:110: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In member "test_delete_opportunity" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:137: error: Function is missing a type annotation  [no-untyped-def]
 tests\modules\test_opportunities_service.py: note: In member "test_generate_opportunities" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:160: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py:162: error: Unexpected keyword argument "project_id" for "OpportunityGenerateRequest"  [call-arg]
-modules\opportunities\schemas.py: note: "OpportunityGenerateRequest" defined here
-tests\modules\test_opportunities_service.py: note: In member "test_compare_opportunities" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:197: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In member "test_get_top_opportunities" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:251: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_opportunities_service.py: note: In member "test_scoring_calculation" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:287: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py: note: In function "test_project":
-tests\modules\test_goals_service.py:13: error: Function is missing a return type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:13: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-tests\modules\test_goals_service.py: note: In function "goal_service":
-tests\modules\test_goals_service.py:28: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py: note: In member "test_create_goal_with_smart_validation" of class "TestGoalService":
-tests\modules\test_goals_service.py:36: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:38: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
-modules\goals\schemas.py: note: "GoalCreate" defined here
-tests\modules\test_goals_service.py: note: In member "test_get_goal" of class "TestGoalService":
-tests\modules\test_goals_service.py:57: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:59: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
-tests\modules\test_goals_service.py: note: In member "test_list_goals" of class "TestGoalService":
-tests\modules\test_goals_service.py:70: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:75: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
-tests\modules\test_goals_service.py: note: In member "test_update_goal" of class "TestGoalService":
-tests\modules\test_goals_service.py:85: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:88: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
-tests\modules\test_goals_service.py: note: In member "test_delete_goal" of class "TestGoalService":
-tests\modules\test_goals_service.py:104: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:107: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
-tests\modules\test_goals_service.py: note: In member "test_analyze_goal" of class "TestGoalService":
-tests\modules\test_goals_service.py:119: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:122: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
-tests\modules\test_goals_service.py: note: In member "test_decompose_goal" of class "TestGoalService":
-tests\modules\test_goals_service.py:152: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:155: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
-tests\modules\test_goals_service.py: note: In member "test_smart_score_calculation" of class "TestGoalService":
-tests\modules\test_goals_service.py:189: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_goals_service.py:193: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
-tests\modules\test_goals_service.py:203: error: Unexpected keyword argument "project_id" for "GoalCreate"  [call-arg]
+tests\modules\test_opportunities_service.py:137: error: Missing named argument "goal_id" for "OpportunityGenerateRequest"  [call-arg]
 modules\architecture\service.py: note: In member "set_project_context" of class "ArchitectureService":
 modules\architecture\service.py:50: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py:52: error: Incompatible types in assignment (expression has type "UUID", variable has type "None")  [assignment]
 modules\architecture\service.py: note: In member "create_dependency" of class "ArchitectureService":
 modules\architecture\service.py:185: error: Function is missing a return type annotation  [no-untyped-def]
-modules\architecture\service.py:203: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
 modules\architecture\service.py: note: In member "get_dependency" of class "ArchitectureService":
-modules\architecture\service.py:289: error: Function is missing a return type annotation  [no-untyped-def]
+modules\architecture\service.py:290: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py: note: In member "list_dependencies" of class "ArchitectureService":
-modules\architecture\service.py:293: error: Function is missing a return type annotation  [no-untyped-def]
+modules\architecture\service.py:294: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py: note: In member "update_dependency" of class "ArchitectureService":
-modules\architecture\service.py:304: error: Function is missing a return type annotation  [no-untyped-def]
+modules\architecture\service.py:305: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py: note: In member "create_rule" of class "ArchitectureService":
-modules\architecture\service.py:316: error: Function is missing a return type annotation  [no-untyped-def]
+modules\architecture\service.py:317: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py: note: In member "get_rule" of class "ArchitectureService":
-modules\architecture\service.py:320: error: Function is missing a return type annotation  [no-untyped-def]
+modules\architecture\service.py:321: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py: note: In member "list_rules" of class "ArchitectureService":
-modules\architecture\service.py:324: error: Function is missing a return type annotation  [no-untyped-def]
+modules\architecture\service.py:325: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py: note: In member "update_rule" of class "ArchitectureService":
-modules\architecture\service.py:339: error: Function is missing a return type annotation  [no-untyped-def]
+modules\architecture\service.py:340: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py: note: In member "deactivate_rule" of class "ArchitectureService":
-modules\architecture\service.py:347: error: Function is missing a return type annotation  [no-untyped-def]
-core\tree_monitors.py: note: In member "setup_project_monitors" of class "TreeMonitoringService":
-core\tree_monitors.py:31: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-core\tree_monitors.py:44: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
+modules\architecture\service.py:348: error: Function is missing a return type annotation  [no-untyped-def]
 core\tree_monitors.py: note: In member "_check_high_complexity" of class "TreeMonitoringService":
-core\tree_monitors.py:110: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-core\tree_monitors.py:114: error: Returning Any from function declared to return "bool"  [no-any-return]
-core\tree_monitors.py: note: In member "_check_broken_deps" of class "TreeMonitoringService":
-core\tree_monitors.py:118: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-core\tree_monitors.py: note: In member "stop_project_monitors" of class "TreeMonitoringService":
-core\tree_monitors.py:203: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-core\tree_monitors.py:206: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-core\tree_monitors.py: note: In function "setup_monitoring_for_project":
-core\tree_monitors.py:223: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-core\change_monitor.py: note: In member "register_node_watcher" of class "ChangeMonitor":
-core\change_monitor.py:27: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-core\change_monitor.py:50: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-core\change_monitor.py: note: In member "find_and_notify_dependents" of class "ChangeMonitor":
-core\change_monitor.py:116: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
-core\change_monitor.py:129: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-core\change_monitor.py: note: In member "unregister_all" of class "ChangeMonitor":
-core\change_monitor.py:154: error: Incompatible default for argument "node_id" (default has type "None", argument has type "UUID")  [assignment]
-core\change_monitor.py:154: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
-core\change_monitor.py:154: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
-core\change_monitor.py: note: In function "watch_module_changes":
-core\change_monitor.py:168: error: Function is missing a type annotation for one or more arguments  [no-untyped-def]
+core\tree_monitors.py:117: error: Returning Any from function declared to return "bool"  [no-any-return]
 core\ai_governor.py:24: error: Unused "type: ignore" comment  [unused-ignore]
-core\ai_governor.py: note: In member "execute_architecture_plan" of class "AIGovernor":
-core\ai_governor.py:92: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-core\ai_governor.py:166: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-api\v1\opportunities.py: note: In function "create_opportunity":
-api\v1\opportunities.py:40: error: Argument 1 to "OpportunityService" has incompatible type "Session"; expected "AsyncSession"  [arg-type]
-api\v1\opportunities.py: note: In function "list_opportunities":
-api\v1\opportunities.py:65: error: Argument 1 to "OpportunityService" has incompatible type "Session"; expected "AsyncSession"  [arg-type]
-api\v1\opportunities.py:67: error: "Coroutine[Any, Any, Sequence[Opportunity]]" has no attribute "__iter__" (not iterable)  [attr-defined]
-api\v1\opportunities.py:67: note: Maybe you forgot to use "await"?
-api\v1\opportunities.py: note: In function "get_opportunity":
-api\v1\opportunities.py:77: error: Argument 1 to "OpportunityService" has incompatible type "Session"; expected "AsyncSession"  [arg-type]
-api\v1\opportunities.py:84: error: "Coroutine[Any, Any, Opportunity | None]" has no attribute "project_id"  [attr-defined]
-api\v1\opportunities.py: note: In function "update_opportunity":
-api\v1\opportunities.py:99: error: Argument 1 to "OpportunityService" has incompatible type "Session"; expected "AsyncSession"  [arg-type]
-api\v1\opportunities.py:106: error: "Coroutine[Any, Any, Opportunity | None]" has no attribute "project_id"  [attr-defined]
-api\v1\opportunities.py: note: In function "delete_opportunity":
-api\v1\opportunities.py:124: error: Argument 1 to "OpportunityService" has incompatible type "Session"; expected "AsyncSession"  [arg-type]
-api\v1\opportunities.py:131: error: "Coroutine[Any, Any, Opportunity | None]" has no attribute "project_id"  [attr-defined]
-api\v1\opportunities.py:136: error: Value of type "Coroutine[Any, Any, None]" must be used  [unused-coroutine]
-api\v1\opportunities.py:136: note: Are you missing an await?
-api\v1\opportunities.py: note: In function "generate_opportunities":
-api\v1\opportunities.py:165: error: Argument 1 to "OpportunityService" has incompatible type "Session"; expected "AsyncSession"  [arg-type]
-api\v1\opportunities.py: note: In function "get_top_opportunities":
-api\v1\opportunities.py:194: error: Argument 1 to "OpportunityService" has incompatible type "Session"; expected "AsyncSession"  [arg-type]
-api\v1\opportunities.py:196: error: "Coroutine[Any, Any, Sequence[Opportunity]]" has no attribute "__iter__" (not iterable)  [attr-defined]
-api\v1\opportunities.py:196: note: Maybe you forgot to use "await"?
-api\v1\opportunities.py: note: In function "compare_opportunities":
-api\v1\opportunities.py:206: error: Argument 1 to "OpportunityService" has incompatible type "Session"; expected "AsyncSession"  [arg-type]
-api\v1\opportunities.py:217: error: "Coroutine[Any, Any, Opportunity | None]" has no attribute "project_id"  [attr-defined]
-api\v1\opportunities.py:223: error: Incompatible return value type (got "Coroutine[Any, Any, dict[str, Any]]", expected "dict[Any, Any]")  [return-value]
-api\v1\opportunities.py:223: note: Maybe you forgot to use "await"?
-api\v1\analytics.py: note: In function "get_most_critical_nodes":
-api\v1\analytics.py:44: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-api\v1\analytics.py: note: In function "get_dependency_hotspots":
-api\v1\analytics.py:109: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-api\v1\analytics.py: note: In function "get_architecture_health":
-api\v1\analytics.py:181: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-tests\modules\test_architecture_service.py: note: In member "test_create_module" of class "TestArchitectureService":
-tests\modules\test_architecture_service.py:19: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_architecture_service.py: note: In member "test_create_module_with_parent" of class "TestArchitectureService":
-tests\modules\test_architecture_service.py:37: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_architecture_service.py: note: In member "test_create_dependency_prevents_self_reference" of class "TestArchitectureService":
-tests\modules\test_architecture_service.py:53: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_architecture_service.py: note: In member "test_delete_module_checks_impact" of class "TestArchitectureService":
-tests\modules\test_architecture_service.py:71: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_architecture_service.py: note: In function "sample_project":
-tests\modules\test_architecture_service.py:87: error: Function is missing a type annotation  [no-untyped-def]
-api\v1\tree_nodes.py: note: In function "get_node_dependents":
-api\v1\tree_nodes.py:81: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
-api\v1\tree_nodes.py: note: In function "get_dependency_chain":
-api\v1\tree_nodes.py:139: error: "GraphManagerService" has no attribute "get_or_create_graph"  [attr-defined]
 ai_agents\requirements_team.py: note: In function "get_requirements_analyst_agent":
 ai_agents\requirements_team.py:53: error: Function is missing a return type annotation  [no-untyped-def]
 ai_agents\requirements_team.py: note: In function "get_requirements_validator_agent":
@@ -383,4 +143,4 @@ tests\e2e\test_refmemtree_e2e.py: note: In function "auth_headers":
 tests\e2e\test_refmemtree_e2e.py:423: error: Function is missing a return type annotation  [no-untyped-def]
 tests\e2e\test_refmemtree_e2e.py: note: In function "sample_project":
 tests\e2e\test_refmemtree_e2e.py:430: error: Function is missing a type annotation  [no-untyped-def]
-Found 232 errors in 21 files (checked 118 source files)
+Found 77 errors in 12 files (checked 118 source files)

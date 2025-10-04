@@ -4,6 +4,8 @@ Tests for Requirements Service.
 
 import pytest
 from uuid import uuid4
+from sqlalchemy.ext.asyncio import AsyncSession
+from backend.db.models import User, Project
 
 from backend.modules.requirements.service import RequirementsService
 from backend.modules.requirements.schemas import RequirementCreate
@@ -13,13 +15,14 @@ from backend.modules.requirements.schemas import RequirementCreate
 class TestRequirementsService:
     """Test Requirements Service."""
 
-    async def test_create_requirement(self, async_session, sample_project, sample_user):
+    async def test_create_requirement(self, async_session: AsyncSession, sample_project: Project, sample_user: User) -> None:
         """Test creating requirement."""
         service = RequirementsService(async_session)
 
         data = RequirementCreate(
             project_id=sample_project.id,
             type="functional",
+            category="security",
             title="User Authentication",
             description="System must support user authentication with JWT tokens",
             priority="must_have",
@@ -33,7 +36,7 @@ class TestRequirementsService:
         assert requirement.type == "functional"
         assert requirement.status == "draft"
 
-    async def test_list_requirements_with_filters(self, async_session, sample_project, sample_user):
+    async def test_list_requirements_with_filters(self, async_session: AsyncSession, sample_project: Project, sample_user: User) -> None:
         """Test listing requirements with filters."""
         service = RequirementsService(async_session)
 
@@ -42,6 +45,7 @@ class TestRequirementsService:
             data = RequirementCreate(
                 project_id=sample_project.id,
                 type="functional" if i % 2 == 0 else "technical",
+                category="core",
                 title=f"Requirement {i}",
                 description=f"Description {i}",
                 priority="must_have",
@@ -56,7 +60,7 @@ class TestRequirementsService:
         functional = await service.list_requirements(sample_project.id, type_filter="functional")
         assert all(r.type == "functional" for r in functional)
 
-    async def test_basic_validation(self, async_session, sample_project, sample_user):
+    async def test_basic_validation(self, async_session: AsyncSession, sample_project: Project, sample_user: User) -> None:
         """Test basic requirement validation."""
         service = RequirementsService(async_session)
 
@@ -64,6 +68,7 @@ class TestRequirementsService:
         data = RequirementCreate(
             project_id=sample_project.id,
             type="functional",
+            category="general",
             title="Short",
             description="Too short",  # < 50 chars
             priority="should_have",
@@ -78,9 +83,8 @@ class TestRequirementsService:
 
 
 @pytest.fixture
-async def sample_user(async_session):
+async def sample_user(async_session: AsyncSession) -> User:
     """Create sample user."""
-    from backend.db.models import User
     from datetime import datetime
 
     user = User(
@@ -96,9 +100,8 @@ async def sample_user(async_session):
 
 
 @pytest.fixture
-async def sample_project(async_session, sample_user):
+async def sample_project(async_session: AsyncSession, sample_user: User) -> Project:
     """Create sample project."""
-    from backend.db.models import Project
     from datetime import datetime
 
     project = Project(

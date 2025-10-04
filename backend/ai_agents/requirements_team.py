@@ -50,7 +50,7 @@ class TechnologyRecommendations(BaseModel):
 
 
 # Requirements Analyst Agent
-def get_requirements_analyst_agent():
+def get_requirements_analyst_agent() -> Agent:
     return Agent(
         "google-gla:gemini-2.0-flash-001",
         output_type=RequirementAnalysis,
@@ -81,7 +81,7 @@ Be thorough but constructive. Focus on helping improve the requirement.""",
 
 
 # Requirements Validator Agent
-def get_requirements_validator_agent():
+def get_requirements_validator_agent() -> Agent:
     return Agent(
         "google-gla:gemini-2.0-flash-001",
         output_type=ValidationResult,
@@ -119,7 +119,7 @@ Be strict but fair. Safety and quality are paramount.""",
 
 
 # Technology Advisor Agent
-def get_technology_advisor_agent():
+def get_technology_advisor_agent() -> Agent:
     return Agent(
         "google-gla:gemini-2.0-flash-001",
         output_type=TechnologyRecommendations,

@@ -11,6 +11,8 @@ Implements automatic alerts for:
 from typing import Dict, List
 from uuid import UUID
 from datetime import datetime
+from sqlalchemy.ext.asyncio import AsyncSession
+from refmemtree import GraphSystem
 
 from backend.core.graph_manager import GraphManagerService
 from backend.core.event_emitter import get_event_emitter
@@ -31,7 +33,7 @@ class TreeMonitoringService:
     async def setup_project_monitors(
         self,
         project_id: UUID,
-        session,
+        session: AsyncSession,
     ) -> Dict:
         """
         Setup automatic monitoring for project.
@@ -41,7 +43,8 @@ class TreeMonitoringService:
         Call this when project is opened/loaded.
         """
         try:
-            graph = await self.graph_manager.get_or_create_graph(project_id, session)
+            _, _, analytics, _ = await self.graph_manager.get_or_create_services(project_id, session)
+            graph = analytics.graph_system
             if not graph:
                 return {"error": "RefMemTree not available"}
 
@@ -107,7 +110,7 @@ class TreeMonitoringService:
         except Exception as e:
             return {"error": f"Failed to setup monitors: {e}"}
 
-    def _check_high_complexity(self, tree) -> bool:
+    def _check_high_complexity(self, tree: "GraphSystem") -> bool:
         """Check if tree complexity is too high."""
         try:
             complexity = tree.calculate_complexity()
@@ -115,7 +118,7 @@ class TreeMonitoringService:
         except:
             return False
 
-    def _check_broken_deps(self, tree) -> bool:
+    def _check_broken_deps(self, tree: "GraphSystem") -> bool:
         """Check for broken dependencies."""
         try:
             broken = tree.find_broken_dependencies()
@@ -200,10 +203,11 @@ class TreeMonitoringService:
 
         self.event_emitter.emit("alert", alert)
 
-    async def stop_project_monitors(self, project_id: UUID, session) -> None:
+    async def stop_project_monitors(self, project_id: UUID, session: AsyncSession) -> None:
         """Stop all monitors for project."""
         try:
-            graph = await self.graph_manager.get_or_create_graph(project_id, session)
+            _, _, analytics, _ = await self.graph_manager.get_or_create_services(project_id, session)
+            graph = analytics.graph_system
             if graph:
                 # ⭐ Remove all monitors
                 graph.remove_all_monitors()
@@ -222,7 +226,7 @@ class TreeMonitoringService:
 
 async def setup_monitoring_for_project(
     project_id: UUID,
-    session,
+    session: AsyncSession,
 ) -> Dict:
     """
     Setup automatic monitoring for project.
