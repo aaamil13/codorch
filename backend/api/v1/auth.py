@@ -1,13 +1,14 @@
 """Authentication endpoints."""
 
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import jwt
-from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from jose import jwt  # type: ignore
+from passlib.context import CryptContext  # type: ignore
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.config import settings
 from backend.core.schemas import (
@@ -39,7 +40,7 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict[str, any], expires_delta: timedelta | None = None) -> str:  # type: ignore
+def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """Create JWT access token."""
     to_encode = data.copy()
 
@@ -53,9 +54,10 @@ def create_access_token(data: dict[str, any], expires_delta: timedelta | None = 
     return encoded_jwt
 
 
-def authenticate_user(db: Session, email: str, password: str) -> User | None:
+async def authenticate_user(db: AsyncSession, email: str, password: str) -> Optional[User]:
     """Authenticate user by email and password."""
-    user = db.query(User).filter(User.email == email).first()
+    result = await db.execute(select(User).filter(User.email == email))
+    user = result.scalars().first()
     if not user:
         return None
     if not verify_password(password, user.hashed_password):
@@ -64,16 +66,18 @@ def authenticate_user(db: Session, email: str, password: str) -> User | None:
 
 
 @router.post("/register", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)
-def register(user_data: UserCreate, db: Session = Depends(get_db)) -> LoginResponse:
+async def register(user_data: UserCreate, db: Annotated[AsyncSession, Depends(get_db)]) -> LoginResponse:
     """Register new user."""
     # Check if user exists
-    if db.query(User).filter(User.email == user_data.email).first():
+    result_email = await db.execute(select(User).filter(User.email == user_data.email))
+    if result_email.scalars().first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
         )
 
-    if db.query(User).filter(User.username == user_data.username).first():
+    result_username = await db.execute(select(User).filter(User.username == user_data.username))
+    if result_username.scalars().first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username already taken",
@@ -89,8 +93,8 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)) -> LoginRespo
     )
 
     db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
 
     # Create access token
     access_token = create_access_token(data={"sub": str(db_user.id)})
@@ -103,9 +107,9 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)) -> LoginRespo
 
 
 @router.post("/login", response_model=LoginResponse)
-def login(login_data: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse:
+async def login(login_data: LoginRequest, db: Annotated[AsyncSession, Depends(get_db)]) -> LoginResponse:
     """Login user."""
-    user = authenticate_user(db, login_data.email, login_data.password)
+    user = await authenticate_user(db, login_data.email, login_data.password)
 
     if not user:
         raise HTTPException(
@@ -131,16 +135,16 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)) -> LoginRespo
 
 
 @router.post("/token", response_model=Token)
-def login_for_token(
+async def login_for_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: Session = Depends(get_db),
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> Token:
     """
     OAuth2 compatible token endpoint.
 
     Uses form data instead of JSON.
     """
-    user = authenticate_user(db, form_data.username, form_data.password)
+    user = await authenticate_user(db, form_data.username, form_data.password)
 
     if not user:
         raise HTTPException(

@@ -77,7 +77,7 @@ class TestOpportunityService:
                 estimated_timeline="Short",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
 
         retrieved = opp_service.get_opportunity(opp.id)
@@ -100,7 +100,7 @@ class TestOpportunityService:
                     estimated_timeline="Short",
                     required_resources={},
                     goal_id=None,
-                )
+                ),
             )
 
         opps = opp_service.list_opportunities(test_project.id)
@@ -121,7 +121,7 @@ class TestOpportunityService:
                 estimated_timeline="Short",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
 
         updated = opp_service.update_opportunity(
@@ -148,7 +148,7 @@ class TestOpportunityService:
                 estimated_timeline="Short",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
 
         result = opp_service.delete_opportunity(opp.id)
@@ -209,7 +209,7 @@ class TestOpportunityService:
                 estimated_timeline="Short",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
         opp2 = opp_service.create_opportunity(
             test_project.id,
@@ -223,7 +223,7 @@ class TestOpportunityService:
                 estimated_timeline="Short",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
 
         request = OpportunityCompareRequest(
@@ -263,7 +263,7 @@ class TestOpportunityService:
                 estimated_timeline="Short",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
         opp_service.create_opportunity(
             test_project.id,
@@ -277,7 +277,7 @@ class TestOpportunityService:
                 estimated_timeline="Short",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
 
         top_opps = opp_service.get_top_opportunities(test_project.id, limit=1)
@@ -299,7 +299,7 @@ class TestOpportunityService:
                 estimated_timeline="Long",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
 
         # Low-quality opportunity
@@ -315,7 +315,7 @@ class TestOpportunityService:
                 estimated_timeline="Unknown",
                 required_resources={},
                 goal_id=None,
-            )
+            ),
         )
 
         # Good opportunity should have higher score

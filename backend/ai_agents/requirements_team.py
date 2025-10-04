@@ -182,7 +182,7 @@ Analyze this requirement thoroughly and provide detailed feedback.
 
     agent = get_requirements_analyst_agent()
     result = await agent.run(context)
-    return result # type: ignore
+    return result  # type: ignore
 
 
 async def validate_requirement_quality(
@@ -209,7 +209,7 @@ Perform final validation and determine if this requirement is ready for approval
 
     agent = get_requirements_validator_agent()
     result = await agent.run(context)
-    return result # type: ignore
+    return result  # type: ignore
 
 
 async def recommend_technologies(
@@ -234,7 +234,7 @@ Provide at least 3-5 recommendations covering different technology categories.
 
     agent = get_technology_advisor_agent()
     result = await agent.run(context)
-    return result # type: ignore
+    return result  # type: ignore
 
 
 # ============================================================================

@@ -49,7 +49,9 @@ class TestGoalsAPI:
         assert "smart_score" in data
         assert "id" in data
 
-    def test_create_goal_missing_fields(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
+    def test_create_goal_missing_fields(
+        self, client: TestClient, auth_headers: Dict[str, str], test_project: Project
+    ) -> None:
         """Test creating goal without required fields."""
         response = client.post(
             "/api/v1/goals",
@@ -84,7 +86,9 @@ class TestGoalsAPI:
         data = response.json()
         assert len(data) == 3
 
-    def test_list_goals_with_filter(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
+    def test_list_goals_with_filter(
+        self, client: TestClient, auth_headers: Dict[str, str], test_project: Project
+    ) -> None:
         """Test filtering goals by category."""
         client.post(
             "/api/v1/goals",
@@ -234,7 +238,9 @@ class TestGoalsAPI:
             assert "weaknesses" in data
 
     @pytest.mark.asyncio
-    async def test_decompose_goal(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
+    async def test_decompose_goal(
+        self, client: TestClient, auth_headers: Dict[str, str], test_project: Project
+    ) -> None:
         """Test POST /api/v1/goals/{id}/decompose."""
         # Create goal
         create_response = client.post(

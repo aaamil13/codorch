@@ -5,7 +5,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
+from jose import JWTError, jwt  # type: ignore
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,7 +37,7 @@ async def get_current_user(
         if user_id is None:
             raise credentials_exception
 
-        token_data = TokenData(user_id=UUID(user_id)) # Convert user_id to UUID
+        token_data = TokenData(user_id=UUID(user_id))  # Convert user_id to UUID
     except JWTError:
         raise credentials_exception
 

@@ -83,7 +83,9 @@ class TestOpportunitiesAPI:
         data = response.json()
         assert len(data) == 3
 
-    def test_list_opportunities_with_filters(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
+    def test_list_opportunities_with_filters(
+        self, client: TestClient, auth_headers: Dict[str, str], test_project: Project
+    ) -> None:
         """Test filtering opportunities."""
         client.post(
             "/api/v1/opportunities",
@@ -195,7 +197,9 @@ class TestOpportunitiesAPI:
         assert get_response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_generate_opportunities(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
+    async def test_generate_opportunities(
+        self, client: TestClient, auth_headers: Dict[str, str], test_project: Project
+    ) -> None:
         """Test POST /api/v1/opportunities/generate."""
         with patch(
             "backend.ai_agents.opportunity_team.SupervisorAgent.generate_opportunities",
@@ -227,7 +231,9 @@ class TestOpportunitiesAPI:
             assert "opportunities" in data
 
     @pytest.mark.asyncio
-    async def test_compare_opportunities(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
+    async def test_compare_opportunities(
+        self, client: TestClient, auth_headers: Dict[str, str], test_project: Project
+    ) -> None:
         """Test POST /api/v1/opportunities/compare."""
         # Create opportunities
         opp1_response = client.post(
@@ -271,7 +277,9 @@ class TestOpportunitiesAPI:
             data = response.json()
             assert "comparison" in data
 
-    def test_get_top_opportunities(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
+    def test_get_top_opportunities(
+        self, client: TestClient, auth_headers: Dict[str, str], test_project: Project
+    ) -> None:
         """Test GET /api/v1/opportunities/top."""
         # Create opportunities
         for i in range(5):

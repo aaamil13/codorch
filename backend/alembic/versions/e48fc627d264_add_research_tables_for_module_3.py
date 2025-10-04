@@ -109,7 +109,7 @@ def downgrade() -> None:
     op.drop_column("tree_nodes", "level")
     op.drop_column("tree_nodes", "position")
     op.drop_column("tree_nodes", "data")
-    op.drop_constraint(None, "projects", type_="foreignkey")
+    op.drop_constraint(op.f("projects_created_by_fkey"), "projects", type_="foreignkey")
     op.create_foreign_key(
         op.f("projects_created_by_fkey"), "projects", "users", ["created_by"], ["id"], ondelete="CASCADE"
     )

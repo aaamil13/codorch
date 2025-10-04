@@ -1,9 +1,10 @@
 """Goal endpoints for Module 1."""
 
+from typing import Annotated, Optional, Sequence
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.deps import get_current_active_user
 from backend.core.schemas import MessageResponse
@@ -24,7 +25,7 @@ from backend.modules.goals.service import GoalService
 router = APIRouter()
 
 
-def get_goal_service(db: Session = Depends(get_db)) -> GoalService:
+async def get_goal_service(db: AsyncSession = Depends(get_db)) -> GoalService:
     """Get goal service dependency."""
     return GoalService(db)
 
@@ -34,7 +35,7 @@ def get_goal_service(db: Session = Depends(get_db)) -> GoalService:
     response_model=GoalResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_goal(
+async def create_goal(
     project_id: UUID,
     goal_data: GoalCreate,
     service: GoalService = Depends(get_goal_service),
@@ -42,32 +43,32 @@ def create_goal(
 ) -> GoalResponse:
     """Create new goal for project."""
     try:
-        goal = service.create_goal(project_id, goal_data)
+        goal = await service.create_goal(project_id, goal_data)
         return GoalResponse.model_validate(goal)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/projects/{project_id}/goals", response_model=list[GoalResponse])
-def list_goals(
+async def list_goals(
     project_id: UUID,
     skip: int = 0,
     limit: int = 100,
     root_only: bool = False,
     service: GoalService = Depends(get_goal_service),
     current_user: User = Depends(get_current_active_user),
-) -> list[GoalResponse]:
+) -> Sequence[GoalResponse]:
     """List goals for project."""
     if root_only:
-        goals = service.list_root_goals(project_id)
+        goals = await service.list_root_goals(project_id)
     else:
-        goals = service.list_goals(project_id, skip, limit)
+        goals = await service.list_goals(project_id, skip, limit)
 
     return [GoalResponse.model_validate(goal) for goal in goals]
 
 
 @router.get("/goals/{goal_id}", response_model=GoalWithSubgoals)
-def get_goal(
+async def get_goal(
     goal_id: UUID,
     include_subgoals: bool = True,
     service: GoalService = Depends(get_goal_service),
@@ -75,9 +76,9 @@ def get_goal(
 ) -> GoalWithSubgoals:
     """Get goal by ID."""
     if include_subgoals:
-        goal = service.get_goal_with_subgoals(goal_id)
+        goal = await service.get_goal_with_subgoals(goal_id)
     else:
-        goal = service.get_goal(goal_id)
+        goal = await service.get_goal(goal_id)
 
     if not goal:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Goal not found")
@@ -92,7 +93,7 @@ def get_goal(
 
 
 @router.put("/goals/{goal_id}", response_model=GoalResponse)
-def update_goal(
+async def update_goal(
     goal_id: UUID,
     goal_update: GoalUpdate,
     service: GoalService = Depends(get_goal_service),
@@ -100,21 +101,21 @@ def update_goal(
 ) -> GoalResponse:
     """Update goal."""
     try:
-        goal = service.update_goal(goal_id, goal_update)
+        goal = await service.update_goal(goal_id, goal_update)
         return GoalResponse.model_validate(goal)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete("/goals/{goal_id}", response_model=MessageResponse)
-def delete_goal(
+async def delete_goal(
     goal_id: UUID,
     service: GoalService = Depends(get_goal_service),
     current_user: User = Depends(get_current_active_user),
 ) -> MessageResponse:
     """Delete goal."""
     try:
-        service.delete_goal(goal_id)
+        await service.delete_goal(goal_id)
         return MessageResponse(message="Goal deleted successfully")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -123,7 +124,9 @@ def delete_goal(
 @router.post("/goals/{goal_id}/analyze", response_model=GoalAnalysisResponse)
 async def analyze_goal(
     goal_id: UUID,
-    request: GoalAnalysisRequest = GoalAnalysisRequest(),
+    request: GoalAnalysisRequest = GoalAnalysisRequest(
+        include_suggestions=False, include_metrics=False, include_subgoals=False
+    ),
     service: GoalService = Depends(get_goal_service),
     current_user: User = Depends(get_current_active_user),
 ) -> GoalAnalysisResponse:
@@ -142,7 +145,7 @@ async def analyze_goal(
 @router.post("/goals/{goal_id}/decompose", response_model=GoalDecomposeResponse)
 async def decompose_goal(
     goal_id: UUID,
-    request: GoalDecomposeRequest = GoalDecomposeRequest(),
+    request: GoalDecomposeRequest = GoalDecomposeRequest(num_subgoals=0, include_metrics=False),
     service: GoalService = Depends(get_goal_service),
     current_user: User = Depends(get_current_active_user),
 ) -> GoalDecomposeResponse:

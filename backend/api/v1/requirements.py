@@ -1,6 +1,6 @@
 """API endpoints for Requirements Module (Module 5)."""
 
-from typing import Optional
+from typing import Any, Dict, List, Optional, Sequence
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status

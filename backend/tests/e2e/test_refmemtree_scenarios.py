@@ -18,7 +18,9 @@ from backend.db.models import Project, User
 class TestRefMemTreeScenarios:
     """Real-world scenario tests for RefMemTree."""
 
-    async def test_scenario_safe_refactoring(self, async_client: AsyncClient, auth_headers: Dict[str, str], sample_project: Project) -> None:
+    async def test_scenario_safe_refactoring(
+        self, async_client: AsyncClient, auth_headers: Dict[str, str], sample_project: Project
+    ) -> None:
         """
         Scenario: User wants to refactor architecture safely.
 
@@ -87,7 +89,9 @@ class TestRefMemTreeScenarios:
         #     # Rollback to snapshot
         #     await async_client.post(.../rollback/{snapshot_id})
 
-    async def test_scenario_dependency_impact_warning(self, async_client: AsyncClient, auth_headers: Dict[str, str], sample_project: Project) -> None:
+    async def test_scenario_dependency_impact_warning(
+        self, async_client: AsyncClient, auth_headers: Dict[str, str], sample_project: Project
+    ) -> None:
         """
         Scenario: User gets warned before breaking change.
 
@@ -144,7 +148,9 @@ class TestRefMemTreeScenarios:
         # assert delete_response.status_code == 400
         # assert "5 modules" in delete_response.json()["detail"]
 
-    async def test_scenario_rule_enforcement(self, async_client: AsyncClient, auth_headers: Dict[str, str], sample_project: Project) -> None:
+    async def test_scenario_rule_enforcement(
+        self, async_client: AsyncClient, auth_headers: Dict[str, str], sample_project: Project
+    ) -> None:
         """
         Scenario: Architecture rules are automatically enforced.
 
@@ -210,7 +216,9 @@ class TestRefMemTreeScenarios:
         # assert dep_response.status_code == 400
         # assert "layer" in dep_response.json()["detail"].lower()
 
-    async def test_scenario_instant_analytics_query(self, async_client: AsyncClient, auth_headers: Dict[str, str], sample_project: Project) -> None:
+    async def test_scenario_instant_analytics_query(
+        self, async_client: AsyncClient, auth_headers: Dict[str, str], sample_project: Project
+    ) -> None:
         """
         Scenario: User gets instant architecture insights.
 

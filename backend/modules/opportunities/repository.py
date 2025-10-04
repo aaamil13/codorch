@@ -88,14 +88,10 @@ class OpportunityRepository:
 
     async def count_by_project(self, project_id: UUID) -> int:
         """Count opportunities in a project."""
-        result = await self.db.execute(
-            select(func.count()).filter(Opportunity.project_id == project_id)
-        )
+        result = await self.db.execute(select(func.count()).filter(Opportunity.project_id == project_id))
         return result.scalar_one()
 
     async def get_multiple_by_ids(self, opportunity_ids: List[UUID]) -> Sequence[Opportunity]:
         """Get multiple opportunities by IDs."""
-        result = await self.db.execute(
-            select(Opportunity).filter(Opportunity.id.in_(opportunity_ids))
-        )
+        result = await self.db.execute(select(Opportunity).filter(Opportunity.id.in_(opportunity_ids)))
         return result.scalars().all()

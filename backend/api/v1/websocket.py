@@ -7,6 +7,7 @@ Provides:
 - Real-time monitoring events
 """
 
+from typing import Any, Dict, List
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from uuid import UUID
 import asyncio
@@ -17,11 +18,11 @@ from backend.core.event_emitter import get_event_emitter
 router = APIRouter(prefix="/ws", tags=["websocket"])
 
 # Active WebSocket connections per project
-active_connections: dict[str, list[WebSocket]] = {}
+active_connections: Dict[str, List[WebSocket]] = {}
 
 
 @router.websocket("/project/{project_id}")
-async def project_websocket(websocket: WebSocket, project_id: str):
+async def project_websocket(websocket: WebSocket, project_id: str) -> None:
     """
     WebSocket endpoint for real-time project updates.
 
@@ -41,17 +42,17 @@ async def project_websocket(websocket: WebSocket, project_id: str):
     event_emitter = get_event_emitter()
 
     # Register event listeners
-    def send_module_change(data):
+    def send_module_change(data: Dict[str, Any]) -> None:
         """Send module change event to this WebSocket."""
         if data.get("project_id") == project_id:
             asyncio.create_task(safe_send(websocket, {"type": "module_changed", "data": data}))
 
-    def send_alert(data):
+    def send_alert(data: Dict[str, Any]) -> None:
         """Send alert event to this WebSocket."""
         if data.get("project_id") == project_id:
             asyncio.create_task(safe_send(websocket, {"type": "alert", "data": data}))
 
-    def send_dependency_change(data):
+    def send_dependency_change(data: Dict[str, Any]) -> None:
         """Send dependency change event."""
         if data.get("project_id") == project_id:
             asyncio.create_task(safe_send(websocket, {"type": "dependency_changed", "data": data}))

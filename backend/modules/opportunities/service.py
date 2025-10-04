@@ -1,9 +1,10 @@
 """Opportunity service layer."""
 
-from typing import Optional
+from typing import Optional, Sequence, Dict, Any, List
 from uuid import UUID
 
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.ai_agents.opportunity_team import (
     CreativeIdeaGenerator,
@@ -14,6 +15,7 @@ from backend.ai_agents.opportunity_team import (
 from backend.db.models import Goal, Opportunity, Project
 from backend.modules.opportunities.repository import OpportunityRepository
 from backend.modules.opportunities.schemas import (
+    AIGeneratedOpportunity,
     OpportunityCreate,
     OpportunityGenerateRequest,
     OpportunityGenerateResponse,
@@ -25,22 +27,24 @@ from backend.modules.opportunities.scoring import OpportunityScorer
 class OpportunityService:
     """Service layer for Opportunity operations."""
 
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: AsyncSession) -> None:
         """Initialize service."""
         self.db = db
         self.repository = OpportunityRepository(db)
         self.scorer = OpportunityScorer()
 
-    def create_opportunity(self, project_id: UUID, opportunity_data: OpportunityCreate) -> Opportunity:
+    async def create_opportunity(self, project_id: UUID, opportunity_data: OpportunityCreate) -> Opportunity:
         """Create new opportunity."""
         # Verify project exists
-        project = self.db.query(Project).filter(Project.id == project_id).first()
+        project_result = await self.db.execute(select(Project).filter(Project.id == project_id))
+        project = project_result.scalars().first()
         if not project:
             raise ValueError("Project not found")
 
         # Verify goal if specified
         if opportunity_data.goal_id:
-            goal = self.db.query(Goal).filter(Goal.id == opportunity_data.goal_id).first()
+            goal_result = await self.db.execute(select(Goal).filter(Goal.id == opportunity_data.goal_id))
+            goal = goal_result.scalars().first()
             if not goal or goal.project_id != project_id:
                 raise ValueError("Goal not found or belongs to different project")
 
@@ -77,19 +81,19 @@ class OpportunityService:
         opportunity.score = scores["overall_score"]
         opportunity.scoring_details = scores
 
-        return self.repository.create(opportunity)
+        return await self.repository.create(opportunity)
 
-    def get_opportunity(self, opportunity_id: UUID) -> Optional[Opportunity]:
+    async def get_opportunity(self, opportunity_id: UUID) -> Optional[Opportunity]:
         """Get opportunity by ID."""
-        return self.repository.get_by_id(opportunity_id)
+        return await self.repository.get_by_id(opportunity_id)
 
-    def list_opportunities(self, project_id: UUID, skip: int = 0, limit: int = 100) -> list[Opportunity]:
+    async def list_opportunities(self, project_id: UUID, skip: int = 0, limit: int = 100) -> Sequence[Opportunity]:
         """List opportunities for project."""
-        return self.repository.get_by_project(project_id, skip, limit)
+        return await self.repository.get_by_project(project_id, skip, limit)
 
-    def update_opportunity(self, opportunity_id: UUID, opportunity_update: OpportunityUpdate) -> Opportunity:
+    async def update_opportunity(self, opportunity_id: UUID, opportunity_update: OpportunityUpdate) -> Opportunity:
         """Update opportunity."""
-        opportunity = self.repository.get_by_id(opportunity_id)
+        opportunity = await self.repository.get_by_id(opportunity_id)
         if not opportunity:
             raise ValueError("Opportunity not found")
 
@@ -138,15 +142,15 @@ class OpportunityService:
             opportunity.score = scores["overall_score"]
             opportunity.scoring_details = scores
 
-        return self.repository.update(opportunity)
+        return await self.repository.update(opportunity)
 
-    def delete_opportunity(self, opportunity_id: UUID) -> None:
+    async def delete_opportunity(self, opportunity_id: UUID) -> None:
         """Delete opportunity."""
-        opportunity = self.repository.get_by_id(opportunity_id)
+        opportunity = await self.repository.get_by_id(opportunity_id)
         if not opportunity:
             raise ValueError("Opportunity not found")
 
-        self.repository.delete(opportunity)
+        await self.repository.delete(opportunity)
 
     async def generate_opportunities(
         self, project_id: UUID, request: OpportunityGenerateRequest
@@ -161,16 +165,18 @@ class OpportunityService:
         4. Supervisor → makes final selection
         """
         # Verify project
-        project = self.db.query(Project).filter(Project.id == project_id).first()
+        project_result = await self.db.execute(select(Project).filter(Project.id == project_id))
+        project = project_result.scalars().first()
         if not project:
             raise ValueError("Project not found")
 
         # Get goal context if specified
         goal_context = None
         if request.goal_id:
-            goal = self.db.query(Goal).filter(Goal.id == request.goal_id).first()
-            if goal:
-                goal_context = f"Goal: {goal.title}. {goal.description or ''}"
+            goal_result = await self.db.execute(select(Goal).filter(Goal.id == request.goal_id))
+            goal = goal_result.scalars().first()
+            if not goal or goal.project_id != project_id:
+                raise ValueError("Goal not found or belongs to different project")
 
         # Build context
         context = request.context or project.goal
@@ -244,13 +250,13 @@ class OpportunityService:
 
         return response
 
-    def get_top_opportunities(self, project_id: UUID, limit: int = 10) -> list[Opportunity]:
+    async def get_top_opportunities(self, project_id: UUID, limit: int = 10) -> Sequence[Opportunity]:
         """Get top-scored opportunities."""
-        return self.repository.get_top_scored(project_id, limit)
+        return await self.repository.get_top_scored(project_id, limit)
 
-    def compare_opportunities(self, opportunity_ids: list[UUID]) -> dict:
+    async def compare_opportunities(self, opportunity_ids: List[UUID]) -> Dict[str, Any]:
         """Compare multiple opportunities."""
-        opportunities = self.repository.get_multiple_by_ids(opportunity_ids)
+        opportunities = await self.repository.get_multiple_by_ids(opportunity_ids)
 
         if not opportunities:
             raise ValueError("No opportunities found")

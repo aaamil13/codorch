@@ -7,11 +7,11 @@ These endpoints demonstrate RefMemTree's TRUE POWER:
 - Real-time architectural intelligence
 """
 
-from typing import Annotated
+from typing import Annotated, Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.api.deps import get_current_user, get_db
 from backend.core.graph_manager import get_graph_manager
@@ -23,10 +23,10 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 @router.get("/projects/{project_id}/most-critical-nodes")
 async def get_most_critical_nodes(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     top_n: int = 10,
-):
+) -> Dict[str, Any]:
     """
     Get most critical nodes (architectural hotspots).
 
@@ -92,10 +92,10 @@ async def get_most_critical_nodes(
 @router.get("/projects/{project_id}/dependency-hotspots")
 async def get_dependency_hotspots(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     threshold: int = 5,
-):
+) -> Dict[str, Any]:
     """
     Find dependency hotspots (over-coupled modules).
 
@@ -155,9 +155,9 @@ async def get_dependency_hotspots(
 @router.get("/projects/{project_id}/architecture-health")
 async def get_architecture_health(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
-):
+) -> Dict[str, Any]:
     """
     Overall architecture health score.
 

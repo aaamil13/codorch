@@ -6,7 +6,7 @@ This is THE critical component that makes AI-generated architecture SAFE!
 Uses RefMemTree's execute_refactoring_plan() for atomic, validated execution.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 from datetime import datetime
 
@@ -21,7 +21,7 @@ from backend.modules.architecture.repository import (
 
 # RefMemTree imports
 try:
-    from refmemtree import AIGovernor as RefMemAIGovernor
+    from refmemtree import AIGovernor as RefMemAIGovernor # type: ignore
 
     AIGOVERNOR_AVAILABLE = True
 except ImportError:
@@ -100,7 +100,7 @@ class AIGovernor:
                     return {"status": "validation_failed", "errors": validation["errors"]}
 
             # Step 2: Create snapshot if requested
-            snapshot_id = None
+            snapshot_id: Optional[str] = None # Initialize snapshot_id
             if create_snapshot:
                 # ⭐ REAL RefMemTree API
                 snapshot_id = graph.create_version(
@@ -114,6 +114,8 @@ class AIGovernor:
 
             # Step 4: Execute using REAL RefMemTree AIGovernor
             # ⭐ REAL RefMemTree API
+            if RefMemAIGovernor is None:
+                return {"status": "error", "error": "RefMemTree AIGovernor not available"}
             governor = RefMemAIGovernor(graph)
 
             execution_result = governor.execute_refactoring_plan(
@@ -126,7 +128,7 @@ class AIGovernor:
             # Step 5: Check execution result
             if not execution_result.success:
                 # Rollback if failed
-                if snapshot_id and not dry_run:
+                if snapshot_id and not dry_run and graph: # Ensure graph is not None for rollback
                     print(f"❌ Execution failed, rolling back to {snapshot_id}")
                     # ⭐ REAL RefMemTree API
                     graph.rollback_to_version(snapshot_id)
@@ -162,9 +164,10 @@ class AIGovernor:
             if snapshot_id and not dry_run:
                 try:
                     graph = await self.graph_manager.get_or_create_graph(project_id, session)
-                    # ⭐ REAL RefMemTree API
-                    graph.rollback_to_version(snapshot_id)
-                    print(f"✅ Rolled back to snapshot {snapshot_id}")
+                    if graph: # Ensure graph is not None for rollback
+                        # ⭐ REAL RefMemTree API
+                        graph.rollback_to_version(snapshot_id)
+                        print(f"✅ Rolled back to snapshot {snapshot_id}")
                 except Exception as rollback_err:
                     print(f"❌ Rollback also failed: {rollback_err}")
 
@@ -174,7 +177,7 @@ class AIGovernor:
                 "rollback_performed": snapshot_id is not None,
             }
 
-    def _validate_plan_structure(self, plan: List[Dict]) -> Dict:
+    def _validate_plan_structure(self, plan: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Validate plan has correct structure."""
         errors = []
 
@@ -278,7 +281,7 @@ class AIGovernor:
                         description=step["data"].get("description"),
                         level=step["data"].get("level", 0),
                     )
-                    module_repo.create(module_data)
+                    await module_repo.create(module_data)
 
                 elif action == "CREATE_DEPENDENCY":
                     # Create dependency in DB
@@ -292,17 +295,17 @@ class AIGovernor:
                         to_module_id=UUID(step["to"]),
                         dependency_type=step.get("type", "depends_on"),
                     )
-                    dep_repo.create(dep_data)
+                    await dep_repo.create(dep_data)
 
                 elif action == "UPDATE_NODE":
                     # Update module in DB
                     module_id = UUID(step["node_id"])
-                    module_repo.update(module_id, step["data"])
+                    await module_repo.update(module_id, step["data"])
 
                 elif action == "DELETE_NODE":
                     # Delete module from DB
                     module_id = UUID(step["node_id"])
-                    module_repo.delete(module_id)
+                    await module_repo.delete(module_id)
 
             except Exception as e:
                 print(f"⚠️ Failed to sync step to DB: {action} - {e}")

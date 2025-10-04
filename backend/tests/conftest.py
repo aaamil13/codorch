@@ -60,7 +60,7 @@ async def test_db(test_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None
     )
     async with TestingSessionLocal() as session:
         yield session
-        await session.rollback() # Rollback after each test
+        await session.rollback()  # Rollback after each test
         await session.close()
 
 

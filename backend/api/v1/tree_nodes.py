@@ -7,7 +7,7 @@ These endpoints demonstrate RefMemTree's REAL power:
 - Real-time impact assessment
 """
 
-from typing import Annotated
+from typing import Annotated, Any, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -25,7 +25,7 @@ async def get_node_impact_analysis(
     node_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> Dict[str, Any]:
     """
     Get impact analysis for node.
 
@@ -57,7 +57,7 @@ async def get_node_dependents(
     node_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> Dict[str, Any]:
     """
     Get all nodes that depend on this node.
 
@@ -111,7 +111,7 @@ async def get_dependency_chain(
     max_depth: int = 10,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> Dict[str, Any]:
     """
     Get full dependency chain for node.
 

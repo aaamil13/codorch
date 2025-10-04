@@ -440,7 +440,7 @@ class RefMemTreeManager:
         versions = self.get_context_versions(node_id)
         for version in versions:
             if version["version_name"] == version_name:
-                return version["context"] # type: ignore
+                return version["context"]  # type: ignore
         return None
 
     # ========================================================================

@@ -100,9 +100,14 @@ class TestEventEmitter:
         """Test removing all listeners for specific event."""
         emitter = EventEmitter()
 
-        def cb_event1_1(d: Any) -> None: pass
-        def cb_event1_2(d: Any) -> None: pass
-        def cb_event2_1(d: Any) -> None: pass
+        def cb_event1_1(d: Any) -> None:
+            pass
+
+        def cb_event1_2(d: Any) -> None:
+            pass
+
+        def cb_event2_1(d: Any) -> None:
+            pass
 
         emitter.on("event1", cb_event1_1)
         emitter.on("event1", cb_event1_2)

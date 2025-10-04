@@ -137,14 +137,14 @@ class RequirementsService:
     ) -> BatchValidationResponse:
         """Validate multiple requirements."""
         if requirement_ids:
-            requirements: List[Requirement] = [] # Keep as List internally for manipulation
+            requirements: List[Requirement] = []  # Keep as List internally for manipulation
             for req_id in requirement_ids:
                 req = await self.req_repo.get_by_id(req_id)
                 if req:
                     requirements.append(req)
         else:
             requirements_sequence = await self.req_repo.get_by_project(project_id)
-            requirements = list(requirements_sequence) # Convert Sequence to List for consistency
+            requirements = list(requirements_sequence)  # Convert Sequence to List for consistency
 
         results = []
         total_issues = 0
@@ -297,6 +297,7 @@ class RequirementsService:
 
         # Convert SQLAlchemy models to Pydantic response models
         from backend.modules.requirements.schemas import TechnologyRecommendationResponse
+
         recommendation_responses = [TechnologyRecommendationResponse.model_validate(r) for r in recommendations]
 
         return TechnologyRecommendationSummary(
@@ -393,6 +394,7 @@ class RequirementsService:
 
         # Convert SQLAlchemy models to Pydantic response models
         from backend.modules.requirements.schemas import RequirementResponse, TechnologyRecommendationResponse
+
         requirement_responses = [RequirementResponse.model_validate(r) for r in requirements]
         technology_responses = [TechnologyRecommendationResponse.model_validate(t) for t in technologies]
 

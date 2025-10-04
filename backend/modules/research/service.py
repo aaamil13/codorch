@@ -30,7 +30,7 @@ class ResearchService:
         self.session_repo = ResearchSessionRepository(db)
         self.message_repo = ResearchMessageRepository(db)
         self.finding_repo = ResearchFindingRepository(db)
-        self.refmem_manager: Optional[AdvancedProjectTree] = None # Initialize as Optional, set later
+        self.refmem_manager: Optional[AdvancedProjectTree] = None  # Initialize as Optional, set later
 
     # ========================================================================
     # Research Session Operations
@@ -278,7 +278,7 @@ class ResearchService:
 
     async def _aggregate_context(
         self,
-        project_id: UUID, # Added project_id
+        project_id: UUID,  # Added project_id
         node_id: Optional[UUID] = None,
         goal_id: Optional[UUID] = None,
         opportunity_id: Optional[UUID] = None,

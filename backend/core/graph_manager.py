@@ -11,7 +11,7 @@ Key Responsibilities:
 4. Manage graph lifecycle per project
 """
 
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any, Callable, TYPE_CHECKING
 from uuid import UUID
 
 from sqlalchemy import select
@@ -20,14 +20,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.db.models import ArchitectureModule, ArchitectureRule, ModuleDependency
 
 # RefMemTree imports (will fail gracefully if not installed)
-try:
-    from refmemtree import GraphSystem, GraphNode
+# Define dummy classes for type checking if RefMemTree is not available
+class DummyGraphSystem:
+    pass
 
+class DummyGraphNode:
+    pass
+
+try:
+    from refmemtree import GraphSystem, GraphNode # type: ignore
     REFMEMTREE_AVAILABLE = True
 except ImportError:
     print("⚠️  RefMemTree not installed - using fallback mode")
-    GraphSystem = None
-    GraphNode = None
+    GraphSystem = DummyGraphSystem
+    GraphNode = DummyGraphNode
     REFMEMTREE_AVAILABLE = False
 
 
@@ -38,16 +44,16 @@ class GraphManagerService:
     One GraphSystem instance per project, cached in memory.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Cache: project_id -> GraphSystem instance
-        self._graph_cache: Dict[UUID, any] = {}  # GraphSystem instances
+        self._graph_cache: Dict[UUID, Optional["GraphSystem"]] = {}  # GraphSystem instances
 
     async def get_or_create_graph(
         self,
         project_id: UUID,
         session: AsyncSession,
         force_reload: bool = False,
-    ):
+    ) -> Optional[GraphSystem]:
         """
         Get or create RefMemTree GraphSystem for project.
 
@@ -67,6 +73,10 @@ class GraphManagerService:
         if not force_reload and project_id in self._graph_cache:
             return self._graph_cache[project_id]
 
+        if GraphSystem is None: # Explicitly check if GraphSystem is None before calling
+            print("⚠️  GraphSystem is None, cannot create a new instance.")
+            return None
+
         # Create new GraphSystem
         graph_system = GraphSystem()
 
@@ -83,7 +93,7 @@ class GraphManagerService:
         self,
         project_id: UUID,
         session: AsyncSession,
-        graph_system,
+        graph_system: GraphSystem,
     ) -> None:
         """
         Hydrate GraphSystem from PostgreSQL data FOR SPECIFIC PROJECT.
@@ -162,7 +172,7 @@ class GraphManagerService:
 
         print(f"✅ RefMemTree hydration complete!")
 
-    def _create_validator_from_rule(self, rule: ArchitectureRule):
+    def _create_validator_from_rule(self, rule: ArchitectureRule) -> Callable[[GraphNode], bool]:
         """
         Create validator function from ArchitectureRule.
 
@@ -175,7 +185,7 @@ class GraphManagerService:
         if rule_type == "naming":
             condition = rule_def.get("condition", "")
 
-            def naming_validator(node) -> bool:
+            def naming_validator(node: GraphNode) -> bool:
                 """Validate naming convention."""
                 name = node.data.get("name", "")
                 # Simple validation - can be enhanced
@@ -189,7 +199,7 @@ class GraphManagerService:
         elif rule_type == "dependency":
             max_deps = rule_def.get("max_dependencies", 999)
 
-            def dependency_validator(node) -> bool:
+            def dependency_validator(node: GraphNode) -> bool:
                 """Validate dependency count."""
                 deps = node.get_dependencies(direction="outgoing")
                 return len(deps) <= max_deps
@@ -198,7 +208,7 @@ class GraphManagerService:
 
         elif rule_type == "layer":
 
-            def layer_validator(node) -> bool:
+            def layer_validator(node: GraphNode) -> bool:
                 """Validate layer rules."""
                 # Layer rules are complex - implement based on definition
                 return True
@@ -263,7 +273,7 @@ class GraphManagerService:
         self,
         project_id: UUID,
         session: AsyncSession,
-    ) -> list:
+    ) -> List[List[str]]:
         """
         Detect circular dependencies using RefMemTree.
 
@@ -565,7 +575,7 @@ class GraphManagerService:
         # Simplified for now
         return []
 
-    async def _sync_graph_to_database(self, project_id: UUID, graph, session: AsyncSession) -> None:
+    async def _sync_graph_to_database(self, project_id: UUID, graph: GraphSystem, session: AsyncSession) -> None:
         """
         Sync RefMemTree state back to PostgreSQL after rollback.
 
@@ -585,7 +595,7 @@ class GraphManagerService:
 # Global Instance (Singleton Pattern for FastAPI)
 # ============================================================================
 
-_graph_manager_instance: Optional[GraphManagerService] = None
+_graph_manager_instance: Optional["GraphManagerService"] = None
 
 
 def get_graph_manager() -> GraphManagerService:

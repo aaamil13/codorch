@@ -112,13 +112,13 @@ class ArchitectureContext(BaseModel):
 class SoftwareArchitectAgent:
     """Agent for generating software architecture."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize SoftwareArchitectAgent."""
         self.client = get_ai_client()
         self.model = "gemini-2.5-pro"
         self.agent = Agent(
             self.model,
-            result_type=ArchitectureProposal,
+            output_type=ArchitectureProposal,
             system_prompt="""You are a Senior Software Architect with expertise in:
 - Software architecture design (layered, microservices, hexagonal, clean architecture)
 - Design patterns and best practices
@@ -171,7 +171,7 @@ Focus on:
 
         try:
             result = await self.agent.run(prompt)
-            return result.data
+            return result # type: ignore
         except Exception as e:
             print(f"SoftwareArchitectAgent error: {e}")
             # Fallback minimal architecture
@@ -182,6 +182,7 @@ Focus on:
                         description="Core business logic",
                         module_type="package",
                         level=0,
+                        parent_name=None, # Added parent_name
                         technologies=["Python"],
                         patterns=["Repository", "Service Layer"],
                     )
@@ -195,13 +196,13 @@ Focus on:
 class DependencyExpertAgent:
     """Agent for validating and optimizing dependencies."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize DependencyExpertAgent."""
         self.client = get_ai_client()
         self.model = "gemini-2.5-pro"
         self.agent = Agent(
             self.model,
-            result_type=DependencyValidationResult,
+            output_type=DependencyValidationResult,
             system_prompt="""You are a Dependency Expert specializing in:
 - Dependency graph analysis
 - Circular dependency detection
@@ -250,7 +251,7 @@ Provide:
 
         try:
             result = await self.agent.run(prompt)
-            return result.data
+            return result # type: ignore
         except Exception as e:
             print(f"DependencyExpertAgent error: {e}")
             return DependencyValidationResult(
@@ -262,13 +263,13 @@ Provide:
 class ComplexityAnalyzerAgent:
     """Agent for analyzing architecture complexity."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize ComplexityAnalyzerAgent."""
         self.client = get_ai_client()
         self.model = "gemini-2.5-flash"
         self.agent = Agent(
             self.model,
-            result_type=ComplexityAssessment,
+            output_type=ComplexityAssessment,
             system_prompt="""You are a Complexity Analyzer specializing in:
 - Software metrics and complexity analysis
 - Cyclomatic complexity
@@ -312,7 +313,7 @@ Calculate:
 
         try:
             result = await self.agent.run(prompt)
-            return result.data
+            return result # type: ignore
         except Exception as e:
             print(f"ComplexityAnalyzerAgent error: {e}")
             # Simple fallback calculation
@@ -331,13 +332,13 @@ Calculate:
 class ArchitectureReviewerAgent:
     """Agent for final architecture review."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize ArchitectureReviewerAgent."""
         self.client = get_ai_client()
         self.model = "gemini-2.5-pro"
         self.agent = Agent(
             self.model,
-            result_type=ArchitectureReview,
+            output_type=ArchitectureReview,
             system_prompt="""You are a Senior Architecture Reviewer with expertise in:
 - Architecture patterns and best practices
 - Quality attributes (scalability, maintainability, security)
@@ -395,7 +396,7 @@ Consider:
 
         try:
             result = await self.agent.run(prompt)
-            return result.data
+            return result # type: ignore
         except Exception as e:
             print(f"ArchitectureReviewerAgent error: {e}")
             return ArchitectureReview(
@@ -417,7 +418,7 @@ Consider:
 class ArchitectureTeam:
     """Coordinates the entire architecture team."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Architecture Team."""
         self.architect = SoftwareArchitectAgent()
         self.dependency_expert = DependencyExpertAgent()
