@@ -24,7 +24,7 @@ async def validate_project(
     project_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> PreGenerationValidation:
     """Validate project readiness for code generation."""
     service = CodeGenerationService(session)
     validation = await service.validation_pipeline.validate_project_readiness(project_id)
@@ -36,7 +36,7 @@ async def create_session(
     data: CodeGenerationSessionCreate,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> CodeGenerationSessionResponse:
     """Create code generation session."""
     service = CodeGenerationService(session)
     gen_session = await service.create_session(data)
@@ -44,7 +44,7 @@ async def create_session(
     # Auto-validate
     await service.validate_project(gen_session.id)
 
-    return gen_session
+    return CodeGenerationSessionResponse.model_validate(gen_session)
 
 
 @router.get("/sessions/{session_id}", response_model=CodeGenerationSessionResponse)
@@ -52,13 +52,13 @@ async def get_session(
     session_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> CodeGenerationSessionResponse:
     """Get generation session."""
     service = CodeGenerationService(session)
     gen_session = await service.get_session(session_id)
     if not gen_session:
         raise HTTPException(status_code=404, detail="Session not found")
-    return gen_session
+    return CodeGenerationSessionResponse.model_validate(gen_session)
 
 
 @router.get("/projects/{project_id}/sessions", response_model=list[CodeGenerationSessionResponse])
@@ -66,11 +66,11 @@ async def list_sessions(
     project_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> list[CodeGenerationSessionResponse]:
     """List all sessions for project."""
     service = CodeGenerationService(session)
     sessions = await service.list_sessions(project_id)
-    return sessions
+    return [CodeGenerationSessionResponse.model_validate(s) for s in sessions]
 
 
 @router.post("/sessions/{session_id}/scaffold", response_model=CodeGenerationSessionResponse)
@@ -78,13 +78,13 @@ async def generate_scaffold(
     session_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> CodeGenerationSessionResponse:
     """Generate code scaffold."""
     service = CodeGenerationService(session)
     gen_session = await service.generate_scaffold(session_id)
     if not gen_session:
         raise HTTPException(status_code=400, detail="Cannot generate scaffold - check session status")
-    return gen_session
+    return CodeGenerationSessionResponse.model_validate(gen_session)
 
 
 @router.post("/sessions/{session_id}/approve-scaffold", response_model=ApprovalResponse)
@@ -93,7 +93,7 @@ async def approve_scaffold(
     data: ApprovalRequest,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> ApprovalResponse:
     """Approve generated scaffold."""
     if not data.approved:
         return ApprovalResponse(
@@ -121,13 +121,13 @@ async def generate_implementation(
     session_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> CodeGenerationSessionResponse:
     """Generate full implementation."""
     service = CodeGenerationService(session)
     gen_session = await service.generate_implementation(session_id)
     if not gen_session:
         raise HTTPException(status_code=400, detail="Cannot generate code")
-    return gen_session
+    return CodeGenerationSessionResponse.model_validate(gen_session)
 
 
 @router.post("/sessions/{session_id}/approve-code", response_model=ApprovalResponse)
@@ -136,7 +136,7 @@ async def approve_code(
     data: ApprovalRequest,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> ApprovalResponse:
     """Approve generated code."""
     service = CodeGenerationService(session)
     gen_session = await service.get_session(session_id)
@@ -162,11 +162,11 @@ async def list_files(
     session_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> list[GeneratedFileResponse]:
     """List generated files."""
     service = CodeGenerationService(session)
     files = await service.file_repo.get_by_session(session_id)
-    return files
+    return [GeneratedFileResponse.model_validate(f) for f in files]
 
 
 @router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -174,7 +174,7 @@ async def delete_session(
     session_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete session."""
     service = CodeGenerationService(session)
     success = await service.delete_session(session_id)

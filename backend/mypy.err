@@ -40,32 +40,6 @@ api\v1\architecture.py: note: In function "validate_module_rules":
 api\v1\architecture.py:537: error: Function is missing a return type annotation  [no-untyped-def]
 api\v1\architecture.py: note: In function "execute_ai_architecture_plan":
 api\v1\architecture.py:561: error: Function is missing a return type annotation  [no-untyped-def]
-tests\modules\test_code_generation_service.py: note: In member "test_create_session" of class "TestCodeGenerationService":
-tests\modules\test_code_generation_service.py:16: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_code_generation_service.py: note: In member "test_list_sessions" of class "TestCodeGenerationService":
-tests\modules\test_code_generation_service.py:28: error: Function is missing a type annotation  [no-untyped-def]
-tests\modules\test_code_generation_service.py: note: In function "sample_project":
-tests\modules\test_code_generation_service.py:43: error: Function is missing a type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "validate_project":
-api\v1\code_generation.py:23: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "create_session":
-api\v1\code_generation.py:35: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "get_session":
-api\v1\code_generation.py:51: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "list_sessions":
-api\v1\code_generation.py:65: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "generate_scaffold":
-api\v1\code_generation.py:77: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "approve_scaffold":
-api\v1\code_generation.py:91: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "generate_implementation":
-api\v1\code_generation.py:120: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "approve_code":
-api\v1\code_generation.py:134: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "list_files":
-api\v1\code_generation.py:161: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\code_generation.py: note: In function "delete_session":
-api\v1\code_generation.py:173: error: Function is missing a return type annotation  [no-untyped-def]
 main.py:41: error: Unused "type: ignore" comment  [unused-ignore]
 tests\e2e\test_refmemtree_e2e.py: note: In member "test_e2e_module_creation_syncs_to_refmemtree" of class "TestRefMemTreeE2E":
 tests\e2e\test_refmemtree_e2e.py:26: error: Function is missing a type annotation  [no-untyped-def]
@@ -91,4 +65,4 @@ tests\e2e\test_refmemtree_e2e.py: note: In function "auth_headers":
 tests\e2e\test_refmemtree_e2e.py:423: error: Function is missing a return type annotation  [no-untyped-def]
 tests\e2e\test_refmemtree_e2e.py: note: In function "sample_project":
 tests\e2e\test_refmemtree_e2e.py:430: error: Function is missing a type annotation  [no-untyped-def]
-Found 50 errors in 11 files (checked 118 source files)
+Found 37 errors in 9 files (checked 118 source files)
