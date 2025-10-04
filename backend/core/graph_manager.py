@@ -11,30 +11,16 @@ Key Responsibilities:
 4. Manage graph lifecycle per project
 """
 
-from typing import Dict, Optional, List, Any, Callable, TYPE_CHECKING
-from uuid import UUID
+from typing import Dict, Optional, List, Any, Callable, Type
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import ArchitectureModule, ArchitectureRule, ModuleDependency
 
-# RefMemTree imports (will fail gracefully if not installed)
-# Define dummy classes for type checking if RefMemTree is not available
-class DummyGraphSystem:
-    pass
-
-class DummyGraphNode:
-    pass
-
-try:
-    from refmemtree import GraphSystem, GraphNode # type: ignore
-    REFMEMTREE_AVAILABLE = True
-except ImportError:
-    print("⚠️  RefMemTree not installed - using fallback mode")
-    GraphSystem = DummyGraphSystem
-    GraphNode = DummyGraphNode
-    REFMEMTREE_AVAILABLE = False
+from backend.lib.refmemtree.graph_system import GraphSystem, GraphNode
+REFMEMTREE_AVAILABLE = True
 
 
 class GraphManagerService:
@@ -46,7 +32,7 @@ class GraphManagerService:
 
     def __init__(self) -> None:
         # Cache: project_id -> GraphSystem instance
-        self._graph_cache: Dict[UUID, Optional["GraphSystem"]] = {}  # GraphSystem instances
+        self._graph_cache: Dict[UUID, Optional[GraphSystem]] = {}  # GraphSystem instances
 
     async def get_or_create_graph(
         self,
@@ -73,11 +59,10 @@ class GraphManagerService:
         if not force_reload and project_id in self._graph_cache:
             return self._graph_cache[project_id]
 
-        if GraphSystem is None: # Explicitly check if GraphSystem is None before calling
-            print("⚠️  GraphSystem is None, cannot create a new instance.")
-            return None
-
         # Create new GraphSystem
+        # If REFMEMTREE_AVAILABLE is True, GraphSystem is the real class.
+        # If REFMEMTREE_AVAILABLE is False, GraphSystem is the placeholder class.
+        # This allows the constructor to be called without a Pylance error.
         graph_system = GraphSystem()
 
         # Hydrate from PostgreSQL
@@ -285,7 +270,7 @@ class GraphManagerService:
 
         try:
             # ⭐ Use RefMemTree's built-in cycle detection
-            cycles = graph.detect_cycles(dependency_type="depends_on")
+            cycles: List[List[str]] = graph.dependency_tracker.find_circular_dependencies()
             return cycles
         except Exception as e:
             print(f"Failed to detect cycles in RefMemTree: {e}")
@@ -450,7 +435,8 @@ class GraphManagerService:
             raise ValueError("Graph not available")
 
         # ⭐ REAL RefMemTree API
-        version_id = graph.create_version(name=name, description=description, include_metadata=True)
+        version_id = str(uuid4())
+        graph.create_version(version_id=version_id, description=description)
 
         print(f"📸 Snapshot created: {version_id} for project {project_id}")
         return version_id
@@ -474,9 +460,9 @@ class GraphManagerService:
             raise ValueError("Graph not available")
 
         # ⭐ REAL RefMemTree API
-        result = graph.rollback_to_version(version_id)
+        success = graph.rollback_to_version(version_id)
 
-        if result.success:
+        if success:
             # Sync RefMemTree state back to PostgreSQL
             print(f"🔄 Syncing rollback to PostgreSQL...")
             await self._sync_graph_to_database(project_id, graph, session)
@@ -484,12 +470,9 @@ class GraphManagerService:
             return {
                 "status": "success",
                 "version_id": version_id,
-                "nodes_restored": result.nodes_restored,
-                "dependencies_restored": result.dependencies_restored,
-                "rules_restored": result.rules_restored,
             }
         else:
-            return {"status": "failed", "error": result.error}
+            return {"status": "failed", "error": f"Failed to rollback to version {version_id}"}
 
     async def list_snapshots(self, project_id: UUID, session: AsyncSession) -> List[Dict]:
         """
@@ -502,15 +485,15 @@ class GraphManagerService:
             return []
 
         # ⭐ REAL RefMemTree API
-        versions = graph.get_versions()
+        versions = graph.list_versions()
 
         return [
             {
-                "version_id": v.id,
-                "name": v.name,
-                "description": v.description,
-                "created_at": v.created_at.isoformat(),
-                "node_count": v.metadata.get("node_count", 0),
+                "version_id": v.get("version_id"),
+                "name": v.get("version_id"), # No name in this version
+                "description": v.get("description"),
+                "created_at": v.get("created_at"),
+                "node_count": 0, # Not available in this version
             }
             for v in versions
         ]
@@ -546,24 +529,13 @@ class GraphManagerService:
 
         try:
             # ⭐ REAL RefMemTree API
-            chains = node.get_transitive_dependencies(
-                dependency_type="depends_on",
-                max_depth=max_depth,
-                include_paths=True,
-            )
+            all_deps = graph.dependency_tracker.get_all_dependencies(str(node_id))
 
             return {
                 "node_id": str(node_id),
-                "dependency_chains": [
-                    {
-                        "path": [n.id for n in chain],
-                        "length": len(chain),
-                        "total_strength": sum(getattr(dep, "strength", 1.0) for dep in self._get_deps_in_chain(chain)),
-                    }
-                    for chain in chains
-                ],
-                "total_unique_dependencies": len(set(node.id for chain in chains for node in chain)),
-                "max_depth": max(len(chain) for chain in chains) if chains else 0,
+                "dependency_chains": [], # Not available in this version
+                "total_unique_dependencies": len(all_deps),
+                "max_depth": 0, # Not available in this version
             }
 
         except Exception as e:

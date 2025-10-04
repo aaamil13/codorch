@@ -1,7 +1,0 @@
-Refactor: Explicitly handle unawaited promises
-
-Consistently use the `void` operator to mark promises that are intentionally not awaited. This removes unnecessary `eslint-disable` comments and ensures compliance with the `@typescript-eslint/no-floating-promises` rule.
-
-- Removed `// eslint-disable-next-line @typescript-eslint/no-floating-promises` comments.
-- Simplified `void await` to `void` for fire-and-forget promise calls.
-- Added `void` operator to promise-returning function calls in template event handlers.
