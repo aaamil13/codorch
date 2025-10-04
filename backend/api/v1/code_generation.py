@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.api.deps import get_current_user, get_session
+from backend.api.deps import get_current_user, get_db
 from backend.db.models import User
 from backend.modules.code_generation.schemas import (
     CodeGenerationSessionCreate,
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/code-generation", tags=["code-generation"])
 @router.post("/projects/{project_id}/validate", response_model=PreGenerationValidation)
 async def validate_project(
     project_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Validate project readiness for code generation."""
@@ -34,7 +34,7 @@ async def validate_project(
 @router.post("/sessions", response_model=CodeGenerationSessionResponse, status_code=status.HTTP_201_CREATED)
 async def create_session(
     data: CodeGenerationSessionCreate,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Create code generation session."""
@@ -50,7 +50,7 @@ async def create_session(
 @router.get("/sessions/{session_id}", response_model=CodeGenerationSessionResponse)
 async def get_session(
     session_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get generation session."""
@@ -64,7 +64,7 @@ async def get_session(
 @router.get("/projects/{project_id}/sessions", response_model=list[CodeGenerationSessionResponse])
 async def list_sessions(
     project_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """List all sessions for project."""
@@ -76,7 +76,7 @@ async def list_sessions(
 @router.post("/sessions/{session_id}/scaffold", response_model=CodeGenerationSessionResponse)
 async def generate_scaffold(
     session_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Generate code scaffold."""
@@ -91,7 +91,7 @@ async def generate_scaffold(
 async def approve_scaffold(
     session_id: UUID,
     data: ApprovalRequest,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Approve generated scaffold."""
@@ -119,7 +119,7 @@ async def approve_scaffold(
 @router.post("/sessions/{session_id}/implementation", response_model=CodeGenerationSessionResponse)
 async def generate_implementation(
     session_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Generate full implementation."""
@@ -134,7 +134,7 @@ async def generate_implementation(
 async def approve_code(
     session_id: UUID,
     data: ApprovalRequest,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Approve generated code."""
@@ -160,7 +160,7 @@ async def approve_code(
 @router.get("/sessions/{session_id}/files", response_model=list[GeneratedFileResponse])
 async def list_files(
     session_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """List generated files."""
@@ -172,7 +172,7 @@ async def list_files(
 @router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_session(
     session_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Delete session."""

@@ -1,9 +1,10 @@
 """Service layer for Architecture Module."""
 
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import ArchitectureModule, User
 from backend.modules.architecture.repository import (
@@ -37,7 +38,7 @@ from backend.modules.architecture.schemas import (
 class ArchitectureService:
     """Service for architecture operations."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         """Initialize service."""
         self.db = db
         self.module_repo = ArchitectureModuleRepository(db)
@@ -62,13 +63,13 @@ class ArchitectureService:
         """Create a new architecture module."""
         # Calculate level if parent exists
         if data.parent_id:
-            parent = self.module_repo.get_by_id(data.parent_id)
+            parent = await self.module_repo.get_by_id(data.parent_id)
             if parent:
                 # Set level to parent level + 1
                 data.level = parent.level + 1
 
-        module = self.module_repo.create(data)
-        
+        module = await self.module_repo.create(data)
+
         # ⭐ REAL RefMemTree Integration: Add to GraphSystem
         try:
             graph_manager = get_graph_manager()
@@ -89,14 +90,14 @@ class ArchitectureService:
         except Exception as e:
             # Non-blocking if RefMemTree fails
             print(f"RefMemTree sync warning: {e}")
-        
+
         return module
 
-    def get_module(self, module_id: UUID) -> Optional[ArchitectureModule]:
+    async def get_module(self, module_id: UUID) -> Optional[ArchitectureModule]:
         """Get module by ID."""
-        return self.module_repo.get_by_id(module_id)
+        return await self.module_repo.get_by_id(module_id)
 
-    def list_modules(
+    async def list_modules(
         self,
         project_id: UUID,
         skip: int = 0,
@@ -106,7 +107,7 @@ class ArchitectureService:
         status: Optional[str] = None,
     ) -> list[ArchitectureModule]:
         """List modules for a project."""
-        return self.module_repo.get_by_project(
+        return await self.module_repo.get_by_project(
             project_id=project_id,
             skip=skip,
             limit=limit,
@@ -115,24 +116,24 @@ class ArchitectureService:
             status=status,
         )
 
-    def update_module(
+    async def update_module(
         self,
         module_id: UUID,
         data: ArchitectureModuleUpdate,
     ) -> Optional[ArchitectureModule]:
         """Update module with RefMemTree change tracking."""
         # Get old state for change tracking
-        old_module = self.module_repo.get_by_id(module_id)
-        
+        old_module = await self.module_repo.get_by_id(module_id)
+
         # Update in DB
-        updated = self.module_repo.update(module_id, data)
-        
+        updated = await self.module_repo.update(module_id, data)
+
         # ⭐ Record change in RefMemTree
         if old_module and updated:
             try:
                 from backend.core.refmemtree_advanced import NodeChangeEvent
                 from datetime import datetime
-                
+
                 event = NodeChangeEvent(
                     node_id=module_id,
                     change_type="update",
@@ -149,21 +150,21 @@ class ArchitectureService:
                     timestamp=datetime.utcnow(),
                     changed_by=None,  # Would come from current_user
                 )
-                
+
                 self.refmem.manager.record_change(event)
             except Exception as e:
                 print(f"RefMemTree change tracking warning: {e}")
-        
+
         return updated
 
-    def delete_module(self, module_id: UUID) -> bool:
+    async def delete_module(self, module_id: UUID) -> bool:
         """Delete module with RefMemTree impact check."""
         # ⭐ ACTIVATE RefMemTree: Check impact before deleting
         try:
             impact = self.analyze_module_change_impact_advanced(module_id, "delete")
-            
+
             # Block deletion if high impact
-            if impact.get('high_impact_count', 0) > 0:
+            if impact.get("high_impact_count", 0) > 0:
                 raise ValueError(
                     f"⚠️ Cannot delete: {impact['high_impact_count']} modules critically depend on this! "
                     f"Affected modules: {impact['affected_modules'][:3]}"
@@ -171,34 +172,26 @@ class ArchitectureService:
         except Exception as e:
             # If RefMemTree not available, proceed with warning
             print(f"RefMemTree impact check warning: {e}")
-        
-        return self.module_repo.delete(module_id)
 
-    def approve_module(self, module_id: UUID, user: User) -> Optional[ArchitectureModule]:
+        return await self.module_repo.delete(module_id)
+
+    async def approve_module(self, module_id: UUID, user: User) -> Optional[ArchitectureModule]:
         """Approve module."""
-        return self.module_repo.approve(module_id, user.id)
+        return await self.module_repo.approve(module_id, user.id)
 
     # ========================================================================
     # Dependency Operations
     # ========================================================================
 
-<<<<<<< Current (Your changes)
-<<<<<<< Current (Your changes)
-    def create_dependency(self, data: ModuleDependencyCreate):
-=======
     async def create_dependency(self, data: ModuleDependencyCreate):
->>>>>>> Incoming (Background Agent changes)
-=======
-    async def create_dependency(self, data: ModuleDependencyCreate):
->>>>>>> Incoming (Background Agent changes)
         """
         Create module dependency with RefMemTree Rule Engine validation.
-        
+
         CRITICAL: Uses RefMemTree to validate BEFORE writing to DB!
         This is the "immune system" - prevents invalid architecture!
         """
         # Check if dependency already exists
-        if self.dependency_repo.exists(data.from_module_id, data.to_module_id, data.dependency_type):
+        if await self.dependency_repo.exists(data.from_module_id, data.to_module_id, data.dependency_type):
             raise ValueError("Dependency already exists")
 
         # Check for self-dependency
@@ -209,32 +202,27 @@ class ArchitectureService:
         try:
             graph_manager = get_graph_manager()
             graph = await graph_manager.get_or_create_graph(data.project_id, self.db)
-            
+
             if graph:
                 # Get nodes from RefMemTree
                 from_node = graph.get_node(str(data.from_module_id))
                 to_node = graph.get_node(str(data.to_module_id))
-                
+
                 if from_node and to_node:
                     # ⭐ SIMULATE adding dependency
                     from_node_after = from_node.model_copy(deep=True)
-                    from_node_after.add_reference(
-                        str(data.to_module_id), 
-                        data.dependency_type
-                    )
-                    
+                    from_node_after.add_reference(str(data.to_module_id), data.dependency_type)
+
                     # ⭐ USE REFMEMTREE RULE ENGINE!
                     impact_signals = graph.impact_analyzer.analyze_change_impact(
-                        from_node,  # Before
-                        from_node_after  # After
+                        from_node, from_node_after  # Before  # After
                     )
-                    
+
                     # Check for BLOCKING errors from Rule Engine
                     blocking_errors = [
-                        s for s in impact_signals 
-                        if s.severity in ["ERROR", "CRITICAL"] and s.requires_action
+                        s for s in impact_signals if s.severity in ["ERROR", "CRITICAL"] and s.requires_action
                     ]
-                    
+
                     if blocking_errors:
                         # ⭐ RULE ENGINE BLOCKS INVALID OPERATION!
                         error_msg = blocking_errors[0].change_description
@@ -247,11 +235,11 @@ class ArchitectureService:
             raise
         except Exception as e:
             print(f"⚠️ Rule Engine check failed, using fallback: {e}")
-        
+
         # ⭐ Check for circular dependency using REAL RefMemTree
         try:
             graph_manager = get_graph_manager()
-            
+
             # Temporarily add to check for cycles
             temp_added = await graph_manager.add_dependency_to_graph(
                 project_id=data.project_id,
@@ -260,14 +248,14 @@ class ArchitectureService:
                 to_node_id=data.to_module_id,
                 dependency_type="temp_check",
             )
-            
+
             if temp_added:
                 # ⭐ REAL RefMemTree API: detect_cycles()
                 cycles = await graph_manager.detect_circular_dependencies(
                     project_id=data.project_id,
                     session=self.db,
                 )
-                
+
                 if cycles:
                     # Remove temp and raise error
                     raise ValueError(f"Would create circular dependency: {cycles[0]}")
@@ -276,11 +264,11 @@ class ArchitectureService:
         except Exception as e:
             # Fallback to custom check if RefMemTree fails
             print(f"RefMemTree cycle detection unavailable, using fallback: {e}")
-            if self._would_create_circular_dependency(data.from_module_id, data.to_module_id):
+            if await self._would_create_circular_dependency(data.from_module_id, data.to_module_id):
                 raise ValueError("Would create circular dependency")
 
-        dependency = self.dependency_repo.create(data)
-        
+        dependency = await self.dependency_repo.create(data)
+
         # ⭐ REAL RefMemTree Integration: Add dependency to GraphSystem
         try:
             graph_manager = get_graph_manager()
@@ -296,45 +284,45 @@ class ArchitectureService:
         except Exception as e:
             # Non-blocking if RefMemTree fails
             print(f"RefMemTree dependency tracking warning: {e}")
-        
+
         return dependency
 
-    def get_dependency(self, dependency_id: UUID):
+    async def get_dependency(self, dependency_id: UUID):
         """Get dependency by ID."""
-        return self.dependency_repo.get_by_id(dependency_id)
+        return await self.dependency_repo.get_by_id(dependency_id)
 
-    def list_dependencies(
+    async def list_dependencies(
         self,
         project_id: UUID,
         dependency_type: Optional[str] = None,
     ):
         """List dependencies for a project."""
-        return self.dependency_repo.get_by_project(
+        return await self.dependency_repo.get_by_project(
             project_id=project_id,
             dependency_type=dependency_type,
         )
 
-    def update_dependency(self, dependency_id: UUID, data: ModuleDependencyUpdate):
+    async def update_dependency(self, dependency_id: UUID, data: ModuleDependencyUpdate):
         """Update dependency."""
-        return self.dependency_repo.update(dependency_id, data)
+        return await self.dependency_repo.update(dependency_id, data)
 
-    def delete_dependency(self, dependency_id: UUID) -> bool:
+    async def delete_dependency(self, dependency_id: UUID) -> bool:
         """Delete dependency."""
-        return self.dependency_repo.delete(dependency_id)
+        return await self.dependency_repo.delete(dependency_id)
 
     # ========================================================================
     # Rule Operations
     # ========================================================================
 
-    def create_rule(self, data: ArchitectureRuleCreate):
+    async def create_rule(self, data: ArchitectureRuleCreate):
         """Create architecture rule."""
-        return self.rule_repo.create(data)
+        return await self.rule_repo.create(data)
 
-    def get_rule(self, rule_id: UUID):
+    async def get_rule(self, rule_id: UUID):
         """Get rule by ID."""
-        return self.rule_repo.get_by_id(rule_id)
+        return await self.rule_repo.get_by_id(rule_id)
 
-    def list_rules(
+    async def list_rules(
         self,
         project_id: UUID,
         level: Optional[str] = None,
@@ -342,35 +330,35 @@ class ArchitectureService:
         active_only: bool = True,
     ):
         """List rules for a project."""
-        return self.rule_repo.get_by_project(
+        return await self.rule_repo.get_by_project(
             project_id=project_id,
             level=level,
             rule_type=rule_type,
             active_only=active_only,
         )
 
-    def update_rule(self, rule_id: UUID, data: ArchitectureRuleUpdate):
+    async def update_rule(self, rule_id: UUID, data: ArchitectureRuleUpdate):
         """Update rule."""
-        return self.rule_repo.update(rule_id, data)
+        return await self.rule_repo.update(rule_id, data)
 
-    def delete_rule(self, rule_id: UUID) -> bool:
+    async def delete_rule(self, rule_id: UUID) -> bool:
         """Delete rule."""
-        return self.rule_repo.delete(rule_id)
+        return await self.rule_repo.delete(rule_id)
 
-    def deactivate_rule(self, rule_id: UUID):
+    async def deactivate_rule(self, rule_id: UUID):
         """Deactivate rule."""
-        return self.rule_repo.deactivate(rule_id)
+        return await self.rule_repo.deactivate(rule_id)
 
     # ========================================================================
     # Validation
     # ========================================================================
 
-    def validate_architecture(self, project_id: UUID) -> ArchitectureValidationResponse:
+    async def validate_architecture(self, project_id: UUID) -> ArchitectureValidationResponse:
         """Validate architecture for circular dependencies and rules."""
         issues: list[ValidationIssue] = []
 
         # Check for circular dependencies
-        circular_deps = self._detect_circular_dependencies(project_id)
+        circular_deps = await self._detect_circular_dependencies(project_id)
         for cycle in circular_deps:
             issues.append(
                 ValidationIssue(
@@ -397,10 +385,10 @@ class ArchitectureService:
     # Complexity Analysis
     # ========================================================================
 
-    def analyze_complexity(self, project_id: UUID) -> ComplexityAnalysisResponse:
+    async def analyze_complexity(self, project_id: UUID) -> ComplexityAnalysisResponse:
         """Analyze architecture complexity."""
-        modules = self.module_repo.get_by_project(project_id)
-        dependencies = self.dependency_repo.get_by_project(project_id)
+        modules = await self.module_repo.get_by_project(project_id)
+        dependencies = await self.dependency_repo.get_by_project(project_id)
 
         module_count = len(modules)
         avg_dependencies = len(dependencies) / module_count if module_count > 0 else 0
@@ -424,8 +412,8 @@ class ArchitectureService:
         # Find hotspots (modules with many dependencies)
         hotspots: list[ComplexityHotspot] = []
         for module in modules:
-            deps_from = self.dependency_repo.get_dependencies_from(module.id)
-            deps_to = self.dependency_repo.get_dependencies_to(module.id)
+            deps_from = await self.dependency_repo.get_dependencies_from(module.id)
+            deps_to = await self.dependency_repo.get_dependencies_to(module.id)
             total_deps = len(deps_from) + len(deps_to)
 
             if total_deps > avg_dependencies * 2:  # Significantly above average
@@ -466,9 +454,9 @@ class ArchitectureService:
     # Impact Analysis
     # ========================================================================
 
-    def analyze_impact(self, request: ImpactAnalysisRequest) -> ImpactAnalysisResponse:
+    async def analyze_impact(self, request: ImpactAnalysisRequest) -> ImpactAnalysisResponse:
         """Analyze impact of changes to a module."""
-        module = self.module_repo.get_by_id(request.module_id)
+        module = await self.module_repo.get_by_id(request.module_id)
         if not module:
             raise ValueError("Module not found")
 
@@ -477,10 +465,10 @@ class ArchitectureService:
 
         if request.change_type in ["modify", "delete"]:
             # Find modules that depend on this module
-            dependencies_to = self.dependency_repo.get_dependencies_to(request.module_id)
+            dependencies_to = await self.dependency_repo.get_dependencies_to(request.module_id)
 
             for dep in dependencies_to:
-                from_module = self.module_repo.get_by_id(dep.from_module_id)
+                from_module = await self.module_repo.get_by_id(dep.from_module_id)
                 if from_module:
                     impact_level = "direct" if dep.dependency_type in ["import", "extends"] else "indirect"
 
@@ -500,7 +488,7 @@ class ArchitectureService:
                     )
 
             # Find child modules (cascade effect)
-            children = self.module_repo.get_children(request.module_id)
+            children = await self.module_repo.get_children(request.module_id)
             for child in children:
                 affected_modules.append(
                     AffectedModule(
@@ -538,13 +526,13 @@ class ArchitectureService:
     # Shared Modules
     # ========================================================================
 
-    def get_shared_modules(self, project_id: UUID) -> SharedModulesResponse:
+    async def get_shared_modules(self, project_id: UUID) -> SharedModulesResponse:
         """Get shared modules (used by multiple modules)."""
-        modules = self.module_repo.get_by_project(project_id)
+        modules = await self.module_repo.get_by_project(project_id)
         shared_modules: list[SharedModuleInfo] = []
 
         for module in modules:
-            dependencies_to = self.dependency_repo.get_dependencies_to(module.id)
+            dependencies_to = await self.dependency_repo.get_dependencies_to(module.id)
 
             if len(dependencies_to) > 1:  # Used by more than one module
                 used_by = [dep.from_module_id for dep in dependencies_to]
@@ -576,7 +564,7 @@ class ArchitectureService:
     ) -> dict:
         """
         ADVANCED: Analyze impact using RefMemTree dependency tracking.
-        
+
         This uses RefMemTree's internal tracking to provide deeper analysis.
         """
         return self.refmem.analyze_module_modification_impact(module_id, change_type)
@@ -588,7 +576,7 @@ class ArchitectureService:
     ) -> dict:
         """
         ADVANCED: Simulate changes before applying them.
-        
+
         Returns risk level, success probability, and side effects.
         """
         return self.refmem.simulate_architecture_change(module_id, proposed_changes)
@@ -596,7 +584,7 @@ class ArchitectureService:
     def get_dependency_analysis_advanced(self, module_id: UUID) -> dict:
         """
         ADVANCED: Get comprehensive dependency analysis using RefMemTree.
-        
+
         Includes coupling scores, chain analysis, criticality assessment.
         """
         return self.refmem.get_module_dependencies_analysis(module_id)
@@ -607,14 +595,14 @@ class ArchitectureService:
         """
         return self.refmem.validate_module_against_rules(module_id)
 
-    def sync_module_to_refmemtree(self, module: ArchitectureModule) -> None:
+    async def sync_module_to_refmemtree(self, module: ArchitectureModule) -> None:
         """
         Sync module and its rules to RefMemTree for advanced tracking.
-        
+
         This should be called after creating/updating modules.
         """
         # Get architectural rules for this module
-        rules = self.rule_repo.get_by_module(module.id)
+        rules = await self.rule_repo.get_by_module(module.id)
 
         # Convert to RefMemTree rule format
         refmem_rules = [
@@ -649,7 +637,7 @@ class ArchitectureService:
     ) -> None:
         """
         Sync dependency to RefMemTree for impact tracking.
-        
+
         This should be called after creating dependencies.
         """
         # Calculate strength based on dependency type
@@ -674,12 +662,12 @@ class ArchitectureService:
     # Private Helper Methods
     # ========================================================================
 
-    def _would_create_circular_dependency(self, from_module_id: UUID, to_module_id: UUID) -> bool:
+    async def _would_create_circular_dependency(self, from_module_id: UUID, to_module_id: UUID) -> bool:
         """Check if creating this dependency would create a circular dependency."""
         # Use DFS to check if there's a path from to_module to from_module
         visited = set()
 
-        def dfs(current_id: UUID) -> bool:
+        async def dfs(current_id: UUID) -> bool:
             if current_id == from_module_id:
                 return True
             if current_id in visited:
@@ -688,35 +676,35 @@ class ArchitectureService:
             visited.add(current_id)
 
             # Get all dependencies FROM current module
-            deps = self.dependency_repo.get_dependencies_from(current_id)
+            deps = await self.dependency_repo.get_dependencies_from(current_id)
             for dep in deps:
-                if dfs(dep.to_module_id):
+                if await dfs(dep.to_module_id):
                     return True
 
             return False
 
-        return dfs(to_module_id)
+        return await dfs(to_module_id)
 
-    def _detect_circular_dependencies(self, project_id: UUID) -> list[list[UUID]]:
+    async def _detect_circular_dependencies(self, project_id: UUID) -> list[list[UUID]]:
         """Detect all circular dependencies using DFS."""
-        modules = self.module_repo.get_by_project(project_id)
+        modules = await self.module_repo.get_by_project(project_id)
         cycles: list[list[UUID]] = []
         visited = set()
         rec_stack = set()
         path = []
 
-        def dfs(module_id: UUID) -> bool:
+        async def dfs(module_id: UUID) -> bool:
             visited.add(module_id)
             rec_stack.add(module_id)
             path.append(module_id)
 
             # Get dependencies
-            deps = self.dependency_repo.get_dependencies_from(module_id)
+            deps = await self.dependency_repo.get_dependencies_from(module_id)
             for dep in deps:
                 to_id = dep.to_module_id
 
                 if to_id not in visited:
-                    if dfs(to_id):
+                    if await dfs(to_id):
                         return True
                 elif to_id in rec_stack:
                     # Found cycle
@@ -730,6 +718,6 @@ class ArchitectureService:
 
         for module in modules:
             if module.id not in visited:
-                dfs(module.id)
+                await dfs(module.id)
 
         return cycles

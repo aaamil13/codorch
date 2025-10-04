@@ -6,7 +6,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.api.deps import get_current_user, get_session
+from backend.api.deps import get_current_user, get_db
 from backend.db.models import User
 from backend.modules.requirements.schemas import (
     APISpecificationCreate,
@@ -41,7 +41,7 @@ router = APIRouter(prefix="/requirements", tags=["requirements"])
 @router.post("", response_model=RequirementResponse, status_code=status.HTTP_201_CREATED)
 async def create_requirement(
     data: RequirementCreate,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Create new requirement."""
@@ -59,7 +59,7 @@ async def list_requirements(
     status_filter: Optional[str] = None,
     priority_filter: Optional[str] = None,
     module_id: Optional[UUID] = None,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """List requirements for a project."""
@@ -73,7 +73,7 @@ async def list_requirements(
 @router.get("/modules/{module_id}", response_model=list[RequirementResponse])
 async def list_module_requirements(
     module_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get requirements for a specific module."""
@@ -85,7 +85,7 @@ async def list_module_requirements(
 @router.get("/{requirement_id}", response_model=RequirementResponse)
 async def get_requirement(
     requirement_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get requirement by ID."""
@@ -100,7 +100,7 @@ async def get_requirement(
 async def update_requirement(
     requirement_id: UUID,
     data: RequirementUpdate,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Update requirement."""
@@ -114,7 +114,7 @@ async def update_requirement(
 @router.delete("/{requirement_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_requirement(
     requirement_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Delete requirement."""
@@ -127,7 +127,7 @@ async def delete_requirement(
 @router.post("/{requirement_id}/approve", response_model=RequirementResponse)
 async def approve_requirement(
     requirement_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Approve requirement."""
@@ -146,7 +146,7 @@ async def approve_requirement(
 @router.post("/{requirement_id}/validate", response_model=RequirementValidationResult)
 async def validate_requirement(
     requirement_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Validate single requirement with AI."""
@@ -198,7 +198,7 @@ async def validate_requirement(
 async def validate_batch(
     project_id: UUID,
     data: BatchValidationRequest,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Validate multiple requirements."""
@@ -210,7 +210,7 @@ async def validate_batch(
 @router.get("/{requirement_id}/suggestions", response_model=dict)
 async def get_suggestions(
     requirement_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get AI suggestions for improving requirement."""
@@ -238,7 +238,7 @@ async def get_suggestions(
 async def generate_technology_recommendations(
     project_id: UUID,
     data: TechnologyRecommendationRequest,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Generate technology recommendations using AI."""
@@ -313,7 +313,7 @@ async def list_technology_recommendations(
     project_id: UUID,
     technology_type: Optional[str] = None,
     status_filter: Optional[str] = None,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """List technology recommendations."""
@@ -325,7 +325,7 @@ async def list_technology_recommendations(
 @router.get("/technology-recommendations/{recommendation_id}", response_model=TechnologyRecommendationResponse)
 async def get_technology_recommendation(
     recommendation_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get technology recommendation by ID."""
@@ -340,7 +340,7 @@ async def get_technology_recommendation(
 async def update_technology_recommendation(
     recommendation_id: UUID,
     data: TechnologyRecommendationUpdate,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Update technology recommendation."""
@@ -354,7 +354,7 @@ async def update_technology_recommendation(
 @router.delete("/technology-recommendations/{recommendation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_technology_recommendation(
     recommendation_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Delete technology recommendation."""
@@ -372,7 +372,7 @@ async def delete_technology_recommendation(
 @router.post("/api-specifications", response_model=APISpecificationResponse, status_code=status.HTTP_201_CREATED)
 async def create_api_specification(
     data: APISpecificationCreate,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Create API specification."""
@@ -384,7 +384,7 @@ async def create_api_specification(
 @router.get("/requirements/{requirement_id}/api-specifications", response_model=list[APISpecificationResponse])
 async def list_api_specifications(
     requirement_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """List API specifications for a requirement."""
@@ -396,7 +396,7 @@ async def list_api_specifications(
 @router.get("/api-specifications/{api_spec_id}", response_model=APISpecificationResponse)
 async def get_api_specification(
     api_spec_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get API specification by ID."""
@@ -411,7 +411,7 @@ async def get_api_specification(
 async def update_api_specification(
     api_spec_id: UUID,
     data: APISpecificationUpdate,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Update API specification."""
@@ -425,7 +425,7 @@ async def update_api_specification(
 @router.delete("/api-specifications/{api_spec_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_api_specification(
     api_spec_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Delete API specification."""
@@ -443,7 +443,7 @@ async def delete_api_specification(
 @router.get("/projects/{project_id}/summary", response_model=RequirementsSummary)
 async def get_requirements_summary(
     project_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Get requirements summary for a project."""
@@ -455,7 +455,7 @@ async def get_requirements_summary(
 @router.get("/projects/{project_id}/report", response_model=RequirementsReport)
 async def get_requirements_report(
     project_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """Generate full requirements report."""

@@ -4,7 +4,7 @@ RefMemTree Loader - Loads existing database data into RefMemTree on project open
 This is the CRITICAL component that bridges PostgreSQL ↔ RefMemTree.
 """
 
-from typing import Dict
+from typing import Dict, Optional
 from uuid import UUID
 
 from sqlalchemy import select

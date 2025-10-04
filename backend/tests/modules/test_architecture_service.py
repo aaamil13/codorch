@@ -84,7 +84,7 @@ class TestArchitectureService:
 
 
 @pytest.fixture
-def sample_project(async_session):
+async def sample_project(async_session):
     """Create sample project."""
     from backend.db.models import Project, User
     from datetime import datetime

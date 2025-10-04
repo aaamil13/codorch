@@ -13,7 +13,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.api.deps import get_current_user, get_session
+from backend.api.deps import get_current_user, get_db
 from backend.db.models import User
 from backend.modules.tree_nodes.service import TreeNodeService
 
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/tree-nodes", tags=["tree-nodes"])
 @router.get("/{node_id}/impact", response_model=dict)
 async def get_node_impact_analysis(
     node_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -55,7 +55,7 @@ async def get_node_impact_analysis(
 @router.get("/{node_id}/dependents", response_model=dict)
 async def get_node_dependents(
     node_id: UUID,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -109,7 +109,7 @@ async def get_node_dependents(
 async def get_dependency_chain(
     node_id: UUID,
     max_depth: int = 10,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """

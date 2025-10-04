@@ -11,7 +11,7 @@ Key Responsibilities:
 4. Manage graph lifecycle per project
 """
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from uuid import UUID
 
 from sqlalchemy import select

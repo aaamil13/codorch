@@ -1,5 +1,6 @@
 """AI Agents for Requirements Module (Module 5)."""
 
+from typing import Any
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
 
@@ -35,9 +36,12 @@ class ValidationResult(BaseModel):
 class TechnologyRecommendations(BaseModel):
     """Technology recommendations from TechnologyAdvisorAgent."""
 
-    recommendations: list[dict[str, any]] = Field(default_factory=list)
+    recommendations: list[dict[str, Any]] = Field(default_factory=list)
     reasoning: str
     alternatives_considered: list[str] = Field(default_factory=list)
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 # ============================================================================
@@ -46,10 +50,11 @@ class TechnologyRecommendations(BaseModel):
 
 
 # Requirements Analyst Agent
-requirements_analyst_agent = Agent(
-    "google-gla:gemini-2.0-flash-001",
-    result_type=RequirementAnalysis,
-    system_prompt="""You are an expert Requirements Analyst specializing in software requirements engineering.
+def get_requirements_analyst_agent():
+    return Agent(
+        "google-gla:gemini-2.0-flash-001",
+        result_type=RequirementAnalysis,
+        system_prompt="""You are an expert Requirements Analyst specializing in software requirements engineering.
 
 Your responsibilities:
 1. Analyze requirement completeness - check if all necessary information is present
@@ -72,14 +77,15 @@ For each issue, provide:
 - Suggestion: Specific actionable recommendation
 
 Be thorough but constructive. Focus on helping improve the requirement.""",
-)
+    )
 
 
 # Requirements Validator Agent
-requirements_validator_agent = Agent(
-    "google-gla:gemini-2.0-flash-001",
-    result_type=ValidationResult,
-    system_prompt="""You are a Requirements Validation Expert responsible for final quality checks.
+def get_requirements_validator_agent():
+    return Agent(
+        "google-gla:gemini-2.0-flash-001",
+        result_type=ValidationResult,
+        system_prompt="""You are a Requirements Validation Expert responsible for final quality checks.
 
 Your responsibilities:
 1. Perform comprehensive validation of requirements
@@ -109,14 +115,15 @@ Warnings (pass but recommend fixing):
 - Missing non-functional requirements
 
 Be strict but fair. Safety and quality are paramount.""",
-)
+    )
 
 
 # Technology Advisor Agent
-technology_advisor_agent = Agent(
-    "google-gla:gemini-2.0-flash-001",
-    result_type=TechnologyRecommendations,
-    system_prompt="""You are a Technology Advisor specializing in recommending suitable technologies for software requirements.
+def get_technology_advisor_agent():
+    return Agent(
+        "google-gla:gemini-2.0-flash-001",
+        result_type=TechnologyRecommendations,
+        system_prompt="""You are a Technology Advisor specializing in recommending suitable technologies for software requirements.
 
 Your responsibilities:
 1. Analyze requirements to understand technical needs
@@ -149,7 +156,7 @@ Consider:
 - Security considerations
 
 Be pragmatic. Recommend proven, well-supported technologies over bleeding-edge.""",
-)
+    )
 
 
 # ============================================================================
@@ -173,7 +180,8 @@ Current Acceptance Criteria: {', '.join(acceptance_criteria) if acceptance_crite
 Analyze this requirement thoroughly and provide detailed feedback.
 """
 
-    result = await requirements_analyst_agent.run(context)
+    agent = get_requirements_analyst_agent()
+    result = await agent.run(context)
     return result.data
 
 
@@ -199,7 +207,8 @@ Previous Analysis:
 Perform final validation and determine if this requirement is ready for approval.
 """
 
-    result = await requirements_validator_agent.run(context)
+    agent = get_requirements_validator_agent()
+    result = await agent.run(context)
     return result.data
 
 
@@ -223,7 +232,8 @@ Analyze the requirements and recommend appropriate technologies for implementati
 Provide at least 3-5 recommendations covering different technology categories.
 """
 
-    result = await technology_advisor_agent.run(context)
+    agent = get_technology_advisor_agent()
+    result = await agent.run(context)
     return result.data
 
 

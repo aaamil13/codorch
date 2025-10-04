@@ -12,7 +12,7 @@ This module provides FULL utilization of RefMemTree capabilities:
 8. Branch management
 """
 
-from typing import Any, Optional
+from typing import Any, Optional, Callable, List, Dict
 from uuid import UUID, uuid4
 from datetime import datetime
 
@@ -132,13 +132,13 @@ class RefMemTreeManager:
     8. Branch management for experimentation
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Core storage
-        self.nodes: dict[UUID, dict[str, Any]] = {}
-        self.rules: dict[UUID, list[NodeRule]] = {}  # node_id -> rules
-        self.dependencies: dict[UUID, list[DependencyLink]] = {}  # node_id -> dependencies
-        self.change_history: dict[UUID, list[NodeChangeEvent]] = {}  # node_id -> events
-        self.context_versions: dict[UUID, list[dict[str, Any]]] = {}  # node_id -> versions
+        self.nodes: Dict[UUID, Dict[str, Any]] = {}
+        self.rules: Dict[UUID, List[NodeRule]] = {}  # node_id -> rules
+        self.dependencies: Dict[UUID, List[DependencyLink]] = {}  # node_id -> dependencies
+        self.change_history: Dict[UUID, List[NodeChangeEvent]] = {}  # node_id -> events
+        self.context_versions: Dict[UUID, List[Dict[str, Any]]] = {}  # node_id -> versions
 
     # ========================================================================
     # 1. RULE TRACKING & ENFORCEMENT
@@ -195,8 +195,8 @@ class RefMemTreeManager:
     def monitor_node_changes(
         self,
         node_id: UUID,
-        callback: callable,
-        change_types: Optional[list[str]] = None,
+        callback: Callable[[NodeChangeEvent], Any],
+        change_types: Optional[List[str]] = None,
     ) -> None:
         """
         Set up monitoring for node changes.
@@ -229,17 +229,17 @@ class RefMemTreeManager:
                     dependents.append(link)
         return dependents
 
-    def get_dependency_chain(self, node_id: UUID, max_depth: int = 5) -> list[list[UUID]]:
+    def get_dependency_chain(self, node_id: UUID, max_depth: int = 5) -> List[List[UUID]]:
         """Get all dependency chains from this node."""
-        chains = []
+        chains: List[List[UUID]] = []
         self._build_dependency_chains(node_id, [], chains, max_depth)
         return chains
 
     def _build_dependency_chains(
         self,
         current_id: UUID,
-        current_chain: list[UUID],
-        all_chains: list[list[UUID]],
+        current_chain: List[UUID],
+        all_chains: List[List[UUID]],
         max_depth: int,
     ) -> None:
         """Recursively build dependency chains."""
@@ -316,17 +316,17 @@ class RefMemTreeManager:
             recommendations=recommendations,
         )
 
-    def _get_propagation_paths(self, node_id: UUID, max_depth: int = 3) -> list[list[UUID]]:
+    def _get_propagation_paths(self, node_id: UUID, max_depth: int = 3) -> List[List[UUID]]:
         """Get paths showing how changes propagate."""
-        paths = []
+        paths: List[List[UUID]] = []
         self._trace_propagation(node_id, [], paths, max_depth)
         return paths
 
     def _trace_propagation(
         self,
         current_id: UUID,
-        current_path: list[UUID],
-        all_paths: list[list[UUID]],
+        current_path: List[UUID],
+        all_paths: List[List[UUID]],
         max_depth: int,
     ) -> None:
         """Recursively trace change propagation."""
@@ -435,12 +435,12 @@ class RefMemTreeManager:
         self,
         node_id: UUID,
         version_name: str,
-    ) -> Optional[dict[str, Any]]:
+    ) -> Optional[Dict[str, Any]]:
         """Get context at specific version."""
         versions = self.get_context_versions(node_id)
         for version in versions:
             if version["version_name"] == version_name:
-                return version["context"]
+                return version["context"] # type: ignore
         return None
 
     # ========================================================================

@@ -9,7 +9,7 @@ This module demonstrates FULL use of RefMemTree capabilities:
 """
 
 from uuid import UUID
-from typing import Any
+from typing import Any, Optional
 
 from backend.core.refmemtree_advanced import (
     RefMemTreeManager,

@@ -146,14 +146,29 @@ class TestRefMemTreeAPIs:
 
 
 @pytest.fixture
-def sample_project(async_session):
+async def sample_project(async_session):
     """Create sample project for testing."""
     from backend.db.models import Project, User
+    from datetime import datetime
 
-    user = User(email="test@test.com", username="testuser", hashed_password="hashed")
+    user = User(
+        email="test@test.com",
+        username="testuser",
+        hashed_password="hashed",
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
     async_session.add(user)
+    await async_session.flush()
 
-    project = Project(name="Test Project", description="Test", goal="Test goal", owner_id=user.id)
+    project = Project(
+        name="Test Project",
+        description="Test",
+        goal="Test goal",
+        owner_id=user.id,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )
     async_session.add(project)
     await async_session.commit()
 

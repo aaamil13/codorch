@@ -7,8 +7,8 @@ try:
     from refmemtree import RefMemTree, Node
 except ImportError:
     # Fallback if RefMemTree is not installed yet
-    RefMemTree = None  # type: ignore
-    Node = None  # type: ignore
+    RefMemTree = None
+    Node = None
 
 
 class ProjectTreeNode:

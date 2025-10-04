@@ -8,7 +8,8 @@ from backend.db.models import Project, User
 from backend.modules.opportunities.schemas import (
     OpportunityCreate,
     OpportunityGenerateRequest,
-    OpportunityComparisonRequest,
+    OpportunityCompareRequest,
+    OpportunityUpdate,
 )
 from backend.modules.opportunities.service import OpportunityService
 
@@ -40,13 +41,18 @@ class TestOpportunityService:
     def test_create_opportunity_with_scoring(self, opp_service, test_project):
         """Test creating opportunity with automatic scoring."""
         opp_data = OpportunityCreate(
-            project_id=test_project.id,
             title="AI-powered analytics",
             description="Build analytics dashboard with AI insights",
             category="product",
+            target_market="Test Market",
+            value_proposition="Test Value",
+            estimated_effort="Low",
+            estimated_timeline="Short",
+            required_resources={},
+            goal_id=None,
         )
 
-        opp = opp_service.create_opportunity(opp_data)
+        opp = opp_service.create_opportunity(test_project.id, opp_data)
 
         assert opp.id is not None
         assert opp.title == opp_data.title
@@ -60,9 +66,17 @@ class TestOpportunityService:
     def test_get_opportunity(self, opp_service, test_project):
         """Test getting opportunity."""
         opp = opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="Test Opportunity",
+                description="Test",
+                category="Test",
+                target_market="Test Market",
+                value_proposition="Test Value",
+                estimated_effort="Low",
+                estimated_timeline="Short",
+                required_resources={},
+                goal_id=None,
             )
         )
 
@@ -75,9 +89,17 @@ class TestOpportunityService:
         """Test listing opportunities."""
         for i in range(3):
             opp_service.create_opportunity(
+                test_project.id,
                 OpportunityCreate(
-                    project_id=test_project.id,
                     title=f"Opportunity {i}",
+                    description="Test",
+                    category="Test",
+                    target_market="Test Market",
+                    value_proposition="Test Value",
+                    estimated_effort="Low",
+                    estimated_timeline="Short",
+                    required_resources={},
+                    goal_id=None,
                 )
             )
 
@@ -88,13 +110,19 @@ class TestOpportunityService:
     def test_update_opportunity(self, opp_service, test_project):
         """Test updating opportunity."""
         opp = opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="Original",
+                description="Test",
+                category="Test",
+                target_market="Test Market",
+                value_proposition="Test Value",
+                estimated_effort="Low",
+                estimated_timeline="Short",
+                required_resources={},
+                goal_id=None,
             )
         )
-
-        from backend.modules.opportunities.schemas import OpportunityUpdate
 
         updated = opp_service.update_opportunity(
             opp.id,
@@ -109,9 +137,17 @@ class TestOpportunityService:
     def test_delete_opportunity(self, opp_service, test_project):
         """Test deleting opportunity."""
         opp = opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="To Delete",
+                description="Test",
+                category="Test",
+                target_market="Test Market",
+                value_proposition="Test Value",
+                estimated_effort="Low",
+                estimated_timeline="Short",
+                required_resources={},
+                goal_id=None,
             )
         )
 
@@ -126,7 +162,9 @@ class TestOpportunityService:
         request = OpportunityGenerateRequest(
             project_id=test_project.id,
             context="SaaS platform for project management",
-            count=3,
+            num_opportunities=3,
+            creativity_level="balanced",
+            include_scoring=True,
         )
 
         with patch("backend.modules.opportunities.service.OpportunityTeam") as mock_team_class:
@@ -160,19 +198,35 @@ class TestOpportunityService:
         """Test opportunity comparison."""
         # Create opportunities
         opp1 = opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="Opportunity 1",
+                description="Test",
+                category="Test",
+                target_market="Test Market",
+                value_proposition="Test Value",
+                estimated_effort="Low",
+                estimated_timeline="Short",
+                required_resources={},
+                goal_id=None,
             )
         )
         opp2 = opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="Opportunity 2",
+                description="Test",
+                category="Test",
+                target_market="Test Market",
+                value_proposition="Test Value",
+                estimated_effort="Low",
+                estimated_timeline="Short",
+                required_resources={},
+                goal_id=None,
             )
         )
 
-        request = OpportunityComparisonRequest(
+        request = OpportunityCompareRequest(
             opportunity_ids=[opp1.id, opp2.id],
         )
 
@@ -198,17 +252,31 @@ class TestOpportunityService:
         """Test getting top-ranked opportunities."""
         # Create opportunities with different scores
         opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="High",
                 description="High impact opportunity with clear benefits",
+                category="Test",
+                target_market="Test Market",
+                value_proposition="Test Value",
+                estimated_effort="Low",
+                estimated_timeline="Short",
+                required_resources={},
+                goal_id=None,
             )
         )
         opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="Low",
                 description="Low priority",
+                category="other",
+                target_market="Test Market",
+                value_proposition="Test Value",
+                estimated_effort="Low",
+                estimated_timeline="Short",
+                required_resources={},
+                goal_id=None,
             )
         )
 
@@ -220,23 +288,33 @@ class TestOpportunityService:
         """Test scoring calculation logic."""
         # High-quality opportunity
         good_opp = opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="Revolutionary AI Platform",
                 description="Build cutting-edge AI platform with proven technology and clear market demand",
                 category="product",
                 target_market="Enterprise B2B",
                 value_proposition="Reduce costs by 50%",
+                estimated_effort="High",
+                estimated_timeline="Long",
+                required_resources={},
+                goal_id=None,
             )
         )
 
         # Low-quality opportunity
         poor_opp = opp_service.create_opportunity(
+            test_project.id,
             OpportunityCreate(
-                project_id=test_project.id,
                 title="Something",
                 description="Do something",
                 category="other",
+                target_market="N/A",
+                value_proposition="N/A",
+                estimated_effort="Unknown",
+                estimated_timeline="Unknown",
+                required_resources={},
+                goal_id=None,
             )
         )
 

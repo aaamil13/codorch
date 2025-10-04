@@ -1,6 +1,6 @@
 """API endpoints for Architecture Module."""
 
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status

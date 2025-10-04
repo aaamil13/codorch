@@ -50,10 +50,11 @@ class TestOutput(BaseModel):
 
 
 # Code Generator Agent
-code_generator_agent = Agent(
-    "google-gla:gemini-2.0-flash-001",
-    result_type=CodeOutput,
-    system_prompt="""You are an expert Software Engineer specialized in generating production-ready code.
+def get_code_generator_agent():
+    return Agent(
+        "google-gla:gemini-2.0-flash-001",
+        result_type=CodeOutput,
+        system_prompt="""You are an expert Software Engineer specialized in generating production-ready code.
 
 Your responsibilities:
 1. Generate clean, maintainable code following best practices
@@ -77,14 +78,15 @@ For each file, provide:
 - content: Complete file content
 
 Generate professional, production-ready code.""",
-)
+    )
 
 
 # Code Reviewer Agent
-code_reviewer_agent = Agent(
-    "google-gla:gemini-2.0-flash-001",
-    result_type=CodeReviewOutput,
-    system_prompt="""You are a Senior Code Reviewer responsible for quality assurance.
+def get_code_reviewer_agent():
+    return Agent(
+        "google-gla:gemini-2.0-flash-001",
+        result_type=CodeReviewOutput,
+        system_prompt="""You are a Senior Code Reviewer responsible for quality assurance.
 
 Review Criteria:
 1. Code Quality (0-10)
@@ -118,14 +120,15 @@ Approval Criteria:
 - No critical quality issues
 
 Provide specific, actionable feedback.""",
-)
+    )
 
 
 # Test Generator Agent
-test_generator_agent = Agent(
-    "google-gla:gemini-2.0-flash-001",
-    result_type=TestOutput,
-    system_prompt="""You are a Test Automation Expert specializing in comprehensive test generation.
+def get_test_generator_agent():
+    return Agent(
+        "google-gla:gemini-2.0-flash-001",
+        result_type=TestOutput,
+        system_prompt="""You are a Test Automation Expert specializing in comprehensive test generation.
 
 Your responsibilities:
 1. Generate unit tests for all functions/methods
@@ -148,7 +151,7 @@ Test Coverage Goals:
 - Test validation logic
 
 Generate complete, runnable test files with proper setup/teardown.""",
-)
+    )
 
 
 # ============================================================================
@@ -174,8 +177,8 @@ Technology Stack:
 
 Generate a complete project scaffold with file structure and empty/template files.
 """
-
-    result = await code_generator_agent.run(context)
+    agent = get_code_generator_agent()
+    result = await agent.run(context)
     return result.data
 
 
@@ -197,8 +200,8 @@ Requirements to Implement:
 Generate complete implementation code for all files.
 Include proper error handling, validation, and documentation.
 """
-
-    result = await code_generator_agent.run(context)
+    agent = get_code_generator_agent()
+    result = await agent.run(context)
     return result.data
 
 
@@ -216,8 +219,8 @@ Requirements:
 
 Perform comprehensive code review focusing on quality, security, and best practices.
 """
-
-    result = await code_reviewer_agent.run(context)
+    agent = get_code_reviewer_agent()
+    result = await agent.run(context)
     return result.data
 
 
@@ -234,8 +237,8 @@ Code Files to Test:
 
 Generate comprehensive test suite including unit tests, integration tests, and edge cases.
 """
-
-    result = await test_generator_agent.run(context)
+    agent = get_test_generator_agent()
+    result = await agent.run(context)
     return result.data
 
 
