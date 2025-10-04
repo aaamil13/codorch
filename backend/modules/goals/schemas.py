@@ -70,14 +70,27 @@ class GoalCreate(GoalBase):
 class GoalUpdate(BaseSchema):
     """Schema for updating a goal."""
 
-    title: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    category: Optional[str] = None
-    target_date: Optional[datetime] = None
-    priority: Optional[str] = None
-    status: Optional[str] = None
-    completion_percentage: Optional[float] = Field(None, ge=0, le=100)
-    metrics: Optional[list[MetricDefinition]] = None
+    title: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    description: Optional[str] = Field(default=None)
+    category: Optional[str] = Field(default=None)
+    target_date: Optional[datetime] = Field(default=None)
+    priority: Optional[str] = Field(default=None)
+    status: Optional[str] = Field(default=None)
+    completion_percentage: Optional[float] = Field(default=None, ge=0, le=100)
+    metrics: Optional[list[MetricDefinition]] = Field(default=None)
+    
+    # SMART validation scores
+    specific_score: Optional[float] = Field(default=None)
+    measurable_score: Optional[float] = Field(default=None)
+    achievable_score: Optional[float] = Field(default=None)
+    relevant_score: Optional[float] = Field(default=None)
+    time_bound_score: Optional[float] = Field(default=None)
+    overall_smart_score: Optional[float] = Field(default=None)
+    is_smart_validated: Optional[bool] = Field(default=None)
+
+    # AI feedback
+    ai_feedback: Optional[dict] = Field(default=None)
+    ai_suggestions: Optional[list] = Field(default=None)
 
 
 class GoalResponse(GoalBase, TimestampMixin):

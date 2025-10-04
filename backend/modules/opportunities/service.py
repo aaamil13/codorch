@@ -48,40 +48,27 @@ class OpportunityService:
             if not goal or goal.project_id != project_id:
                 raise ValueError("Goal not found or belongs to different project")
 
-        # Create opportunity
-        opportunity = Opportunity(
-            project_id=project_id,
-            goal_id=opportunity_data.goal_id,
-            title=opportunity_data.title,
-            description=opportunity_data.description,
-            category=opportunity_data.category,
-            target_market=opportunity_data.target_market,
-            value_proposition=opportunity_data.value_proposition,
-            estimated_effort=opportunity_data.estimated_effort,
-            estimated_timeline=opportunity_data.estimated_timeline,
-            required_resources=opportunity_data.required_resources,
-            ai_generated=False,
-            status="proposed",
-        )
+        # Create opportunity via repository
+        created_opportunity = await self.repository.create(opportunity_data, project_id)
 
-        # Calculate scores
+        # Calculate scores and update
         scores = self.scorer.calculate_overall_score(
-            description=opportunity.description,
-            category=opportunity.category,
-            target_market=opportunity.target_market,
-            value_proposition=opportunity.value_proposition,
-            estimated_effort=opportunity.estimated_effort,
-            required_resources=opportunity.required_resources,
+            description=created_opportunity.description,
+            category=created_opportunity.category,
+            target_market=created_opportunity.target_market,
+            value_proposition=created_opportunity.value_proposition,
+            estimated_effort=created_opportunity.estimated_effort,
+            required_resources=created_opportunity.required_resources,
         )
 
-        opportunity.feasibility_score = scores["feasibility_score"]
-        opportunity.impact_score = scores["impact_score"]
-        opportunity.innovation_score = scores["innovation_score"]
-        opportunity.resource_score = scores["resource_score"]
-        opportunity.score = scores["overall_score"]
-        opportunity.scoring_details = scores
+        created_opportunity.feasibility_score = scores["feasibility_score"]
+        created_opportunity.impact_score = scores["impact_score"]
+        created_opportunity.innovation_score = scores["innovation_score"]
+        created_opportunity.resource_score = scores["resource_score"]
+        created_opportunity.score = scores["overall_score"]
+        created_opportunity.scoring_details = scores
 
-        return await self.repository.create(opportunity)
+        return await self.repository.update(created_opportunity)
 
     async def get_opportunity(self, opportunity_id: UUID) -> Optional[Opportunity]:
         """Get opportunity by ID."""

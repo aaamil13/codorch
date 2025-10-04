@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, List, Any, Tuple, cast
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,7 @@ class GraphManagerService:
         self._analytics_services: Dict[UUID, GraphAnalyticsService] = {}
         self._versioning_services: Dict[UUID, GraphVersioningService] = {}
 
-    async def get_or_create_services(self, project_id: UUID, session: AsyncSession):
+    async def get_or_create_services(self, project_id: UUID, session: AsyncSession) -> Tuple[GraphHydrationService, GraphOperationsService, GraphAnalyticsService, GraphVersioningService]:
         if project_id not in self._graph_cache:
             graph_system = GraphSystem()
             self._graph_cache[project_id] = graph_system
@@ -44,12 +44,10 @@ class GraphManagerService:
 
     async def update_node_in_graph(self, project_id: UUID, session: AsyncSession, node_id: UUID, node_type: str, data: dict) -> bool:
         _, ops, _, _ = await self.get_or_create_services(project_id, session)
-        # This method needs to be implemented in GraphOperationsService
         return await ops.update_node_in_graph(node_id, node_type, data)
 
     async def remove_node_from_graph(self, project_id: UUID, session: AsyncSession, node_id: UUID) -> bool:
         _, ops, _, _ = await self.get_or_create_services(project_id, session)
-        # This method needs to be implemented in GraphOperationsService
         return await ops.remove_node_from_graph(node_id)
 
     async def detect_circular_dependencies(self, project_id: UUID, session: AsyncSession) -> List[List[str]]:

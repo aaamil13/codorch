@@ -88,19 +88,19 @@ class GraphHydrationService:
             condition = rule_def.get("condition", "")
 
             def naming_validator(node: GraphNode) -> bool:
-                name = node.data.get("name", "")
+                name: str = node.data.get("name", "")
                 if "endswith" in condition:
-                    suffix = condition.split("'")[1] if "'" in condition else ""
+                    suffix: str = condition.split("'")[1] if "'" in condition else ""
                     return name.endswith(suffix)
                 return True
 
             return naming_validator
 
         elif rule_type == "dependency":
-            max_deps = rule_def.get("max_dependencies", 999)
+            max_deps: int = rule_def.get("max_dependencies", 999)
 
             def dependency_validator(node: GraphNode) -> bool:
-                deps = node.get_dependencies(direction="outgoing")
+                deps: list = node.get_dependencies(direction="outgoing")
                 return len(deps) <= max_deps
 
             return dependency_validator
@@ -113,4 +113,8 @@ class GraphHydrationService:
             return layer_validator
 
         else:
-            return lambda node: True
+
+            def default_validator(node: GraphNode) -> bool:
+                return True
+
+            return default_validator

@@ -53,38 +53,33 @@ class GoalService:
             if not parent or parent.project_id != project_id:
                 raise ValueError("Parent goal not found or belongs to different project")
 
-        # Create goal
-        goal = Goal(
-            project_id=project_id,
-            parent_goal_id=goal_data.parent_goal_id,
-            title=goal_data.title,
-            description=goal_data.description,
-            category=goal_data.category,
-            target_date=goal_data.target_date,
-            priority=goal_data.priority,
-            metrics={"metrics": [m.model_dump() for m in goal_data.metrics]} if goal_data.metrics else None,
-            status="draft",
-        )
+        # Create goal via repository
+        created_goal = await self.repository.create(goal_data, project_id)
 
-        # Perform SMART validation
+        # Perform SMART validation and update
         validation_result = self.validator.validate_goal(
-            title=goal.title,
-            description=goal.description,
-            category=goal.category,
-            target_date=goal.target_date,
-            metrics=goal.metrics,
+            title=created_goal.title,
+            description=created_goal.description,
+            category=created_goal.category,
+            target_date=created_goal.target_date,
+            metrics=created_goal.metrics,
         )
 
         # Set validation scores
-        goal.specific_score = validation_result["specific_score"]
-        goal.measurable_score = validation_result["measurable_score"]
-        goal.achievable_score = validation_result["achievable_score"]
-        goal.relevant_score = validation_result["relevant_score"]
-        goal.time_bound_score = validation_result["time_bound_score"]
-        goal.overall_smart_score = validation_result["overall_smart_score"]
-        goal.is_smart_validated = validation_result["is_smart_compliant"] # type: ignore
-
-        return await self.repository.create(goal)
+        update_data = GoalUpdate(
+            specific_score=validation_result["specific_score"],
+            measurable_score=validation_result["measurable_score"],
+            achievable_score=validation_result["achievable_score"],
+            relevant_score=validation_result["relevant_score"],
+            time_bound_score=validation_result["time_bound_score"],
+            overall_smart_score=validation_result["overall_smart_score"],
+            is_smart_validated=bool(validation_result["is_smart_compliant"]),
+        )
+        
+        updated_goal = await self.repository.update(created_goal.id, update_data)
+        if updated_goal is None:
+             raise ValueError("Failed to update goal after creation.") # Should not happen
+        return updated_goal
 
     async def get_goal(self, goal_id: UUID) -> Optional[Goal]:
         """Get goal by ID."""
@@ -160,7 +155,10 @@ class GoalService:
             goal.overall_smart_score = validation_result["overall_smart_score"]
             goal.is_smart_validated = validation_result["is_smart_compliant"] # type: ignore
 
-        return await self.repository.update(goal)
+        updated_goal = await self.repository.update(goal_id, goal_update)
+        if updated_goal is None:
+            raise ValueError("Goal not found during update")
+        return updated_goal
 
     async def delete_goal(self, goal_id: UUID) -> None:
         """Delete goal."""
@@ -168,7 +166,7 @@ class GoalService:
         if not goal:
             raise ValueError("Goal not found")
 
-        await self.repository.delete(goal)
+        await self.repository.delete(goal_id)
 
     async def analyze_goal(self, goal_id: UUID, request: GoalAnalysisRequest) -> GoalAnalysisResponse:
         """
@@ -210,13 +208,15 @@ class GoalService:
             suggested_subgoals = [s.title for s in subgoals_result]
 
         # Store AI feedback in goal
-        goal.ai_feedback = {
-            "feedback": ai_result.overall_feedback,
-            "strengths": ai_result.strengths,
-            "weaknesses": ai_result.weaknesses,
-        }
-        goal.ai_suggestions = ai_result.suggestions
-        await self.repository.update(goal)
+        update_data = GoalUpdate(
+            ai_feedback={
+                "feedback": ai_result.overall_feedback,
+                "strengths": ai_result.strengths,
+                "weaknesses": ai_result.weaknesses,
+            },
+            ai_suggestions=ai_result.suggestions,
+        )
+        await self.repository.update(goal.id, update_data)
 
         # Build response
         from backend.modules.goals.schemas import AIFeedback, SMARTScores, MetricDefinition # Import MetricDefinition

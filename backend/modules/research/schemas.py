@@ -22,10 +22,10 @@ class ResearchSessionBase(BaseSchema):
     """Base research session schema."""
 
     title: str = Field(..., min_length=1, max_length=255, description="Session title")
-    description: Optional[str] = Field(None, description="Session description")
-    goal_id: Optional[UUID] = Field(None, description="Related goal ID")
-    opportunity_id: Optional[UUID] = Field(None, description="Related opportunity ID")
-    tree_node_id: Optional[UUID] = Field(None, description="Related tree node ID")
+    description: Optional[str] = Field(default=None, description="Session description")
+    goal_id: Optional[UUID] = Field(default=None, description="Related goal ID")
+    opportunity_id: Optional[UUID] = Field(default=None, description="Related opportunity ID")
+    tree_node_id: Optional[UUID] = Field(default=None, description="Related tree node ID")
 
 
 class ResearchSessionCreate(ResearchSessionBase):
