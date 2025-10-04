@@ -1,6 +1,6 @@
 """Repository pattern for Research Module."""
 
-from typing import Optional
+from typing import Optional, Sequence
 from uuid import UUID
 
 from sqlalchemy import desc, func, select
@@ -42,7 +42,7 @@ class ResearchSessionRepository:
         skip: int = 0,
         limit: int = 100,
         status: Optional[str] = None,
-    ) -> list[ResearchSession]:
+    ) -> Sequence[ResearchSession]:
         """Get research sessions by project ID."""
         query = select(ResearchSession).filter(ResearchSession.project_id == project_id)
 
@@ -52,7 +52,7 @@ class ResearchSessionRepository:
         result = await self.db.execute(query.order_by(desc(ResearchSession.updated_at)).offset(skip).limit(limit))
         return list(result.scalars().all())
 
-    async def get_by_goal(self, goal_id: UUID) -> list[ResearchSession]:
+    async def get_by_goal(self, goal_id: UUID) -> Sequence[ResearchSession]:
         """Get research sessions by goal ID."""
         result = await self.db.execute(
             select(ResearchSession)
@@ -61,7 +61,7 @@ class ResearchSessionRepository:
         )
         return list(result.scalars().all())
 
-    async def get_by_opportunity(self, opportunity_id: UUID) -> list[ResearchSession]:
+    async def get_by_opportunity(self, opportunity_id: UUID) -> Sequence[ResearchSession]:
         """Get research sessions by opportunity ID."""
         result = await self.db.execute(
             select(ResearchSession)
@@ -88,7 +88,7 @@ class ResearchSessionRepository:
         )
         return result.scalar_one()
 
-    async def get_active_sessions(self, user_id: UUID) -> list[ResearchSession]:
+    async def get_active_sessions(self, user_id: UUID) -> Sequence[ResearchSession]:
         """Get all active sessions for a user."""
         result = await self.db.execute(
             select(ResearchSession)
@@ -125,7 +125,7 @@ class ResearchMessageRepository:
         session_id: UUID,
         skip: int = 0,
         limit: int = 100,
-    ) -> list[ResearchMessage]:
+    ) -> Sequence[ResearchMessage]:
         """Get messages for a research session."""
         result = await self.db.execute(
             select(ResearchMessage)
@@ -143,7 +143,7 @@ class ResearchMessageRepository:
         )
         return result.scalar_one()
 
-    async def get_latest_messages(self, session_id: UUID, limit: int = 10) -> list[ResearchMessage]:
+    async def get_latest_messages(self, session_id: UUID, limit: int = 10) -> Sequence[ResearchMessage]:
         """Get latest N messages from a session."""
         result = await self.db.execute(
             select(ResearchMessage)
@@ -177,7 +177,7 @@ class ResearchFindingRepository:
         self,
         session_id: UUID,
         finding_type: Optional[str] = None,
-    ) -> list[ResearchFinding]:
+    ) -> Sequence[ResearchFinding]:
         """Get findings for a research session."""
         query = select(ResearchFinding).filter(ResearchFinding.session_id == session_id)
 
@@ -192,7 +192,7 @@ class ResearchFindingRepository:
         project_id: UUID,
         finding_type: Optional[str] = None,
         limit: int = 100,
-    ) -> list[ResearchFinding]:
+    ) -> Sequence[ResearchFinding]:
         """Get findings for all sessions in a project."""
         query = select(ResearchFinding).join(ResearchSession).filter(ResearchSession.project_id == project_id)
 
@@ -237,7 +237,7 @@ class ResearchFindingRepository:
         session_id: UUID,
         min_confidence: float = 0.7,
         limit: int = 10,
-    ) -> list[ResearchFinding]:
+    ) -> Sequence[ResearchFinding]:
         """Get high-confidence findings."""
         result = await self.db.execute(
             select(ResearchFinding)

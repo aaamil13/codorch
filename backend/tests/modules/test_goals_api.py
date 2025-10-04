@@ -1,13 +1,18 @@
 """Integration tests for Goals API endpoints."""
 
+from typing import Dict
+from uuid import UUID
 import pytest
 from unittest.mock import AsyncMock, patch
+from fastapi.testclient import TestClient
 
-from backend.db.models import Project
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.db.models import Project, User
 
 
 @pytest.fixture
-def test_project(db_session, test_user):
+async def test_project(db_session: AsyncSession, test_user: User) -> Project:
     """Create test project."""
     project = Project(
         name="Test Project",
@@ -16,15 +21,15 @@ def test_project(db_session, test_user):
         created_by=test_user.id,
     )
     db_session.add(project)
-    db_session.commit()
-    db_session.refresh(project)
+    await db_session.commit()
+    await db_session.refresh(project)
     return project
 
 
 class TestGoalsAPI:
     """Test Goals API endpoints."""
 
-    def test_create_goal(self, client, auth_headers, test_project):
+    def test_create_goal(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/goals."""
         response = client.post(
             "/api/v1/goals",
@@ -44,7 +49,7 @@ class TestGoalsAPI:
         assert "smart_score" in data
         assert "id" in data
 
-    def test_create_goal_missing_fields(self, client, auth_headers, test_project):
+    def test_create_goal_missing_fields(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test creating goal without required fields."""
         response = client.post(
             "/api/v1/goals",
@@ -57,7 +62,7 @@ class TestGoalsAPI:
 
         assert response.status_code == 422
 
-    def test_list_goals(self, client, auth_headers, test_project):
+    def test_list_goals(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/goals."""
         # Create goals
         for i in range(3):
@@ -79,7 +84,7 @@ class TestGoalsAPI:
         data = response.json()
         assert len(data) == 3
 
-    def test_list_goals_with_filter(self, client, auth_headers, test_project):
+    def test_list_goals_with_filter(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test filtering goals by category."""
         client.post(
             "/api/v1/goals",
@@ -110,7 +115,7 @@ class TestGoalsAPI:
         assert len(data) == 1
         assert data[0]["category"] == "business"
 
-    def test_get_goal(self, client, auth_headers, test_project):
+    def test_get_goal(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/goals/{id}."""
         # Create goal
         create_response = client.post(
@@ -133,7 +138,7 @@ class TestGoalsAPI:
         assert data["id"] == goal_id
         assert data["title"] == "Test Goal"
 
-    def test_get_goal_not_found(self, client, auth_headers):
+    def test_get_goal_not_found(self, client: TestClient, auth_headers: Dict[str, str]) -> None:
         """Test getting non-existent goal."""
         from uuid import uuid4
 
@@ -144,7 +149,7 @@ class TestGoalsAPI:
 
         assert response.status_code == 404
 
-    def test_update_goal(self, client, auth_headers, test_project):
+    def test_update_goal(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test PUT /api/v1/goals/{id}."""
         # Create goal
         create_response = client.post(
@@ -167,7 +172,7 @@ class TestGoalsAPI:
         data = response.json()
         assert data["title"] == "Updated Title"
 
-    def test_delete_goal(self, client, auth_headers, test_project):
+    def test_delete_goal(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test DELETE /api/v1/goals/{id}."""
         # Create goal
         create_response = client.post(
@@ -195,7 +200,7 @@ class TestGoalsAPI:
         assert get_response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_analyze_goal(self, client, auth_headers, test_project):
+    async def test_analyze_goal(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/goals/{id}/analyze."""
         # Create goal
         create_response = client.post(
@@ -229,7 +234,7 @@ class TestGoalsAPI:
             assert "weaknesses" in data
 
     @pytest.mark.asyncio
-    async def test_decompose_goal(self, client, auth_headers, test_project):
+    async def test_decompose_goal(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/goals/{id}/decompose."""
         # Create goal
         create_response = client.post(
@@ -264,7 +269,7 @@ class TestGoalsAPI:
             assert "subgoals" in data
             assert len(data["subgoals"]) == 2
 
-    def test_unauthorized_access(self, client, test_project):
+    def test_unauthorized_access(self, client: TestClient, test_project: Project) -> None:
         """Test accessing goals without authentication."""
         response = client.get(f"/api/v1/goals?project_id={test_project.id}")
 

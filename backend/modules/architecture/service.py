@@ -1,9 +1,8 @@
 """Service layer for Architecture Module."""
 
-from typing import Optional, List
+from typing import Optional, List, Sequence
 from uuid import UUID
 
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import ArchitectureModule, User
@@ -105,7 +104,7 @@ class ArchitectureService:
         parent_id: Optional[UUID] = None,
         module_type: Optional[str] = None,
         status: Optional[str] = None,
-    ) -> list[ArchitectureModule]:
+    ) -> Sequence[ArchitectureModule]:
         """List modules for a project."""
         return await self.module_repo.get_by_project(
             project_id=project_id,
@@ -685,7 +684,7 @@ class ArchitectureService:
 
         return await dfs(to_module_id)
 
-    async def _detect_circular_dependencies(self, project_id: UUID) -> list[list[UUID]]:
+    async def _detect_circular_dependencies(self, project_id: UUID) -> List[List[UUID]]:
         """Detect all circular dependencies using DFS."""
         modules = await self.module_repo.get_by_project(project_id)
         cycles: list[list[UUID]] = []

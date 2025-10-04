@@ -4,7 +4,7 @@ from typing import Annotated, Optional, List, Dict
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.ai_agents.architecture_team import ArchitectureTeam
 from backend.api.deps import get_current_user, get_db
@@ -44,7 +44,7 @@ router = APIRouter()
 async def generate_architecture(
     project_id: UUID,
     request: ArchitectureGenerationRequest,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ArchitectureGenerationResponse:
     """Generate architecture using AI team."""
@@ -57,7 +57,7 @@ async def generate_architecture(
 
     goals_data = []
     for goal_id in request.goal_ids:
-        goal = goal_repo.get_by_id(goal_id)
+        goal = await goal_repo.get_by_id(goal_id)
         if goal:
             goals_data.append(
                 {
@@ -69,7 +69,7 @@ async def generate_architecture(
 
     opportunities_data = []
     for opp_id in request.opportunity_ids:
-        opp = opp_repo.get_by_id(opp_id)
+        opp = await opp_repo.get_by_id(opp_id)
         if opp:
             opportunities_data.append(
                 {
@@ -108,10 +108,10 @@ async def generate_architecture(
         )
 
         # Mark as AI generated
-        module = service.create_module(module_create)
+        module = await service.create_module(module_create)
         module.ai_generated = True
         module.generation_reasoning = proposal.get("reasoning")
-        db.commit()
+        await db.commit()
 
         created_modules.append(module)
         module_name_to_id[module.name] = module.id
@@ -131,7 +131,7 @@ async def generate_architecture(
                     dependency_type=dep_data["dependency_type"],
                     description=dep_data.get("reason"),
                 )
-                dep = service.create_dependency(dep_create)
+                dep = await service.create_dependency(dep_create)
                 created_dependencies.append(dep)
             except ValueError:
                 # Skip if dependency validation fails
@@ -156,21 +156,21 @@ async def generate_architecture(
 
 
 @router.post("/architecture/modules", response_model=ArchitectureModuleResponse, status_code=status.HTTP_201_CREATED)
-def create_module(
+async def create_module(
     data: ArchitectureModuleCreate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ArchitectureModuleResponse:
     """Create a new architecture module."""
     service = ArchitectureService(db)
-    module = service.create_module(data)
+    module = await service.create_module(data)
     return ArchitectureModuleResponse.model_validate(module)
 
 
 @router.get("/projects/{project_id}/architecture", response_model=list[ArchitectureModuleResponse])
-def list_modules(
+async def list_modules(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     skip: int = 0,
     limit: int = 100,
@@ -180,7 +180,7 @@ def list_modules(
 ) -> list[ArchitectureModuleResponse]:
     """List architecture modules for a project."""
     service = ArchitectureService(db)
-    modules = service.list_modules(
+    modules = await service.list_modules(
         project_id=project_id,
         skip=skip,
         limit=limit,
@@ -192,14 +192,14 @@ def list_modules(
 
 
 @router.get("/architecture/modules/{module_id}", response_model=ArchitectureModuleResponse)
-def get_module(
+async def get_module(
     module_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ArchitectureModuleResponse:
     """Get architecture module by ID."""
     service = ArchitectureService(db)
-    module = service.get_module(module_id)
+    module = await service.get_module(module_id)
 
     if not module:
         raise HTTPException(
@@ -211,15 +211,15 @@ def get_module(
 
 
 @router.put("/architecture/modules/{module_id}", response_model=ArchitectureModuleResponse)
-def update_module(
+async def update_module(
     module_id: UUID,
     data: ArchitectureModuleUpdate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ArchitectureModuleResponse:
     """Update architecture module."""
     service = ArchitectureService(db)
-    module = service.update_module(module_id, data)
+    module = await service.update_module(module_id, data)
 
     if not module:
         raise HTTPException(
@@ -231,14 +231,14 @@ def update_module(
 
 
 @router.delete("/architecture/modules/{module_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_module(
+async def delete_module(
     module_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """Delete architecture module."""
     service = ArchitectureService(db)
-    success = service.delete_module(module_id)
+    success = await service.delete_module(module_id)
 
     if not success:
         raise HTTPException(
@@ -248,14 +248,14 @@ def delete_module(
 
 
 @router.post("/architecture/modules/{module_id}/approve", response_model=ArchitectureModuleResponse)
-def approve_module(
+async def approve_module(
     module_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ArchitectureModuleResponse:
     """Approve architecture module."""
     service = ArchitectureService(db)
-    module = service.approve_module(module_id, current_user)
+    module = await service.approve_module(module_id, current_user)
 
     if not module:
         raise HTTPException(
@@ -276,16 +276,16 @@ def approve_module(
     response_model=ModuleDependencyResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_dependency(
+async def create_dependency(
     data: ModuleDependencyCreate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ModuleDependencyResponse:
     """Create a module dependency."""
     service = ArchitectureService(db)
 
     try:
-        dependency = service.create_dependency(data)
+        dependency = await service.create_dependency(data)
         return ModuleDependencyResponse.model_validate(dependency)
     except ValueError as e:
         raise HTTPException(
@@ -295,15 +295,15 @@ def create_dependency(
 
 
 @router.get("/projects/{project_id}/architecture/dependencies", response_model=list[ModuleDependencyResponse])
-def list_dependencies(
+async def list_dependencies(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     dependency_type: Optional[str] = None,
 ) -> list[ModuleDependencyResponse]:
     """List dependencies for a project."""
     service = ArchitectureService(db)
-    dependencies = service.list_dependencies(
+    dependencies = await service.list_dependencies(
         project_id=project_id,
         dependency_type=dependency_type,
     )
@@ -311,14 +311,14 @@ def list_dependencies(
 
 
 @router.delete("/architecture/dependencies/{dependency_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_dependency(
+async def delete_dependency(
     dependency_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """Delete a module dependency."""
     service = ArchitectureService(db)
-    success = service.delete_dependency(dependency_id)
+    success = await service.delete_dependency(dependency_id)
 
     if not success:
         raise HTTPException(
@@ -333,14 +333,14 @@ def delete_dependency(
 
 
 @router.get("/projects/{project_id}/architecture/validate", response_model=ArchitectureValidationResponse)
-def validate_architecture(
+async def validate_architecture(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ArchitectureValidationResponse:
     """Validate architecture for issues."""
     service = ArchitectureService(db)
-    return service.validate_architecture(project_id)
+    return await service.validate_architecture(project_id)
 
 
 # ============================================================================
@@ -349,21 +349,21 @@ def validate_architecture(
 
 
 @router.post("/architecture/rules", response_model=ArchitectureRuleResponse, status_code=status.HTTP_201_CREATED)
-def create_rule(
+async def create_rule(
     data: ArchitectureRuleCreate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ArchitectureRuleResponse:
     """Create an architecture rule."""
     service = ArchitectureService(db)
-    rule = service.create_rule(data)
+    rule = await service.create_rule(data)
     return ArchitectureRuleResponse.model_validate(rule)
 
 
 @router.get("/projects/{project_id}/architecture/rules", response_model=list[ArchitectureRuleResponse])
-def list_rules(
+async def list_rules(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     level: Optional[str] = None,
     rule_type: Optional[str] = None,
@@ -371,7 +371,7 @@ def list_rules(
 ) -> list[ArchitectureRuleResponse]:
     """List architecture rules for a project."""
     service = ArchitectureService(db)
-    rules = service.list_rules(
+    rules = await service.list_rules(
         project_id=project_id,
         level=level,
         rule_type=rule_type,
@@ -381,15 +381,15 @@ def list_rules(
 
 
 @router.put("/architecture/rules/{rule_id}", response_model=ArchitectureRuleResponse)
-def update_rule(
+async def update_rule(
     rule_id: UUID,
     data: ArchitectureRuleUpdate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ArchitectureRuleResponse:
     """Update an architecture rule."""
     service = ArchitectureService(db)
-    rule = service.update_rule(rule_id, data)
+    rule = await service.update_rule(rule_id, data)
 
     if not rule:
         raise HTTPException(
@@ -401,14 +401,14 @@ def update_rule(
 
 
 @router.delete("/architecture/rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_rule(
+async def delete_rule(
     rule_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """Delete an architecture rule."""
     service = ArchitectureService(db)
-    success = service.delete_rule(rule_id)
+    success = await service.delete_rule(rule_id)
 
     if not success:
         raise HTTPException(
@@ -423,28 +423,28 @@ def delete_rule(
 
 
 @router.get("/projects/{project_id}/architecture/complexity", response_model=ComplexityAnalysisResponse)
-def get_complexity_analysis(
+async def get_complexity_analysis(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ComplexityAnalysisResponse:
     """Get complexity analysis for architecture."""
     service = ArchitectureService(db)
-    return service.analyze_complexity(project_id)
+    return await service.analyze_complexity(project_id)
 
 
 @router.post("/projects/{project_id}/architecture/impact-analysis", response_model=ImpactAnalysisResponse)
-def get_impact_analysis(
+async def get_impact_analysis(
     project_id: UUID,
     request: ImpactAnalysisRequest,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ImpactAnalysisResponse:
     """Analyze impact of changes to a module."""
     service = ArchitectureService(db)
 
     try:
-        return service.analyze_impact(request)
+        return await service.analyze_impact(request)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -458,14 +458,14 @@ def get_impact_analysis(
 
 
 @router.get("/projects/{project_id}/architecture/shared-modules", response_model=SharedModulesResponse)
-def get_shared_modules(
+async def get_shared_modules(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> SharedModulesResponse:
     """Get shared modules (used by multiple modules)."""
     service = ArchitectureService(db)
-    return service.get_shared_modules(project_id)
+    return await service.get_shared_modules(project_id)
 
 
 # ============================================================================
@@ -474,9 +474,9 @@ def get_shared_modules(
 
 
 @router.get("/modules/{module_id}/impact-analysis-advanced", response_model=dict)
-def analyze_module_impact_advanced(
+async def analyze_module_impact_advanced(
     module_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     change_type: str = "update",
 ):
@@ -493,10 +493,10 @@ def analyze_module_impact_advanced(
 
 
 @router.post("/modules/{module_id}/simulate-change", response_model=dict)
-def simulate_module_change(
+async def simulate_module_change(
     module_id: UUID,
     proposed_changes: dict,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     """
@@ -515,9 +515,9 @@ def simulate_module_change(
 
 
 @router.get("/modules/{module_id}/dependency-analysis", response_model=dict)
-def get_dependency_analysis(
+async def get_dependency_analysis(
     module_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     """
@@ -534,9 +534,9 @@ def get_dependency_analysis(
 
 
 @router.get("/modules/{module_id}/rule-validation", response_model=dict)
-def validate_module_rules(
+async def validate_module_rules(
     module_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     """
@@ -561,7 +561,7 @@ def validate_module_rules(
 async def execute_ai_architecture_plan(
     project_id: UUID,
     plan: List[Dict],
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     dry_run: bool = False,
 ):

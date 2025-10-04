@@ -1,5 +1,7 @@
 """Tests for project endpoints."""
 
+from typing import Dict
+from uuid import UUID
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,7 +14,7 @@ def auth_headers(client: TestClient, sample_user_data: dict[str, str]) -> dict[s
     return {"Authorization": f"Bearer {token}"}
 
 
-def test_create_project(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
+def test_create_project(client: TestClient, auth_headers: Dict[str, str], sample_project_data: Dict[str, str]) -> None:
     """Test project creation."""
     response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
 
@@ -23,7 +25,7 @@ def test_create_project(client: TestClient, auth_headers: dict[str, str], sample
     assert "id" in data
 
 
-def test_list_projects(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
+def test_list_projects(client: TestClient, auth_headers: Dict[str, str], sample_project_data: Dict[str, str]) -> None:
     """Test listing projects."""
     # Create a project
     client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
@@ -37,7 +39,7 @@ def test_list_projects(client: TestClient, auth_headers: dict[str, str], sample_
     assert len(data) >= 1
 
 
-def test_get_project(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
+def test_get_project(client: TestClient, auth_headers: Dict[str, str], sample_project_data: Dict[str, str]) -> None:
     """Test getting project by ID."""
     # Create project
     create_response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
@@ -52,7 +54,7 @@ def test_get_project(client: TestClient, auth_headers: dict[str, str], sample_pr
     assert data["name"] == sample_project_data["name"]
 
 
-def test_update_project(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
+def test_update_project(client: TestClient, auth_headers: Dict[str, str], sample_project_data: Dict[str, str]) -> None:
     """Test updating project."""
     # Create project
     create_response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
@@ -67,7 +69,7 @@ def test_update_project(client: TestClient, auth_headers: dict[str, str], sample
     assert data["name"] == update_data["name"]
 
 
-def test_delete_project(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> None:
+def test_delete_project(client: TestClient, auth_headers: Dict[str, str], sample_project_data: Dict[str, str]) -> None:
     """Test deleting project."""
     # Create project
     create_response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
@@ -82,7 +84,7 @@ def test_delete_project(client: TestClient, auth_headers: dict[str, str], sample
     assert get_response.status_code == 404
 
 
-def test_unauthorized_access(client: TestClient, sample_project_data: dict[str, str]) -> None:
+def test_unauthorized_access(client: TestClient, sample_project_data: Dict[str, str]) -> None:
     """Test that unauthorized users cannot access projects."""
     response = client.get("/api/v1/projects/")
     assert response.status_code == 403  # Forbidden - no auth header

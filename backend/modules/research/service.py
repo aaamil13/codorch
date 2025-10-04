@@ -1,6 +1,6 @@
 """Service layer for Research Module."""
 
-from typing import Optional
+from typing import Optional, Sequence, Dict, Any
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +30,7 @@ class ResearchService:
         self.session_repo = ResearchSessionRepository(db)
         self.message_repo = ResearchMessageRepository(db)
         self.finding_repo = ResearchFindingRepository(db)
-        self.refmem_manager = AdvancedProjectTree(project_id=None)
+        self.refmem_manager: Optional[AdvancedProjectTree] = None # Initialize as Optional, set later
 
     # ========================================================================
     # Research Session Operations
@@ -46,7 +46,8 @@ class ResearchService:
         context_summary = None
         if data.tree_node_id:
             try:
-                self.refmem_manager.project_id = data.project_id
+                # Initialize refmem_manager with the current project_id
+                self.refmem_manager = AdvancedProjectTree(data.project_id)
                 context_summary = self.refmem_manager.get_smart_context(
                     node_id=data.tree_node_id,
                 )
@@ -79,7 +80,7 @@ class ResearchService:
         skip: int = 0,
         limit: int = 100,
         status: Optional[str] = None,
-    ) -> list[ResearchSession]:
+    ) -> Sequence[ResearchSession]:
         """List research sessions for a project."""
         return await self.session_repo.get_by_project(
             project_id=project_id,
@@ -151,7 +152,7 @@ class ResearchService:
         session_id: UUID,
         skip: int = 0,
         limit: int = 100,
-    ) -> list[ResearchMessage]:
+    ) -> Sequence[ResearchMessage]:
         """Get messages for a research session."""
         return await self.message_repo.get_by_session(
             session_id=session_id,
@@ -163,7 +164,7 @@ class ResearchService:
         self,
         session_id: UUID,
         limit: int = 10,
-    ) -> list[ResearchMessage]:
+    ) -> Sequence[ResearchMessage]:
         """Get latest N messages from session."""
         return await self.message_repo.get_latest_messages(
             session_id=session_id,
@@ -199,7 +200,7 @@ class ResearchService:
         self,
         session_id: UUID,
         finding_type: Optional[str] = None,
-    ) -> list[ResearchFinding]:
+    ) -> Sequence[ResearchFinding]:
         """List findings for a research session."""
         return await self.finding_repo.get_by_session(
             session_id=session_id,
@@ -246,7 +247,7 @@ class ResearchService:
         session_id: UUID,
         min_confidence: float = 0.7,
         limit: int = 10,
-    ) -> list[ResearchFinding]:
+    ) -> Sequence[ResearchFinding]:
         """Get high-confidence findings for a session."""
         return await self.finding_repo.get_high_confidence_findings(
             session_id=session_id,
@@ -277,21 +278,21 @@ class ResearchService:
 
     async def _aggregate_context(
         self,
+        project_id: UUID, # Added project_id
         node_id: Optional[UUID] = None,
         goal_id: Optional[UUID] = None,
         opportunity_id: Optional[UUID] = None,
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """Aggregate context from RefMemTree and related entities."""
-        context = {}
+        context: Dict[str, Any] = {}
 
         # Get tree node context if available
-        if node_id and goal_id:
+        if node_id:
             try:
-                session = await self.session_repo.get_by_id(goal_id)
-                if session:
-                    self.refmem_manager.project_id = session.project_id
-                    node_context = self.refmem_manager.get_smart_context(node_id)
-                    context["tree_node"] = node_context
+                # Initialize refmem_manager with the correct project_id
+                refmem_manager = AdvancedProjectTree(project_id)
+                node_context = refmem_manager.get_smart_context(node_id)
+                context["tree_node"] = node_context
             except Exception as e:
                 print(f"Warning: Failed to get tree node context: {e}")
 

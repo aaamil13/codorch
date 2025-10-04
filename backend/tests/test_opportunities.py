@@ -1,6 +1,7 @@
 """Tests for Opportunity Engine - Module 2."""
 
-from uuid import uuid4
+from typing import Any, Dict
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,7 +12,7 @@ from backend.modules.opportunities.scoring import OpportunityScorer
 # Unit Tests - Scoring
 
 
-def test_score_feasibility_high():
+def test_score_feasibility_high() -> None:
     """Test high feasibility scoring."""
     score = OpportunityScorer.score_feasibility(
         description="Well-defined opportunity with existing infrastructure and proven approach",
@@ -21,13 +22,13 @@ def test_score_feasibility_high():
     assert score >= 7.0
 
 
-def test_score_feasibility_low():
+def test_score_feasibility_low() -> None:
     """Test low feasibility scoring."""
     score = OpportunityScorer.score_feasibility(description=None, estimated_effort=None, required_resources=None)
     assert score <= 6.0
 
 
-def test_score_impact_high():
+def test_score_impact_high() -> None:
     """Test high impact scoring."""
     score = OpportunityScorer.score_impact(
         description="Significant revenue growth opportunity with proven market demand",
@@ -37,7 +38,7 @@ def test_score_impact_high():
     assert score >= 7.0
 
 
-def test_score_innovation_high():
+def test_score_innovation_high() -> None:
     """Test high innovation scoring."""
     score = OpportunityScorer.score_innovation(
         description="Revolutionary AI-powered approach using cutting-edge technology",
@@ -47,7 +48,7 @@ def test_score_innovation_high():
     assert score >= 7.0
 
 
-def test_overall_scoring():
+def test_overall_scoring() -> None:
     """Test overall scoring calculation."""
     scores = OpportunityScorer.calculate_overall_score(
         description="Innovative AI platform for enterprise automation",
@@ -71,7 +72,7 @@ def test_overall_scoring():
 
 
 @pytest.mark.asyncio
-async def test_create_opportunity(client: TestClient, auth_headers: dict, project_id: str):
+async def test_create_opportunity(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test opportunity creation."""
     response = client.post(
         f"/api/v1/opportunities/projects/{project_id}/opportunities",
@@ -97,7 +98,7 @@ async def test_create_opportunity(client: TestClient, auth_headers: dict, projec
 
 
 @pytest.mark.asyncio
-async def test_list_opportunities(client: TestClient, auth_headers: dict, project_id: str):
+async def test_list_opportunities(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test listing opportunities."""
     # Create test opportunity first
     client.post(
@@ -121,7 +122,7 @@ async def test_list_opportunities(client: TestClient, auth_headers: dict, projec
 
 
 @pytest.mark.asyncio
-async def test_get_opportunity(client: TestClient, auth_headers: dict, project_id: str):
+async def test_get_opportunity(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test getting single opportunity."""
     # Create opportunity
     create_response = client.post(
@@ -145,7 +146,7 @@ async def test_get_opportunity(client: TestClient, auth_headers: dict, project_i
 
 
 @pytest.mark.asyncio
-async def test_update_opportunity(client: TestClient, auth_headers: dict, project_id: str):
+async def test_update_opportunity(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test updating opportunity."""
     # Create opportunity
     create_response = client.post(
@@ -176,7 +177,7 @@ async def test_update_opportunity(client: TestClient, auth_headers: dict, projec
 
 
 @pytest.mark.asyncio
-async def test_delete_opportunity(client: TestClient, auth_headers: dict, project_id: str):
+async def test_delete_opportunity(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test deleting opportunity."""
     # Create opportunity
     create_response = client.post(
@@ -202,7 +203,7 @@ async def test_delete_opportunity(client: TestClient, auth_headers: dict, projec
 
 @pytest.mark.asyncio
 @pytest.mark.ai
-async def test_generate_opportunities(client: TestClient, auth_headers: dict, project_id: str):
+async def test_generate_opportunities(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test AI opportunity generation."""
     response = client.post(
         f"/api/v1/opportunities/projects/{project_id}/opportunities/generate",
@@ -233,7 +234,7 @@ async def test_generate_opportunities(client: TestClient, auth_headers: dict, pr
 
 
 @pytest.mark.asyncio
-async def test_get_top_opportunities(client: TestClient, auth_headers: dict, project_id: str):
+async def test_get_top_opportunities(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test getting top opportunities."""
     # Create multiple opportunities with different scores
     for i in range(3):
@@ -264,7 +265,7 @@ async def test_get_top_opportunities(client: TestClient, auth_headers: dict, pro
 
 
 @pytest.mark.asyncio
-async def test_compare_opportunities(client: TestClient, auth_headers: dict, project_id: str):
+async def test_compare_opportunities(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test opportunity comparison."""
     # Create two opportunities
     opp1 = client.post(
@@ -309,7 +310,7 @@ async def test_compare_opportunities(client: TestClient, auth_headers: dict, pro
 
 
 @pytest.mark.asyncio
-async def test_opportunity_not_found(client: TestClient, auth_headers: dict):
+async def test_opportunity_not_found(client: TestClient, auth_headers: Dict[str, str]) -> None:
     """Test 404 for non-existent opportunity."""
     fake_id = str(uuid4())
     response = client.get(f"/api/v1/opportunities/opportunities/{fake_id}", headers=auth_headers)

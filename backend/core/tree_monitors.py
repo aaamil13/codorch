@@ -8,7 +8,7 @@ Implements automatic alerts for:
 - Rule violations
 """
 
-from typing import Dict
+from typing import Dict, List
 from uuid import UUID
 from datetime import datetime
 

@@ -7,7 +7,7 @@ Handles:
 - Alert history in database
 """
 
-from typing import Dict
+from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 from datetime import datetime
 
@@ -17,9 +17,9 @@ from backend.core.event_emitter import get_event_emitter
 class AlertService:
     """Service for managing alerts and notifications."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.event_emitter = get_event_emitter()
-        self.alert_history: Dict[UUID, list] = {}  # project_id -> alerts
+        self.alert_history: Dict[UUID, List[Dict[str, Any]]] = {}  # project_id -> alerts
 
     async def send_alert(
         self,
@@ -28,8 +28,8 @@ class AlertService:
         title: str,
         message: str,
         severity: str = "info",
-        actions: list = None,
-        metadata: dict = None,
+        actions: Optional[List[Any]] = None,
+        metadata: Optional[Dict[Any, Any]] = None,
     ) -> str:
         """
         Send alert to user(s).
@@ -88,8 +88,8 @@ class AlertService:
         self,
         project_id: UUID,
         unread_only: bool = False,
-        severity: str = None,
-    ) -> list:
+        severity: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """Get alerts for project."""
         alerts = self.alert_history.get(project_id, [])
 
@@ -123,7 +123,7 @@ class AlertService:
 # Global Instance
 # ============================================================================
 
-_alert_service: AlertService = None
+_alert_service: Optional[AlertService] = None
 
 
 def get_alert_service() -> AlertService:
@@ -145,7 +145,7 @@ async def send_alert(
     title: str,
     message: str,
     severity: str = "info",
-    actions: list = None,
+    actions: Optional[List[Any]] = None,
 ) -> str:
     """
     Convenience function to send alert.

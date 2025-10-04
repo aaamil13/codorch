@@ -1,14 +1,14 @@
 """SQLAlchemy base configuration."""
 
-from sqlalchemy import create_engine
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
 
 from backend.core.config import settings
 
-# Create engine with connection pooling
-engine = create_engine(
+# Create async engine
+async_engine = create_async_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
     pool_size=settings.DATABASE_POOL_SIZE,
@@ -16,8 +16,14 @@ engine = create_engine(
     echo=settings.DEBUG,
 )
 
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Create async session factory
+AsyncSessionLocal = async_sessionmaker(
+    async_engine,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+    class_=AsyncSession,
+)
 
 
 # Create base class for models
@@ -25,10 +31,7 @@ class Base(DeclarativeBase):
     pass
 
 
-def get_db():
-    """Dependency for getting database session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Dependency for getting asynchronous database session."""
+    async with AsyncSessionLocal() as session:
+        yield session

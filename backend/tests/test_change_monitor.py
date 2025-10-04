@@ -2,8 +2,11 @@
 Tests for ChangeMonitor - Real-time change tracking.
 """
 
+from typing import Any, Callable, Dict
 import pytest
-from uuid import uuid4
+from uuid import UUID, uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.change_monitor import ChangeMonitor
 from backend.core.graph_manager import get_graph_manager
@@ -12,7 +15,7 @@ from backend.core.graph_manager import get_graph_manager
 class TestChangeMonitor:
     """Test ChangeMonitor functionality."""
 
-    def test_change_monitor_creation(self):
+    def test_change_monitor_creation(self) -> None:
         """Test ChangeMonitor can be created."""
         graph_manager = get_graph_manager()
         monitor = ChangeMonitor(graph_manager)
@@ -21,7 +24,7 @@ class TestChangeMonitor:
         assert monitor.graph_manager is graph_manager
         assert isinstance(monitor.callbacks, dict)
 
-    def test_get_changed_fields(self):
+    def test_get_changed_fields(self) -> None:
         """Test identifying changed fields."""
         monitor = ChangeMonitor(get_graph_manager())
 
@@ -34,12 +37,12 @@ class TestChangeMonitor:
         assert "status" in changed
         assert "type" not in changed  # Unchanged
 
-    def test_change_callback_storage(self):
+    def test_change_callback_storage(self) -> None:
         """Test callback storage."""
         monitor = ChangeMonitor(get_graph_manager())
         node_id = uuid4()
 
-        def dummy_callback(change):
+        def dummy_callback(change: Any) -> None:
             pass
 
         # Initially empty
@@ -51,13 +54,13 @@ class TestChangeMonitor:
         assert len(monitor.callbacks[node_id]) == 1
 
     @pytest.mark.asyncio
-    async def test_register_watcher_without_refmemtree(self, async_session):
+    async def test_register_watcher_without_refmemtree(self, async_session: AsyncSession) -> None:
         """Test graceful handling when RefMemTree not available."""
         monitor = ChangeMonitor(get_graph_manager())
         project_id = uuid4()
         node_id = uuid4()
 
-        def callback(change):
+        def callback(change: Any) -> None:
             pass
 
         # Should not crash

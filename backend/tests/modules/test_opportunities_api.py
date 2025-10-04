@@ -1,13 +1,18 @@
 """Integration tests for Opportunities API endpoints."""
 
+from typing import Dict
+from uuid import UUID
 import pytest
 from unittest.mock import AsyncMock, patch
+from fastapi.testclient import TestClient
 
-from backend.db.models import Project
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.db.models import Project, User
 
 
 @pytest.fixture
-def test_project(db_session, test_user):
+async def test_project(db_session: AsyncSession, test_user: User) -> Project:
     """Create test project."""
     project = Project(
         name="Test Project",
@@ -16,15 +21,15 @@ def test_project(db_session, test_user):
         created_by=test_user.id,
     )
     db_session.add(project)
-    db_session.commit()
-    db_session.refresh(project)
+    await db_session.commit()
+    await db_session.refresh(project)
     return project
 
 
 class TestOpportunitiesAPI:
     """Test Opportunities API endpoints."""
 
-    def test_create_opportunity(self, client, auth_headers, test_project):
+    def test_create_opportunity(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/opportunities."""
         response = client.post(
             "/api/v1/opportunities",
@@ -43,7 +48,7 @@ class TestOpportunitiesAPI:
         assert "score" in data
         assert "id" in data
 
-    def test_create_opportunity_missing_fields(self, client, auth_headers):
+    def test_create_opportunity_missing_fields(self, client: TestClient, auth_headers: Dict[str, str]) -> None:
         """Test creating opportunity without required fields."""
         response = client.post(
             "/api/v1/opportunities",
@@ -56,7 +61,7 @@ class TestOpportunitiesAPI:
 
         assert response.status_code == 422
 
-    def test_list_opportunities(self, client, auth_headers, test_project):
+    def test_list_opportunities(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/opportunities."""
         # Create opportunities
         for i in range(3):
@@ -78,7 +83,7 @@ class TestOpportunitiesAPI:
         data = response.json()
         assert len(data) == 3
 
-    def test_list_opportunities_with_filters(self, client, auth_headers, test_project):
+    def test_list_opportunities_with_filters(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test filtering opportunities."""
         client.post(
             "/api/v1/opportunities",
@@ -109,7 +114,7 @@ class TestOpportunitiesAPI:
         assert len(data) == 1
         assert data[0]["category"] == "product"
 
-    def test_get_opportunity(self, client, auth_headers, test_project):
+    def test_get_opportunity(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/opportunities/{id}."""
         create_response = client.post(
             "/api/v1/opportunities",
@@ -130,7 +135,7 @@ class TestOpportunitiesAPI:
         data = response.json()
         assert data["id"] == opp_id
 
-    def test_get_opportunity_not_found(self, client, auth_headers):
+    def test_get_opportunity_not_found(self, client: TestClient, auth_headers: Dict[str, str]) -> None:
         """Test getting non-existent opportunity."""
         from uuid import uuid4
 
@@ -141,7 +146,7 @@ class TestOpportunitiesAPI:
 
         assert response.status_code == 404
 
-    def test_update_opportunity(self, client, auth_headers, test_project):
+    def test_update_opportunity(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test PUT /api/v1/opportunities/{id}."""
         create_response = client.post(
             "/api/v1/opportunities",
@@ -163,7 +168,7 @@ class TestOpportunitiesAPI:
         data = response.json()
         assert data["title"] == "Updated"
 
-    def test_delete_opportunity(self, client, auth_headers, test_project):
+    def test_delete_opportunity(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test DELETE /api/v1/opportunities/{id}."""
         create_response = client.post(
             "/api/v1/opportunities",
@@ -190,7 +195,7 @@ class TestOpportunitiesAPI:
         assert get_response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_generate_opportunities(self, client, auth_headers, test_project):
+    async def test_generate_opportunities(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/opportunities/generate."""
         with patch(
             "backend.ai_agents.opportunity_team.SupervisorAgent.generate_opportunities",
@@ -222,7 +227,7 @@ class TestOpportunitiesAPI:
             assert "opportunities" in data
 
     @pytest.mark.asyncio
-    async def test_compare_opportunities(self, client, auth_headers, test_project):
+    async def test_compare_opportunities(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/opportunities/compare."""
         # Create opportunities
         opp1_response = client.post(
@@ -266,7 +271,7 @@ class TestOpportunitiesAPI:
             data = response.json()
             assert "comparison" in data
 
-    def test_get_top_opportunities(self, client, auth_headers, test_project):
+    def test_get_top_opportunities(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/opportunities/top."""
         # Create opportunities
         for i in range(5):
@@ -288,7 +293,7 @@ class TestOpportunitiesAPI:
         data = response.json()
         assert len(data) <= 3
 
-    def test_unauthorized_access(self, client, test_project):
+    def test_unauthorized_access(self, client: TestClient, test_project: Project) -> None:
         """Test accessing without authentication."""
         response = client.get(f"/api/v1/opportunities?project_id={test_project.id}")
 

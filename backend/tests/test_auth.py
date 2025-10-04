@@ -1,12 +1,13 @@
 """Tests for authentication."""
 
+from typing import Dict
 import pytest
 from fastapi.testclient import TestClient
 
 from backend.core.schemas import UserCreate
 
 
-def test_register_user(client: TestClient, sample_user_data: dict[str, str]) -> None:
+def test_register_user(client: TestClient, sample_user_data: Dict[str, str]) -> None:
     """Test user registration."""
     response = client.post("/api/v1/auth/register", json=sample_user_data)
     assert response.status_code == 201
@@ -19,7 +20,7 @@ def test_register_user(client: TestClient, sample_user_data: dict[str, str]) -> 
     assert data["user"]["username"] == sample_user_data["username"]
 
 
-def test_register_duplicate_email(client: TestClient, sample_user_data: dict[str, str]) -> None:
+def test_register_duplicate_email(client: TestClient, sample_user_data: Dict[str, str]) -> None:
     """Test registration with duplicate email."""
     # Register first user
     client.post("/api/v1/auth/register", json=sample_user_data)
@@ -30,7 +31,7 @@ def test_register_duplicate_email(client: TestClient, sample_user_data: dict[str
     assert "already registered" in response.json()["detail"].lower()
 
 
-def test_login(client: TestClient, sample_user_data: dict[str, str]) -> None:
+def test_login(client: TestClient, sample_user_data: Dict[str, str]) -> None:
     """Test user login."""
     # Register user
     client.post("/api/v1/auth/register", json=sample_user_data)
@@ -46,7 +47,7 @@ def test_login(client: TestClient, sample_user_data: dict[str, str]) -> None:
     assert data["token_type"] == "bearer"
 
 
-def test_login_invalid_credentials(client: TestClient, sample_user_data: dict[str, str]) -> None:
+def test_login_invalid_credentials(client: TestClient, sample_user_data: Dict[str, str]) -> None:
     """Test login with invalid credentials."""
     # Register user
     client.post("/api/v1/auth/register", json=sample_user_data)
@@ -59,7 +60,7 @@ def test_login_invalid_credentials(client: TestClient, sample_user_data: dict[st
 
 
 @pytest.mark.integration
-def test_auth_flow(client: TestClient, sample_user_data: dict[str, str]) -> None:
+def test_auth_flow(client: TestClient, sample_user_data: Dict[str, str]) -> None:
     """Test complete authentication flow."""
     # Register
     register_response = client.post("/api/v1/auth/register", json=sample_user_data)

@@ -24,7 +24,7 @@ from backend.core.refmemtree_advanced import (
 class ArchitectureRefMemTreeIntegration:
     """Integration layer for Architecture Module with RefMemTree."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.manager = RefMemTreeManager()
 
     # ========================================================================
@@ -230,7 +230,7 @@ class ArchitectureRefMemTreeIntegration:
 # ============================================================================
 
 
-def example_usage():
+def example_usage() -> None:
     """
     Example of how to use RefMemTree advanced features in Architecture Module.
     """

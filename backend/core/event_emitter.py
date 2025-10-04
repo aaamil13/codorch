@@ -8,7 +8,7 @@ Used for:
 - Alert broadcasting
 """
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 import asyncio
 
 
@@ -20,7 +20,7 @@ class EventEmitter:
     when those events occur.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.listeners: Dict[str, List[Callable]] = {}
         self._event_queue: List[Dict] = []
 
@@ -83,13 +83,13 @@ class EventEmitter:
     def once(self, event_name: str, callback: Callable) -> None:
         """Register one-time event listener."""
 
-        def wrapper(data):
+        def wrapper(data: Any) -> None:
             callback(data)
             self.off(event_name, wrapper)
 
         self.on(event_name, wrapper)
 
-    def remove_all_listeners(self, event_name: str = None) -> None:
+    def remove_all_listeners(self, event_name: Optional[str] = None) -> None:
         """Remove all listeners for event or all events."""
         if event_name:
             if event_name in self.listeners:
@@ -107,7 +107,7 @@ class EventEmitter:
 # ============================================================================
 
 # Singleton instance used throughout application
-_global_emitter: EventEmitter = None
+_global_emitter: Optional[EventEmitter] = None
 
 
 def get_event_emitter() -> EventEmitter:

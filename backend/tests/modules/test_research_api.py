@@ -1,13 +1,18 @@
 """Integration tests for Research API endpoints."""
 
+from typing import Dict
+from uuid import UUID
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
+from fastapi.testclient import TestClient
 
-from backend.db.models import Project
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.db.models import Project, User
 
 
 @pytest.fixture
-def test_project(db_session, test_user):
+async def test_project(db_session: AsyncSession, test_user: User) -> Project:
     """Create test project."""
     project = Project(
         name="Test Project",
@@ -16,15 +21,15 @@ def test_project(db_session, test_user):
         created_by=test_user.id,
     )
     db_session.add(project)
-    db_session.commit()
-    db_session.refresh(project)
+    await db_session.commit()
+    await db_session.refresh(project)
     return project
 
 
 class TestResearchAPI:
     """Test Research API endpoints."""
 
-    def test_create_session(self, client, auth_headers, test_project):
+    def test_create_session(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/research/sessions."""
         response = client.post(
             "/api/v1/research/sessions",
@@ -42,7 +47,7 @@ class TestResearchAPI:
         assert data["status"] == "active"
         assert "id" in data
 
-    def test_list_sessions(self, client, auth_headers, test_project):
+    def test_list_sessions(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/research/sessions."""
         # Create sessions
         for i in range(3):
@@ -64,7 +69,7 @@ class TestResearchAPI:
         data = response.json()
         assert len(data) == 3
 
-    def test_get_session(self, client, auth_headers, test_project):
+    def test_get_session(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/research/sessions/{id}."""
         create_response = client.post(
             "/api/v1/research/sessions",
@@ -85,7 +90,7 @@ class TestResearchAPI:
         data = response.json()
         assert data["id"] == session_id
 
-    def test_get_session_not_found(self, client, auth_headers):
+    def test_get_session_not_found(self, client: TestClient, auth_headers: Dict[str, str]) -> None:
         """Test getting non-existent session."""
         from uuid import uuid4
 
@@ -96,7 +101,7 @@ class TestResearchAPI:
 
         assert response.status_code == 404
 
-    def test_update_session(self, client, auth_headers, test_project):
+    def test_update_session(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test PUT /api/v1/research/sessions/{id}."""
         create_response = client.post(
             "/api/v1/research/sessions",
@@ -118,7 +123,7 @@ class TestResearchAPI:
         data = response.json()
         assert data["title"] == "Updated"
 
-    def test_delete_session(self, client, auth_headers, test_project):
+    def test_delete_session(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test DELETE /api/v1/research/sessions/{id}."""
         create_response = client.post(
             "/api/v1/research/sessions",
@@ -137,7 +142,7 @@ class TestResearchAPI:
 
         assert response.status_code == 204
 
-    def test_archive_session(self, client, auth_headers, test_project):
+    def test_archive_session(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/research/sessions/{id}/archive."""
         create_response = client.post(
             "/api/v1/research/sessions",
@@ -158,7 +163,7 @@ class TestResearchAPI:
         data = response.json()
         assert data["status"] == "archived"
 
-    def test_get_messages(self, client, auth_headers, test_project):
+    def test_get_messages(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/research/sessions/{id}/messages."""
         create_response = client.post(
             "/api/v1/research/sessions",
@@ -180,7 +185,7 @@ class TestResearchAPI:
         assert isinstance(data, list)
 
     @pytest.mark.asyncio
-    async def test_chat(self, client, auth_headers, test_project):
+    async def test_chat(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/research/sessions/{id}/chat."""
         create_response = client.post(
             "/api/v1/research/sessions",
@@ -222,7 +227,7 @@ class TestResearchAPI:
             assert "content" in data
             assert "message_id" in data
 
-    def test_get_findings(self, client, auth_headers, test_project):
+    def test_get_findings(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/research/sessions/{id}/findings."""
         create_response = client.post(
             "/api/v1/research/sessions",
@@ -243,7 +248,7 @@ class TestResearchAPI:
         data = response.json()
         assert isinstance(data, list)
 
-    def test_create_finding(self, client, auth_headers, test_project):
+    def test_create_finding(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test POST /api/v1/research/findings."""
         session_response = client.post(
             "/api/v1/research/sessions",
@@ -270,7 +275,7 @@ class TestResearchAPI:
         data = response.json()
         assert data["title"] == "Test Finding"
 
-    def test_get_finding(self, client, auth_headers, test_project):
+    def test_get_finding(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/research/findings/{id}."""
         session_response = client.post(
             "/api/v1/research/sessions",
@@ -303,7 +308,7 @@ class TestResearchAPI:
         data = response.json()
         assert data["id"] == finding_id
 
-    def test_update_finding(self, client, auth_headers, test_project):
+    def test_update_finding(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test PUT /api/v1/research/findings/{id}."""
         session_response = client.post(
             "/api/v1/research/sessions",
@@ -337,7 +342,7 @@ class TestResearchAPI:
         data = response.json()
         assert data["title"] == "Updated"
 
-    def test_delete_finding(self, client, auth_headers, test_project):
+    def test_delete_finding(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test DELETE /api/v1/research/findings/{id}."""
         session_response = client.post(
             "/api/v1/research/sessions",
@@ -368,7 +373,7 @@ class TestResearchAPI:
 
         assert response.status_code == 204
 
-    def test_get_statistics(self, client, auth_headers, test_project):
+    def test_get_statistics(self, client: TestClient, auth_headers: Dict[str, str], test_project: Project) -> None:
         """Test GET /api/v1/research/sessions/{id}/statistics."""
         create_response = client.post(
             "/api/v1/research/sessions",
@@ -390,7 +395,7 @@ class TestResearchAPI:
         assert "message_count" in data
         assert "finding_count" in data
 
-    def test_unauthorized_access(self, client, test_project):
+    def test_unauthorized_access(self, client: TestClient, test_project: Project) -> None:
         """Test accessing without authentication."""
         response = client.get(f"/api/v1/research/sessions?project_id={test_project.id}")
 

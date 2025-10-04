@@ -1,12 +1,13 @@
 """Tests for AI client."""
 
 import pytest
+from unittest.mock import MagicMock
 
 from backend.core.ai_client import AIClient, AIClientError
 
 
 @pytest.fixture
-def ai_client(mock_ai_client: any) -> AIClient:  # type: ignore
+def ai_client(mock_ai_client: MagicMock) -> AIClient:
     """Get AI client with mocked API."""
     client = AIClient()
     client._sync_client = mock_ai_client

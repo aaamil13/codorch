@@ -53,7 +53,7 @@ class TechnologyRecommendations(BaseModel):
 def get_requirements_analyst_agent():
     return Agent(
         "google-gla:gemini-2.0-flash-001",
-        result_type=RequirementAnalysis,
+        output_type=RequirementAnalysis,
         system_prompt="""You are an expert Requirements Analyst specializing in software requirements engineering.
 
 Your responsibilities:
@@ -84,7 +84,7 @@ Be thorough but constructive. Focus on helping improve the requirement.""",
 def get_requirements_validator_agent():
     return Agent(
         "google-gla:gemini-2.0-flash-001",
-        result_type=ValidationResult,
+        output_type=ValidationResult,
         system_prompt="""You are a Requirements Validation Expert responsible for final quality checks.
 
 Your responsibilities:
@@ -122,7 +122,7 @@ Be strict but fair. Safety and quality are paramount.""",
 def get_technology_advisor_agent():
     return Agent(
         "google-gla:gemini-2.0-flash-001",
-        result_type=TechnologyRecommendations,
+        output_type=TechnologyRecommendations,
         system_prompt="""You are a Technology Advisor specializing in recommending suitable technologies for software requirements.
 
 Your responsibilities:
@@ -182,7 +182,7 @@ Analyze this requirement thoroughly and provide detailed feedback.
 
     agent = get_requirements_analyst_agent()
     result = await agent.run(context)
-    return result.data
+    return result # type: ignore
 
 
 async def validate_requirement_quality(
@@ -209,7 +209,7 @@ Perform final validation and determine if this requirement is ready for approval
 
     agent = get_requirements_validator_agent()
     result = await agent.run(context)
-    return result.data
+    return result # type: ignore
 
 
 async def recommend_technologies(
@@ -234,7 +234,7 @@ Provide at least 3-5 recommendations covering different technology categories.
 
     agent = get_technology_advisor_agent()
     result = await agent.run(context)
-    return result.data
+    return result # type: ignore
 
 
 # ============================================================================

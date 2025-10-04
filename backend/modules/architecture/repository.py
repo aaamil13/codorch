@@ -1,6 +1,6 @@
 """Repository pattern for Architecture Module."""
 
-from typing import Optional
+from typing import Optional, Sequence
 from uuid import UUID
 
 from sqlalchemy import func
@@ -46,7 +46,7 @@ class ArchitectureModuleRepository:
         parent_id: Optional[UUID] = None,
         module_type: Optional[str] = None,
         status: Optional[str] = None,
-    ) -> list[ArchitectureModule]:
+    ) -> Sequence[ArchitectureModule]:
         """Get architecture modules by project with filters."""
         query = select(ArchitectureModule).filter(ArchitectureModule.project_id == project_id)
 
@@ -62,7 +62,7 @@ class ArchitectureModuleRepository:
         result = await self.db.execute(query.offset(skip).limit(limit))
         return result.scalars().all()
 
-    async def get_root_modules(self, project_id: UUID) -> list[ArchitectureModule]:
+    async def get_root_modules(self, project_id: UUID) -> Sequence[ArchitectureModule]:
         """Get root modules (modules without parent) for a project."""
         result = await self.db.execute(
             select(ArchitectureModule).filter(
@@ -72,7 +72,7 @@ class ArchitectureModuleRepository:
         )
         return result.scalars().all()
 
-    async def get_children(self, parent_id: UUID) -> list[ArchitectureModule]:
+    async def get_children(self, parent_id: UUID) -> Sequence[ArchitectureModule]:
         """Get child modules of a parent."""
         result = await self.db.execute(select(ArchitectureModule).filter(ArchitectureModule.parent_id == parent_id))
         return result.scalars().all()
@@ -124,7 +124,7 @@ class ArchitectureModuleRepository:
         )
         return result.scalar_one()
 
-    async def get_by_level(self, project_id: UUID, level: int) -> list[ArchitectureModule]:
+    async def get_by_level(self, project_id: UUID, level: int) -> Sequence[ArchitectureModule]:
         """Get modules by level in hierarchy."""
         result = await self.db.execute(
             select(ArchitectureModule).filter(
@@ -159,7 +159,7 @@ class ModuleDependencyRepository:
         self,
         project_id: UUID,
         dependency_type: Optional[str] = None,
-    ) -> list[ModuleDependency]:
+    ) -> Sequence[ModuleDependency]:
         """Get module dependencies by project."""
         query = select(ModuleDependency).filter(ModuleDependency.project_id == project_id)
 
@@ -169,12 +169,12 @@ class ModuleDependencyRepository:
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def get_dependencies_from(self, module_id: UUID) -> list[ModuleDependency]:
+    async def get_dependencies_from(self, module_id: UUID) -> Sequence[ModuleDependency]:
         """Get dependencies FROM a module (what this module depends on)."""
         result = await self.db.execute(select(ModuleDependency).filter(ModuleDependency.from_module_id == module_id))
         return result.scalars().all()
 
-    async def get_dependencies_to(self, module_id: UUID) -> list[ModuleDependency]:
+    async def get_dependencies_to(self, module_id: UUID) -> Sequence[ModuleDependency]:
         """Get dependencies TO a module (what depends on this module)."""
         result = await self.db.execute(select(ModuleDependency).filter(ModuleDependency.to_module_id == module_id))
         return result.scalars().all()
@@ -241,7 +241,7 @@ class ArchitectureRuleRepository:
         level: Optional[str] = None,
         rule_type: Optional[str] = None,
         active_only: bool = True,
-    ) -> list[ArchitectureRule]:
+    ) -> Sequence[ArchitectureRule]:
         """Get architecture rules by project."""
         query = select(ArchitectureRule).filter(ArchitectureRule.project_id == project_id)
 
@@ -252,22 +252,22 @@ class ArchitectureRuleRepository:
             query = query.filter(ArchitectureRule.rule_type == rule_type)
 
         if active_only:
-            query = query.filter(ArchitectureRule.active == True)  # noqa: E712
+            query = query.filter(ArchitectureRule.active)
 
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def get_by_module(self, module_id: UUID, active_only: bool = True) -> list[ArchitectureRule]:
+    async def get_by_module(self, module_id: UUID, active_only: bool = True) -> Sequence[ArchitectureRule]:
         """Get rules for a specific module."""
         query = select(ArchitectureRule).filter(ArchitectureRule.module_id == module_id)
 
         if active_only:
-            query = query.filter(ArchitectureRule.active == True)  # noqa: E712
+            query = query.filter(ArchitectureRule.active)
 
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def get_global_rules(self, project_id: UUID, active_only: bool = True) -> list[ArchitectureRule]:
+    async def get_global_rules(self, project_id: UUID, active_only: bool = True) -> Sequence[ArchitectureRule]:
         """Get global rules for a project."""
         query = select(ArchitectureRule).filter(
             ArchitectureRule.project_id == project_id,
@@ -275,7 +275,7 @@ class ArchitectureRuleRepository:
         )
 
         if active_only:
-            query = query.filter(ArchitectureRule.active == True)  # noqa: E712
+            query = query.filter(ArchitectureRule.active)
 
         result = await self.db.execute(query)
         return result.scalars().all()

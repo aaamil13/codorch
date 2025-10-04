@@ -4,7 +4,7 @@ from typing import Annotated, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.ai_agents.research_team import ResearchTeam
 from backend.api.deps import get_current_user, get_db
@@ -31,20 +31,20 @@ router = APIRouter()
 
 
 @router.post("/sessions", response_model=ResearchSessionResponse, status_code=status.HTTP_201_CREATED)
-def create_research_session(
+async def create_research_session(
     data: ResearchSessionCreate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ResearchSessionResponse:
     """Create a new research session."""
     service = ResearchService(db)
 
     try:
-        session = service.create_session(data=data, current_user=current_user)
+        session = await service.create_session(data=data, current_user=current_user)
 
         # Add counts
-        message_count = service.message_repo.count_by_session(session.id)
-        finding_count = service.finding_repo.count_by_session(session.id)
+        message_count = await service.message_repo.count_by_session(session.id)
+        finding_count = await service.finding_repo.count_by_session(session.id)
 
         response = ResearchSessionResponse.model_validate(session)
         response.message_count = message_count
@@ -56,9 +56,9 @@ def create_research_session(
 
 
 @router.get("/sessions", response_model=list[ResearchSessionResponse])
-def list_research_sessions(
+async def list_research_sessions(
     project_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     skip: int = 0,
     limit: int = 100,
@@ -66,7 +66,7 @@ def list_research_sessions(
 ) -> list[ResearchSessionResponse]:
     """List research sessions for a project."""
     service = ResearchService(db)
-    sessions = service.list_sessions(
+    sessions = await service.list_sessions(
         project_id=project_id,
         skip=skip,
         limit=limit,
@@ -75,8 +75,8 @@ def list_research_sessions(
 
     responses = []
     for session in sessions:
-        message_count = service.message_repo.count_by_session(session.id)
-        finding_count = service.finding_repo.count_by_session(session.id)
+        message_count = await service.message_repo.count_by_session(session.id)
+        finding_count = await service.finding_repo.count_by_session(session.id)
 
         response = ResearchSessionResponse.model_validate(session)
         response.message_count = message_count
@@ -87,14 +87,14 @@ def list_research_sessions(
 
 
 @router.get("/sessions/{session_id}", response_model=ResearchSessionResponse)
-def get_research_session(
+async def get_research_session(
     session_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ResearchSessionResponse:
     """Get research session by ID."""
     service = ResearchService(db)
-    session = service.get_session(session_id)
+    session = await service.get_session(session_id)
 
     if not session:
         raise HTTPException(
@@ -102,8 +102,8 @@ def get_research_session(
             detail="Research session not found",
         )
 
-    message_count = service.message_repo.count_by_session(session.id)
-    finding_count = service.finding_repo.count_by_session(session.id)
+    message_count = await service.message_repo.count_by_session(session.id)
+    finding_count = await service.finding_repo.count_by_session(session.id)
 
     response = ResearchSessionResponse.model_validate(session)
     response.message_count = message_count
@@ -113,15 +113,15 @@ def get_research_session(
 
 
 @router.put("/sessions/{session_id}", response_model=ResearchSessionResponse)
-def update_research_session(
+async def update_research_session(
     session_id: UUID,
     data: ResearchSessionUpdate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ResearchSessionResponse:
     """Update research session."""
     service = ResearchService(db)
-    session = service.update_session(session_id=session_id, data=data)
+    session = await service.update_session(session_id=session_id, data=data)
 
     if not session:
         raise HTTPException(
@@ -129,8 +129,8 @@ def update_research_session(
             detail="Research session not found",
         )
 
-    message_count = service.message_repo.count_by_session(session.id)
-    finding_count = service.finding_repo.count_by_session(session.id)
+    message_count = await service.message_repo.count_by_session(session.id)
+    finding_count = await service.finding_repo.count_by_session(session.id)
 
     response = ResearchSessionResponse.model_validate(session)
     response.message_count = message_count
@@ -140,14 +140,14 @@ def update_research_session(
 
 
 @router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_research_session(
+async def delete_research_session(
     session_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """Delete research session."""
     service = ResearchService(db)
-    success = service.delete_session(session_id)
+    success = await service.delete_session(session_id)
 
     if not success:
         raise HTTPException(
@@ -157,14 +157,14 @@ def delete_research_session(
 
 
 @router.post("/sessions/{session_id}/archive", response_model=ResearchSessionResponse)
-def archive_research_session(
+async def archive_research_session(
     session_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ResearchSessionResponse:
     """Archive research session."""
     service = ResearchService(db)
-    session = service.archive_session(session_id)
+    session = await service.archive_session(session_id)
 
     if not session:
         raise HTTPException(
@@ -172,8 +172,8 @@ def archive_research_session(
             detail="Research session not found",
         )
 
-    message_count = service.message_repo.count_by_session(session.id)
-    finding_count = service.finding_repo.count_by_session(session.id)
+    message_count = await service.message_repo.count_by_session(session.id)
+    finding_count = await service.finding_repo.count_by_session(session.id)
 
     response = ResearchSessionResponse.model_validate(session)
     response.message_count = message_count
@@ -188,9 +188,9 @@ def archive_research_session(
 
 
 @router.get("/sessions/{session_id}/messages", response_model=list[ResearchMessageResponse])
-def get_session_messages(
+async def get_session_messages(
     session_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     skip: int = 0,
     limit: int = 100,
@@ -199,14 +199,14 @@ def get_session_messages(
     service = ResearchService(db)
 
     # Verify session exists
-    session = service.get_session(session_id)
+    session = await service.get_session(session_id)
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Research session not found",
         )
 
-    messages = service.get_messages(session_id=session_id, skip=skip, limit=limit)
+    messages = await service.get_messages(session_id=session_id, skip=skip, limit=limit)
     return [ResearchMessageResponse.model_validate(msg) for msg in messages]
 
 
@@ -214,14 +214,14 @@ def get_session_messages(
 async def chat_with_research_team(
     session_id: UUID,
     request: ChatRequest,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ChatResponse:
     """Send a message and get AI response from research team."""
     service = ResearchService(db)
 
     # Verify session exists
-    session = service.get_session(session_id)
+    session = await service.get_session(session_id)
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -231,13 +231,13 @@ async def chat_with_research_team(
     # Save user message
     from backend.modules.research.schemas import ResearchMessageCreate
 
-    user_message = service.create_message(
+    user_message = await service.create_message(
         session_id=session_id,
         data=ResearchMessageCreate(role="user", content=request.message),
     )
 
     # Get previous messages for context
-    previous_messages = service.get_latest_messages(session_id=session_id, limit=10)
+    previous_messages = await service.get_latest_messages(session_id=session_id, limit=10)
     message_history = [{"role": msg.role, "content": msg.content} for msg in reversed(previous_messages)]
 
     # Conduct research with AI team
@@ -263,7 +263,7 @@ async def chat_with_research_team(
 Confidence: {synthesis.confidence:.1%}
 """
 
-        assistant_message = service.create_message(
+        assistant_message = await service.create_message(
             session_id=session_id,
             data=ResearchMessageCreate(role="assistant", content=assistant_content),
             metadata={
@@ -276,7 +276,7 @@ Confidence: {synthesis.confidence:.1%}
         # Auto-create findings from synthesis
         for finding_data in synthesis.findings:
             try:
-                service.create_finding(
+                await service.create_finding(
                     data=ResearchFindingCreate(
                         session_id=session_id,
                         finding_type=finding_data.get("type", "other"),
@@ -300,7 +300,7 @@ Confidence: {synthesis.confidence:.1%}
     except Exception as e:
         # Create error response
         error_content = f"I encountered an error while researching: {str(e)}"
-        error_message = service.create_message(
+        error_message = await service.create_message(
             session_id=session_id,
             data=ResearchMessageCreate(role="assistant", content=error_content),
             metadata={"error": str(e)},
@@ -320,9 +320,9 @@ Confidence: {synthesis.confidence:.1%}
 
 
 @router.get("/sessions/{session_id}/findings", response_model=list[ResearchFindingResponse])
-def get_session_findings(
+async def get_session_findings(
     session_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     finding_type: Optional[str] = None,
 ) -> list[ResearchFindingResponse]:
@@ -330,42 +330,42 @@ def get_session_findings(
     service = ResearchService(db)
 
     # Verify session exists
-    session = service.get_session(session_id)
+    session = await service.get_session(session_id)
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Research session not found",
         )
 
-    findings = service.list_findings(session_id=session_id, finding_type=finding_type)
+    findings = await service.list_findings(session_id=session_id, finding_type=finding_type)
     return [ResearchFindingResponse.model_validate(f) for f in findings]
 
 
 @router.post("/findings", response_model=ResearchFindingResponse, status_code=status.HTTP_201_CREATED)
-def create_finding(
+async def create_finding(
     data: ResearchFindingCreate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ResearchFindingResponse:
     """Create a new research finding."""
     service = ResearchService(db)
 
     try:
-        finding = service.create_finding(data=data)
+        finding = await service.create_finding(data=data)
         return ResearchFindingResponse.model_validate(finding)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.get("/findings/{finding_id}", response_model=ResearchFindingResponse)
-def get_finding(
+async def get_finding(
     finding_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ResearchFindingResponse:
     """Get research finding by ID."""
     service = ResearchService(db)
-    finding = service.get_finding(finding_id)
+    finding = await service.get_finding(finding_id)
 
     if not finding:
         raise HTTPException(
@@ -377,15 +377,15 @@ def get_finding(
 
 
 @router.put("/findings/{finding_id}", response_model=ResearchFindingResponse)
-def update_finding(
+async def update_finding(
     finding_id: UUID,
     data: ResearchFindingUpdate,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> ResearchFindingResponse:
     """Update research finding."""
     service = ResearchService(db)
-    finding = service.update_finding(finding_id=finding_id, data=data)
+    finding = await service.update_finding(finding_id=finding_id, data=data)
 
     if not finding:
         raise HTTPException(
@@ -397,14 +397,14 @@ def update_finding(
 
 
 @router.delete("/findings/{finding_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_finding(
+async def delete_finding(
     finding_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> None:
     """Delete research finding."""
     service = ResearchService(db)
-    success = service.delete_finding(finding_id)
+    success = await service.delete_finding(finding_id)
 
     if not success:
         raise HTTPException(
@@ -419,20 +419,20 @@ def delete_finding(
 
 
 @router.get("/sessions/{session_id}/statistics")
-def get_session_statistics(
+async def get_session_statistics(
     session_id: UUID,
-    db: Annotated[Session, Depends(get_db)],
+    db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> dict:
     """Get statistics for a research session."""
     service = ResearchService(db)
 
     # Verify session exists
-    session = service.get_session(session_id)
+    session = await service.get_session(session_id)
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Research session not found",
         )
 
-    return service.get_session_statistics(session_id)
+    return await service.get_session_statistics(session_id)

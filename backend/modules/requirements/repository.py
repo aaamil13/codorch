@@ -1,9 +1,9 @@
 """Repository pattern for Requirements Module."""
 
-from typing import Optional
+from typing import Optional, Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -41,7 +41,7 @@ class RequirementRepository:
         status_filter: Optional[str] = None,
         priority_filter: Optional[str] = None,
         module_id: Optional[UUID] = None,
-    ) -> list[Requirement]:
+    ) -> Sequence[Requirement]:
         """Get requirements by project with filters."""
         query = select(Requirement).where(Requirement.project_id == project_id)
 
@@ -59,7 +59,7 @@ class RequirementRepository:
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
-    async def get_by_module(self, module_id: UUID) -> list[Requirement]:
+    async def get_by_module(self, module_id: UUID) -> Sequence[Requirement]:
         """Get requirements by module."""
         result = await self.session.execute(
             select(Requirement).where(Requirement.module_id == module_id).order_by(Requirement.created_at.desc())
@@ -88,17 +88,19 @@ class RequirementRepository:
 
     async def count_by_project(self, project_id: UUID) -> int:
         """Count requirements by project."""
-        result = await self.session.execute(select(Requirement).where(Requirement.project_id == project_id))
-        return len(list(result.scalars().all()))
+        result = await self.session.execute(
+            select(func.count(Requirement.id)).where(Requirement.project_id == project_id)
+        )
+        return result.scalar_one()
 
     async def get_validated_count(self, project_id: UUID) -> int:
         """Count validated requirements."""
         result = await self.session.execute(
-            select(Requirement).where(
+            select(func.count(Requirement.id)).where(
                 Requirement.project_id == project_id, Requirement.ai_validation_result.isnot(None)
             )
         )
-        return len(list(result.scalars().all()))
+        return result.scalar_one()
 
 
 class TechnologyRecommendationRepository:
@@ -126,7 +128,7 @@ class TechnologyRecommendationRepository:
         project_id: UUID,
         technology_type: Optional[str] = None,
         status_filter: Optional[str] = None,
-    ) -> list[TechnologyRecommendation]:
+    ) -> Sequence[TechnologyRecommendation]:
         """Get recommendations by project."""
         query = select(TechnologyRecommendation).where(TechnologyRecommendation.project_id == project_id)
 
@@ -140,7 +142,7 @@ class TechnologyRecommendationRepository:
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
-    async def get_by_module(self, module_id: UUID) -> list[TechnologyRecommendation]:
+    async def get_by_module(self, module_id: UUID) -> Sequence[TechnologyRecommendation]:
         """Get recommendations by module."""
         result = await self.session.execute(
             select(TechnologyRecommendation)
@@ -163,15 +165,11 @@ class TechnologyRecommendationRepository:
     async def count_by_type(self, project_id: UUID) -> dict[str, int]:
         """Count recommendations by type."""
         result = await self.session.execute(
-            select(TechnologyRecommendation).where(TechnologyRecommendation.project_id == project_id)
+            select(TechnologyRecommendation.technology_type, func.count(TechnologyRecommendation.id))
+            .where(TechnologyRecommendation.project_id == project_id)
+            .group_by(TechnologyRecommendation.technology_type)
         )
-        recommendations = list(result.scalars().all())
-
-        counts: dict[str, int] = {}
-        for rec in recommendations:
-            counts[rec.technology_type] = counts.get(rec.technology_type, 0) + 1
-
-        return counts
+        return {tech_type: count for tech_type, count in result.all()}
 
 
 class APISpecificationRepository:
@@ -192,7 +190,7 @@ class APISpecificationRepository:
         result = await self.session.execute(select(APISpecification).where(APISpecification.id == api_spec_id))
         return result.scalar_one_or_none()
 
-    async def get_by_requirement(self, requirement_id: UUID) -> list[APISpecification]:
+    async def get_by_requirement(self, requirement_id: UUID) -> Sequence[APISpecification]:
         """Get API specs by requirement."""
         result = await self.session.execute(
             select(APISpecification)
@@ -215,6 +213,6 @@ class APISpecificationRepository:
     async def count_by_requirement(self, requirement_id: UUID) -> int:
         """Count API specs for requirement."""
         result = await self.session.execute(
-            select(APISpecification).where(APISpecification.requirement_id == requirement_id)
+            select(func.count(APISpecification.id)).where(APISpecification.requirement_id == requirement_id)
         )
-        return len(list(result.scalars().all()))
+        return result.scalar_one()

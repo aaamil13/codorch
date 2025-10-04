@@ -1,11 +1,13 @@
 """FastAPI dependencies."""
 
-from typing import Generator
+from typing import Annotated
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.config import settings
 from backend.core.schemas import TokenData
@@ -16,9 +18,9 @@ from backend.db.models import User
 security = HTTPBearer()
 
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     """Get current authenticated user."""
     token = credentials.credentials
@@ -35,11 +37,12 @@ def get_current_user(
         if user_id is None:
             raise credentials_exception
 
-        token_data = TokenData(user_id=user_id)
+        token_data = TokenData(user_id=UUID(user_id)) # Convert user_id to UUID
     except JWTError:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == token_data.user_id).first()
+    result = await db.execute(select(User).filter(User.id == token_data.user_id))
+    user = result.scalars().first()
     if user is None:
         raise credentials_exception
 
@@ -49,17 +52,17 @@ def get_current_user(
     return user
 
 
-def get_current_active_user(
-    current_user: User = Depends(get_current_user),
+async def get_current_active_user(
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     """Get current active user."""
     return current_user
 
 
-def get_current_superuser(
-    current_user: User = Depends(get_current_user),
+async def get_current_superuser(
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     """Get current superuser."""
     if not current_user.is_superuser:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     return current_user

@@ -4,14 +4,18 @@ Tests for GraphManagerService - RefMemTree core integration.
 Critical tests for the BRAIN of Codorch!
 """
 
+from typing import Any, Dict
 import pytest
-from uuid import uuid4
+from uuid import UUID, uuid4
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.core.graph_manager import GraphManagerService, get_graph_manager, reset_graph_manager
+from backend.db.models import Project, User
 
 
 @pytest.fixture
-def graph_manager():
+def graph_manager() -> GraphManagerService:
     """Get fresh GraphManagerService for each test."""
     reset_graph_manager()  # Clear singleton
     return get_graph_manager()
@@ -20,7 +24,7 @@ def graph_manager():
 class TestGraphManagerService:
     """Test GraphManagerService - RefMemTree integration."""
 
-    def test_singleton_pattern(self, graph_manager):
+    def test_singleton_pattern(self, graph_manager: GraphManagerService) -> None:
         """Test that get_graph_manager returns same instance."""
         manager1 = get_graph_manager()
         manager2 = get_graph_manager()
@@ -28,7 +32,7 @@ class TestGraphManagerService:
         assert manager1 is manager2
         assert id(manager1) == id(manager2)
 
-    def test_cache_management(self, graph_manager):
+    def test_cache_management(self, graph_manager: GraphManagerService) -> None:
         """Test graph caching."""
         project_id = uuid4()
 
@@ -45,7 +49,7 @@ class TestGraphManagerService:
         graph_manager.clear_cache(project_id)
         assert project_id not in graph_manager._graph_cache
 
-    def test_clear_all_cache(self, graph_manager):
+    def test_clear_all_cache(self, graph_manager: GraphManagerService) -> None:
         """Test clearing all caches."""
         project1 = uuid4()
         project2 = uuid4()
@@ -63,7 +67,7 @@ class TestGraphManagerService:
 class TestGraphManagerIntegration:
     """Integration tests for GraphManager with database."""
 
-    async def test_hydration_creates_cache(self, async_session, sample_project):
+    async def test_hydration_creates_cache(self, async_session: AsyncSession, sample_project: Project) -> None:
         """Test that hydration creates cached graph."""
         manager = get_graph_manager()
 
@@ -74,7 +78,7 @@ class TestGraphManagerIntegration:
         assert manager is not None
         assert hasattr(manager, "_graph_cache")
 
-    async def test_add_node_to_graph_without_refmemtree(self, async_session):
+    async def test_add_node_to_graph_without_refmemtree(self, async_session: AsyncSession) -> None:
         """Test graceful fallback when RefMemTree not available."""
         manager = get_graph_manager()
         project_id = uuid4()
@@ -92,7 +96,7 @@ class TestGraphManagerIntegration:
         # Result is False if RefMemTree not available, but doesn't crash
         assert result in [True, False]
 
-    async def test_detect_circular_dependencies_fallback(self, async_session):
+    async def test_detect_circular_dependencies_fallback(self, async_session: AsyncSession) -> None:
         """Test circular detection works even without RefMemTree."""
         manager = get_graph_manager()
         project_id = uuid4()
@@ -112,7 +116,7 @@ class TestRefMemTreeAPIs:
     """Test RefMemTree API integration (requires RefMemTree installed)."""
 
     @pytest.mark.skipif(not hasattr(GraphManagerService, "_check_refmemtree"), reason="RefMemTree not installed")
-    async def test_real_graphsystem_creation(self, async_session):
+    async def test_real_graphsystem_creation(self, async_session: AsyncSession) -> None:
         """Test real GraphSystem creation."""
         manager = get_graph_manager()
         project_id = uuid4()
@@ -125,7 +129,7 @@ class TestRefMemTreeAPIs:
         pass
 
     @pytest.mark.skipif(not hasattr(GraphManagerService, "_check_refmemtree"), reason="RefMemTree not installed")
-    async def test_impact_analysis(self, async_session):
+    async def test_impact_analysis(self, async_session: AsyncSession) -> None:
         """Test RefMemTree impact analysis."""
         manager = get_graph_manager()
         project_id = uuid4()
@@ -146,7 +150,7 @@ class TestRefMemTreeAPIs:
 
 
 @pytest.fixture
-async def sample_project(async_session):
+async def sample_project(async_session: AsyncSession) -> Project:
     """Create sample project for testing."""
     from backend.db.models import Project, User
     from datetime import datetime

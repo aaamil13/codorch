@@ -1,5 +1,8 @@
 """Tests for Goal module."""
 
+from typing import Dict
+from uuid import UUID
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -7,7 +10,7 @@ from backend.modules.goals.smart_validator import SMARTValidator
 
 
 @pytest.fixture
-def auth_headers(client: TestClient, sample_user_data: dict[str, str]) -> dict[str, str]:
+def auth_headers(client: TestClient, sample_user_data: Dict[str, str]) -> Dict[str, str]:
     """Get authentication headers."""
     response = client.post("/api/v1/auth/register", json=sample_user_data)
     token = response.json()["access_token"]
@@ -15,13 +18,13 @@ def auth_headers(client: TestClient, sample_user_data: dict[str, str]) -> dict[s
 
 
 @pytest.fixture
-def project_id(client: TestClient, auth_headers: dict[str, str], sample_project_data: dict[str, str]) -> str:
+def project_id(client: TestClient, auth_headers: Dict[str, str], sample_project_data: Dict[str, str]) -> UUID:
     """Create a project and return its ID."""
     response = client.post("/api/v1/projects/", json=sample_project_data, headers=auth_headers)
-    return response.json()["id"]
+    return UUID(response.json()["id"])
 
 
-def test_create_goal(client: TestClient, auth_headers: dict[str, str], project_id: str) -> None:
+def test_create_goal(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test creating a goal."""
     goal_data = {
         "title": "Increase revenue by 20%",
@@ -39,7 +42,7 @@ def test_create_goal(client: TestClient, auth_headers: dict[str, str], project_i
     assert "overall_smart_score" in data
 
 
-def test_list_goals(client: TestClient, auth_headers: dict[str, str], project_id: str) -> None:
+def test_list_goals(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test listing goals."""
     # Create a goal
     goal_data = {"title": "Test Goal", "description": "Test description"}
@@ -54,7 +57,7 @@ def test_list_goals(client: TestClient, auth_headers: dict[str, str], project_id
     assert len(data) >= 1
 
 
-def test_get_goal(client: TestClient, auth_headers: dict[str, str], project_id: str) -> None:
+def test_get_goal(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test getting goal by ID."""
     # Create goal
     goal_data = {"title": "Test Goal", "description": "Test description"}
@@ -70,7 +73,7 @@ def test_get_goal(client: TestClient, auth_headers: dict[str, str], project_id: 
     assert data["title"] == goal_data["title"]
 
 
-def test_update_goal(client: TestClient, auth_headers: dict[str, str], project_id: str) -> None:
+def test_update_goal(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test updating goal."""
     # Create goal
     goal_data = {"title": "Original Title", "description": "Original description"}
@@ -87,7 +90,7 @@ def test_update_goal(client: TestClient, auth_headers: dict[str, str], project_i
     assert data["priority"] == update_data["priority"]
 
 
-def test_delete_goal(client: TestClient, auth_headers: dict[str, str], project_id: str) -> None:
+def test_delete_goal(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test deleting goal."""
     # Create goal
     goal_data = {"title": "To Delete", "description": "Will be deleted"}
@@ -105,7 +108,7 @@ def test_delete_goal(client: TestClient, auth_headers: dict[str, str], project_i
 
 
 @pytest.mark.ai
-def test_analyze_goal(client: TestClient, auth_headers: dict[str, str], project_id: str) -> None:
+def test_analyze_goal(client: TestClient, auth_headers: Dict[str, str], project_id: UUID) -> None:
     """Test AI goal analysis."""
     # Create goal
     goal_data = {

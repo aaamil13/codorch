@@ -1,7 +1,7 @@
 """Service layer for Requirements Module."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, List, Optional, Sequence
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,13 +73,13 @@ class RequirementsService:
         status_filter: Optional[str] = None,
         priority_filter: Optional[str] = None,
         module_id: Optional[UUID] = None,
-    ) -> list[Requirement]:
+    ) -> Sequence[Requirement]:
         """List requirements with filters."""
         return await self.req_repo.get_by_project(
             project_id, skip, limit, type_filter, status_filter, priority_filter, module_id
         )
 
-    async def get_module_requirements(self, module_id: UUID) -> list[Requirement]:
+    async def get_module_requirements(self, module_id: UUID) -> Sequence[Requirement]:
         """Get requirements for a module."""
         return await self.req_repo.get_by_module(module_id)
 
@@ -133,17 +133,18 @@ class RequirementsService:
         return validation_result
 
     async def validate_batch(
-        self, project_id: UUID, requirement_ids: Optional[list[UUID]] = None
+        self, project_id: UUID, requirement_ids: Optional[List[UUID]] = None
     ) -> BatchValidationResponse:
         """Validate multiple requirements."""
         if requirement_ids:
-            requirements = []
+            requirements: List[Requirement] = [] # Keep as List internally for manipulation
             for req_id in requirement_ids:
                 req = await self.req_repo.get_by_id(req_id)
                 if req:
                     requirements.append(req)
         else:
-            requirements = await self.req_repo.get_by_project(project_id)
+            requirements_sequence = await self.req_repo.get_by_project(project_id)
+            requirements = list(requirements_sequence) # Convert Sequence to List for consistency
 
         results = []
         total_issues = 0
@@ -262,7 +263,7 @@ class RequirementsService:
         project_id: UUID,
         technology_type: Optional[str] = None,
         status_filter: Optional[str] = None,
-    ) -> list[TechnologyRecommendation]:
+    ) -> Sequence[TechnologyRecommendation]:
         """List technology recommendations."""
         return await self.tech_repo.get_by_project(project_id, technology_type, status_filter)
 
@@ -294,8 +295,12 @@ class RequirementsService:
         recommendations = await self.tech_repo.get_by_project(project_id)
         by_type = await self.tech_repo.count_by_type(project_id)
 
+        # Convert SQLAlchemy models to Pydantic response models
+        from backend.modules.requirements.schemas import TechnologyRecommendationResponse
+        recommendation_responses = [TechnologyRecommendationResponse.model_validate(r) for r in recommendations]
+
         return TechnologyRecommendationSummary(
-            recommendations=recommendations,
+            recommendations=recommendation_responses,
             total_count=len(recommendations),
             by_type=by_type,
         )
@@ -324,7 +329,7 @@ class RequirementsService:
         """Get API specification by ID."""
         return await self.api_repo.get_by_id(api_spec_id)
 
-    async def list_api_specifications(self, requirement_id: UUID) -> list[APISpecification]:
+    async def list_api_specifications(self, requirement_id: UUID) -> Sequence[APISpecification]:
         """List API specifications for requirement."""
         return await self.api_repo.get_by_requirement(requirement_id)
 
@@ -386,6 +391,11 @@ class RequirementsService:
         technologies = await self.tech_repo.get_by_project(project_id)
         summary = await self.get_requirements_summary(project_id)
 
+        # Convert SQLAlchemy models to Pydantic response models
+        from backend.modules.requirements.schemas import RequirementResponse, TechnologyRecommendationResponse
+        requirement_responses = [RequirementResponse.model_validate(r) for r in requirements]
+        technology_responses = [TechnologyRecommendationResponse.model_validate(t) for t in technologies]
+
         # Count API specifications
         api_specs_count = 0
         for req in requirements:
@@ -395,8 +405,8 @@ class RequirementsService:
         return RequirementsReport(
             project_id=project_id,
             summary=summary,
-            requirements=requirements,
-            technology_recommendations=technologies,
+            requirements=requirement_responses,
+            technology_recommendations=technology_responses,
             api_specifications_count=api_specs_count,
             generated_at=datetime.utcnow(),
         )

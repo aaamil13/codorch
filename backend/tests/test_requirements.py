@@ -5,7 +5,7 @@ from backend.ai_agents.requirements_team import analyze_requirement, Requirement
 
 @pytest.mark.asyncio
 @patch("backend.ai_agents.requirements_team.analyze_requirement")
-async def test_analyze_requirement(mock_analyze_requirement):
+async def test_analyze_requirement(mock_analyze_requirement: MagicMock) -> None:
     # Arrange
     mock_analyze_requirement.return_value = RequirementAnalysis(
         completeness_score=10.0,
