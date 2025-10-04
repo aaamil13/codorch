@@ -51,7 +51,7 @@ class TestOutput(BaseModel):
 
 
 # Code Generator Agent
-def get_code_generator_agent() -> Agent[Any, CodeOutput]:
+def get_code_generator_agent() -> "Agent[None, CodeOutput]":
     return Agent(
         "google-gla:gemini-2.0-flash-001",
         output_type=CodeOutput,
@@ -83,7 +83,7 @@ Generate professional, production-ready code.""",
 
 
 # Code Reviewer Agent
-def get_code_reviewer_agent() -> Agent[Any, CodeReviewOutput]:
+def get_code_reviewer_agent() -> "Agent[None, CodeReviewOutput]":
     return Agent(
         "google-gla:gemini-2.0-flash-001",
         output_type=CodeReviewOutput,
@@ -125,7 +125,7 @@ Provide specific, actionable feedback.""",
 
 
 # Test Generator Agent
-def get_test_generator_agent() -> Agent[Any, TestOutput]:
+def get_test_generator_agent() -> "Agent[None, TestOutput]":
     return Agent(
         "google-gla:gemini-2.0-flash-001",
         output_type=TestOutput,
@@ -180,7 +180,7 @@ Generate a complete project scaffold with file structure and empty/template file
 """
     agent = get_code_generator_agent()
     result = await agent.run(context)
-    return result # type: ignore
+    return result  # type: ignore
 
 
 async def generate_implementation(
@@ -203,7 +203,7 @@ Include proper error handling, validation, and documentation.
 """
     agent = get_code_generator_agent()
     result = await agent.run(context)
-    return result # type: ignore
+    return result  # type: ignore
 
 
 async def review_code(
@@ -222,7 +222,7 @@ Perform comprehensive code review focusing on quality, security, and best practi
 """
     agent = get_code_reviewer_agent()
     result = await agent.run(context)
-    return result # type: ignore
+    return result  # type: ignore
 
 
 async def generate_tests(
@@ -240,7 +240,7 @@ Generate comprehensive test suite including unit tests, integration tests, and e
 """
     agent = get_test_generator_agent()
     result = await agent.run(context)
-    return result # type: ignore
+    return result  # type: ignore
 
 
 # ============================================================================
@@ -264,14 +264,14 @@ class CodeGenerationTeam:
 
         # Step 2: Generate Implementation
         implementation = await generate_implementation(
-            scaffold.model_dump(), # type: ignore
+            scaffold.model_dump(),  # type: ignore
             requirements,
             f"Module implementation in {language}",
         )
 
         # Step 3: Review Code
         review = await review_code(
-            implementation.model_dump(), # type: ignore
+            implementation.model_dump(),  # type: ignore
             requirements,
         )
 

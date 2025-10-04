@@ -18,12 +18,7 @@ from backend.modules.opportunities.service import OpportunityService
 @pytest.fixture
 async def test_project(db_session: AsyncSession, test_user: User) -> Project:
     """Create test project."""
-    project = Project(
-        name="Test Project",
-        description="Test",
-        goal="Test Goal",
-        owner_id=test_user.id
-    )
+    project = Project(name="Test Project", description="Test", goal="Test Goal", owner_id=test_user.id)
     db_session.add(project)
     await db_session.commit()
     await db_session.refresh(project)
@@ -40,7 +35,9 @@ class TestOpportunityService:
     """Test OpportunityService methods."""
 
     @pytest.mark.asyncio
-    async def test_create_opportunity_with_scoring(self, opp_service: OpportunityService, test_project: Project) -> None:
+    async def test_create_opportunity_with_scoring(
+        self, opp_service: OpportunityService, test_project: Project
+    ) -> None:
         """Test creating opportunity with automatic scoring."""
         opp_data = OpportunityCreate(
             title="AI-powered analytics",

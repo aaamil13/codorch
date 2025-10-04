@@ -94,9 +94,10 @@ class TreeNodeService:
         node.data.update(updates.get("data", {}))
         if "node_type" in updates:
             node.node_type = updates["node_type"]
-        
+
         # Mark as modified to ensure JSON is updated
         from sqlalchemy.orm.attributes import flag_modified
+
         flag_modified(node, "data")
 
         await self.session.commit()
@@ -169,9 +170,7 @@ class TreeNodeService:
         # Step 2: Delete from RefMemTree
         try:
             await self.graph_manager.remove_node_from_graph(
-                project_id=node.project_id,
-                session=self.session,
-                node_id=node_id
+                project_id=node.project_id, session=self.session, node_id=node_id
             )
             print(f"✅ Node {node_id} removed from RefMemTree")
         except Exception as e:

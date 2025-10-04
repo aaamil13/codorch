@@ -15,7 +15,9 @@ from backend.modules.requirements.schemas import RequirementCreate
 class TestRequirementsService:
     """Test Requirements Service."""
 
-    async def test_create_requirement(self, async_session: AsyncSession, sample_project: Project, sample_user: User) -> None:
+    async def test_create_requirement(
+        self, async_session: AsyncSession, sample_project: Project, sample_user: User
+    ) -> None:
         """Test creating requirement."""
         service = RequirementsService(async_session)
 
@@ -36,7 +38,9 @@ class TestRequirementsService:
         assert requirement.type == "functional"
         assert requirement.status == "draft"
 
-    async def test_list_requirements_with_filters(self, async_session: AsyncSession, sample_project: Project, sample_user: User) -> None:
+    async def test_list_requirements_with_filters(
+        self, async_session: AsyncSession, sample_project: Project, sample_user: User
+    ) -> None:
         """Test listing requirements with filters."""
         service = RequirementsService(async_session)
 
@@ -60,7 +64,9 @@ class TestRequirementsService:
         functional = await service.list_requirements(sample_project.id, type_filter="functional")
         assert all(r.type == "functional" for r in functional)
 
-    async def test_basic_validation(self, async_session: AsyncSession, sample_project: Project, sample_user: User) -> None:
+    async def test_basic_validation(
+        self, async_session: AsyncSession, sample_project: Project, sample_user: User
+    ) -> None:
         """Test basic requirement validation."""
         service = RequirementsService(async_session)
 

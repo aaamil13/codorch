@@ -54,7 +54,9 @@ class TestResearchSessionRepository:
     """Test ResearchSessionRepository."""
 
     @pytest.mark.asyncio
-    async def test_create_session(self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_create_session(
+        self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User
+    ) -> None:
         """Test creating research session."""
         session = ResearchSession(
             project_id=test_project.id,
@@ -70,7 +72,9 @@ class TestResearchSessionRepository:
         assert created.status == "active"
 
     @pytest.mark.asyncio
-    async def test_get_by_id(self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_get_by_id(
+        self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User
+    ) -> None:
         """Test getting session by ID."""
         session = ResearchSession(
             project_id=test_project.id,
@@ -85,7 +89,9 @@ class TestResearchSessionRepository:
         assert retrieved.id == created.id
 
     @pytest.mark.asyncio
-    async def test_get_by_project(self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_get_by_project(
+        self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User
+    ) -> None:
         """Test getting sessions by project."""
         for i in range(3):
             session = ResearchSession(
@@ -101,7 +107,9 @@ class TestResearchSessionRepository:
         assert all(s.project_id == test_project.id for s in sessions)
 
     @pytest.mark.asyncio
-    async def test_get_by_project_with_status_filter(self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_get_by_project_with_status_filter(
+        self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User
+    ) -> None:
         """Test filtering sessions by status."""
         active_session = ResearchSession(
             project_id=test_project.id,
@@ -124,7 +132,9 @@ class TestResearchSessionRepository:
         assert active_sessions[0].status == "active"
 
     @pytest.mark.asyncio
-    async def test_update_session(self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_update_session(
+        self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User
+    ) -> None:
         """Test updating session."""
         session = ResearchSession(
             project_id=test_project.id,
@@ -139,7 +149,9 @@ class TestResearchSessionRepository:
         assert updated.title == "Updated"
 
     @pytest.mark.asyncio
-    async def test_delete_session(self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_delete_session(
+        self, session_repo: ResearchSessionRepository, test_project: Project, test_user: User
+    ) -> None:
         """Test deleting session."""
         session = ResearchSession(
             project_id=test_project.id,
@@ -157,7 +169,13 @@ class TestResearchMessageRepository:
     """Test ResearchMessageRepository."""
 
     @pytest.mark.asyncio
-    async def test_create_message(self, message_repo: ResearchMessageRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_create_message(
+        self,
+        message_repo: ResearchMessageRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test creating message."""
         from backend.db.models import ResearchMessage
 
@@ -180,7 +198,13 @@ class TestResearchMessageRepository:
         assert created.content == "Test message"
 
     @pytest.mark.asyncio
-    async def test_get_by_session(self, message_repo: ResearchMessageRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_get_by_session(
+        self,
+        message_repo: ResearchMessageRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test getting messages by session."""
         from backend.db.models import ResearchMessage
 
@@ -204,7 +228,13 @@ class TestResearchMessageRepository:
         assert len(messages) == 3
 
     @pytest.mark.asyncio
-    async def test_get_latest_messages(self, message_repo: ResearchMessageRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_get_latest_messages(
+        self,
+        message_repo: ResearchMessageRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test getting latest messages."""
         from backend.db.models import ResearchMessage
 
@@ -228,7 +258,13 @@ class TestResearchMessageRepository:
         assert len(latest) == 3
 
     @pytest.mark.asyncio
-    async def test_count_by_session(self, message_repo: ResearchMessageRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_count_by_session(
+        self,
+        message_repo: ResearchMessageRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test counting messages."""
         from backend.db.models import ResearchMessage
 
@@ -256,7 +292,13 @@ class TestResearchFindingRepository:
     """Test ResearchFindingRepository."""
 
     @pytest.mark.asyncio
-    async def test_create_finding(self, finding_repo: ResearchFindingRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_create_finding(
+        self,
+        finding_repo: ResearchFindingRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test creating finding."""
         from backend.db.models import ResearchFinding
 
@@ -280,7 +322,13 @@ class TestResearchFindingRepository:
         assert created.title == "Test Finding"
 
     @pytest.mark.asyncio
-    async def test_get_by_session(self, finding_repo: ResearchFindingRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_get_by_session(
+        self,
+        finding_repo: ResearchFindingRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test getting findings by session."""
         from backend.db.models import ResearchFinding
 
@@ -305,7 +353,13 @@ class TestResearchFindingRepository:
         assert len(findings) == 3
 
     @pytest.mark.asyncio
-    async def test_get_by_session_with_type_filter(self, finding_repo: ResearchFindingRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_get_by_session_with_type_filter(
+        self,
+        finding_repo: ResearchFindingRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test filtering findings by type."""
         from backend.db.models import ResearchFinding
 
@@ -337,7 +391,13 @@ class TestResearchFindingRepository:
         assert technical_findings[0].finding_type == "technical"
 
     @pytest.mark.asyncio
-    async def test_get_high_confidence_findings(self, finding_repo: ResearchFindingRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_get_high_confidence_findings(
+        self,
+        finding_repo: ResearchFindingRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test getting high-confidence findings."""
         from backend.db.models import ResearchFinding
 
@@ -372,7 +432,13 @@ class TestResearchFindingRepository:
         assert high_findings[0].confidence_score >= 0.7
 
     @pytest.mark.asyncio
-    async def test_count_by_type(self, finding_repo: ResearchFindingRepository, session_repo: ResearchSessionRepository, test_project: Project, test_user: User) -> None:
+    async def test_count_by_type(
+        self,
+        finding_repo: ResearchFindingRepository,
+        session_repo: ResearchSessionRepository,
+        test_project: Project,
+        test_user: User,
+    ) -> None:
         """Test counting findings by type."""
         from backend.db.models import ResearchFinding
 

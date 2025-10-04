@@ -117,7 +117,7 @@ Please provide comprehensive research insights including:
 
         try:
             result = await self.agent.run(prompt)
-            return result # type: ignore
+            return result  # type: ignore
         except Exception as e:
             print(f"WebResearchAgent error: {e}")
             # Return fallback response
@@ -176,7 +176,7 @@ Please provide expert analysis including:
 
         try:
             result = await self.agent.run(prompt)
-            return result # type: ignore
+            return result  # type: ignore
         except Exception as e:
             print(f"DomainExpertAgent error: {e}")
             return DomainAnalysis(
@@ -241,7 +241,7 @@ Please synthesize all information and provide:
 
         try:
             result = await self.agent.run(prompt)
-            return result # type: ignore
+            return result  # type: ignore
         except Exception as e:
             print(f"AnalyzerAgent error: {e}")
             return AnalysisResult(
@@ -333,7 +333,7 @@ Please provide a comprehensive research synthesis that:
 
         try:
             result = await self.agent.run(synthesis_prompt)
-            return result # type: ignore
+            return result  # type: ignore
         except Exception as e:
             print(f"SupervisorAgent error: {e}")
             # Fallback synthesis

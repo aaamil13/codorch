@@ -1,6 +1,6 @@
 """API endpoints for Architecture Module."""
 
-from typing import Annotated, Optional, List, Dict
+from typing import Annotated, Optional, List, Dict, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -479,7 +479,7 @@ async def analyze_module_impact_advanced(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     change_type: str = "update",
-):
+) -> Dict[str, Any]:
     """
     ADVANCED RefMemTree: Analyze change impact with dependency tracking.
 

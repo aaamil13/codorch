@@ -57,7 +57,7 @@ class GraphOperationsService:
                 node.node_type = node_type
                 node.data = data
                 # Trigger change analysis in RefMemTree if needed
-                # node.on_change() 
+                # node.on_change()
                 return True
             return False
         except Exception as e:

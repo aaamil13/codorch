@@ -20,10 +20,7 @@ class GoalRepository:
 
     async def create(self, goal_data: GoalCreate, project_id: UUID) -> Goal:
         """Create new goal."""
-        db_goal = Goal(
-            **goal_data.model_dump(),
-            project_id=project_id
-        )
+        db_goal = Goal(**goal_data.model_dump(), project_id=project_id)
         self.db.add(db_goal)
         await self.db.commit()
         await self.db.refresh(db_goal)

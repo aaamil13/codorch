@@ -43,11 +43,11 @@ async def create_requirement(
     data: RequirementCreate,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> RequirementResponse:
     """Create new requirement."""
     service = RequirementsService(session)
     requirement = await service.create_requirement(data, current_user.id)
-    return requirement
+    return RequirementResponse.model_validate(requirement)
 
 
 @router.get("/projects/{project_id}", response_model=list[RequirementResponse])
@@ -61,13 +61,13 @@ async def list_requirements(
     module_id: Optional[UUID] = None,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> list[RequirementResponse]:
     """List requirements for a project."""
     service = RequirementsService(session)
     requirements = await service.list_requirements(
         project_id, skip, limit, type_filter, status_filter, priority_filter, module_id
     )
-    return requirements
+    return [RequirementResponse.model_validate(req) for req in requirements]
 
 
 @router.get("/modules/{module_id}", response_model=list[RequirementResponse])
@@ -75,11 +75,11 @@ async def list_module_requirements(
     module_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> list[RequirementResponse]:
     """Get requirements for a specific module."""
     service = RequirementsService(session)
     requirements = await service.get_module_requirements(module_id)
-    return requirements
+    return [RequirementResponse.model_validate(req) for req in requirements]
 
 
 @router.get("/{requirement_id}", response_model=RequirementResponse)
@@ -87,13 +87,13 @@ async def get_requirement(
     requirement_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> RequirementResponse:
     """Get requirement by ID."""
     service = RequirementsService(session)
     requirement = await service.get_requirement(requirement_id)
     if not requirement:
         raise HTTPException(status_code=404, detail="Requirement not found")
-    return requirement
+    return RequirementResponse.model_validate(requirement)
 
 
 @router.put("/{requirement_id}", response_model=RequirementResponse)
@@ -102,13 +102,13 @@ async def update_requirement(
     data: RequirementUpdate,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> RequirementResponse:
     """Update requirement."""
     service = RequirementsService(session)
     requirement = await service.update_requirement(requirement_id, data)
     if not requirement:
         raise HTTPException(status_code=404, detail="Requirement not found")
-    return requirement
+    return RequirementResponse.model_validate(requirement)
 
 
 @router.delete("/{requirement_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -116,7 +116,7 @@ async def delete_requirement(
     requirement_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete requirement."""
     service = RequirementsService(session)
     success = await service.delete_requirement(requirement_id)
@@ -129,13 +129,13 @@ async def approve_requirement(
     requirement_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> RequirementResponse:
     """Approve requirement."""
     service = RequirementsService(session)
     requirement = await service.approve_requirement(requirement_id, current_user.id)
     if not requirement:
         raise HTTPException(status_code=404, detail="Requirement not found")
-    return requirement
+    return RequirementResponse.model_validate(requirement)
 
 
 # ============================================================================
@@ -148,7 +148,7 @@ async def validate_requirement(
     requirement_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> RequirementValidationResult:
     """Validate single requirement with AI."""
     service = RequirementsService(session)
 
@@ -180,15 +180,7 @@ async def validate_requirement(
         clarity_score=analysis.clarity_score,
         consistency_score=analysis.consistency_score,
         feasibility_score=analysis.feasibility_score,
-        issues=[
-            {
-                "type": issue.get("type", "general"),
-                "severity": issue.get("severity", "info"),
-                "message": issue.get("message", ""),
-                "suggestion": issue.get("suggestion"),
-            }
-            for issue in analysis.issues
-        ],
+        issues=analysis.issues,
         suggestions=analysis.suggestions,
         is_valid=validation.is_valid,
     )
@@ -200,7 +192,7 @@ async def validate_batch(
     data: BatchValidationRequest,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> BatchValidationResponse:
     """Validate multiple requirements."""
     service = RequirementsService(session)
     result = await service.validate_batch(project_id, data.requirement_ids)
@@ -212,7 +204,7 @@ async def get_suggestions(
     requirement_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> dict:
     """Get AI suggestions for improving requirement."""
     service = RequirementsService(session)
     requirement = await service.get_requirement(requirement_id)
@@ -240,7 +232,7 @@ async def generate_technology_recommendations(
     data: TechnologyRecommendationRequest,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> TechnologyRecommendationSummary:
     """Generate technology recommendations using AI."""
     service = RequirementsService(session)
 
@@ -315,11 +307,11 @@ async def list_technology_recommendations(
     status_filter: Optional[str] = None,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> list[TechnologyRecommendationResponse]:
     """List technology recommendations."""
     service = RequirementsService(session)
     recommendations = await service.list_technology_recommendations(project_id, technology_type, status_filter)
-    return recommendations
+    return [TechnologyRecommendationResponse.model_validate(rec) for rec in recommendations]
 
 
 @router.get("/technology-recommendations/{recommendation_id}", response_model=TechnologyRecommendationResponse)
@@ -327,13 +319,13 @@ async def get_technology_recommendation(
     recommendation_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> TechnologyRecommendationResponse:
     """Get technology recommendation by ID."""
     service = RequirementsService(session)
     recommendation = await service.get_technology_recommendation(recommendation_id)
     if not recommendation:
         raise HTTPException(status_code=404, detail="Technology recommendation not found")
-    return recommendation
+    return TechnologyRecommendationResponse.model_validate(recommendation)
 
 
 @router.put("/technology-recommendations/{recommendation_id}", response_model=TechnologyRecommendationResponse)
@@ -342,13 +334,13 @@ async def update_technology_recommendation(
     data: TechnologyRecommendationUpdate,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> TechnologyRecommendationResponse:
     """Update technology recommendation."""
     service = RequirementsService(session)
     recommendation = await service.update_technology_recommendation(recommendation_id, data)
     if not recommendation:
         raise HTTPException(status_code=404, detail="Technology recommendation not found")
-    return recommendation
+    return TechnologyRecommendationResponse.model_validate(recommendation)
 
 
 @router.delete("/technology-recommendations/{recommendation_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -356,7 +348,7 @@ async def delete_technology_recommendation(
     recommendation_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete technology recommendation."""
     service = RequirementsService(session)
     success = await service.delete_technology_recommendation(recommendation_id)
@@ -374,11 +366,11 @@ async def create_api_specification(
     data: APISpecificationCreate,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> APISpecificationResponse:
     """Create API specification."""
     service = RequirementsService(session)
     api_spec = await service.create_api_specification(data)
-    return api_spec
+    return APISpecificationResponse.model_validate(api_spec)
 
 
 @router.get("/requirements/{requirement_id}/api-specifications", response_model=list[APISpecificationResponse])
@@ -386,11 +378,11 @@ async def list_api_specifications(
     requirement_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> list[APISpecificationResponse]:
     """List API specifications for a requirement."""
     service = RequirementsService(session)
     api_specs = await service.list_api_specifications(requirement_id)
-    return api_specs
+    return [APISpecificationResponse.model_validate(spec) for spec in api_specs]
 
 
 @router.get("/api-specifications/{api_spec_id}", response_model=APISpecificationResponse)
@@ -398,13 +390,13 @@ async def get_api_specification(
     api_spec_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> APISpecificationResponse:
     """Get API specification by ID."""
     service = RequirementsService(session)
     api_spec = await service.get_api_specification(api_spec_id)
     if not api_spec:
         raise HTTPException(status_code=404, detail="API specification not found")
-    return api_spec
+    return APISpecificationResponse.model_validate(api_spec)
 
 
 @router.put("/api-specifications/{api_spec_id}", response_model=APISpecificationResponse)
@@ -413,13 +405,13 @@ async def update_api_specification(
     data: APISpecificationUpdate,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> APISpecificationResponse:
     """Update API specification."""
     service = RequirementsService(session)
     api_spec = await service.update_api_specification(api_spec_id, data)
     if not api_spec:
         raise HTTPException(status_code=404, detail="API specification not found")
-    return api_spec
+    return APISpecificationResponse.model_validate(api_spec)
 
 
 @router.delete("/api-specifications/{api_spec_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -427,7 +419,7 @@ async def delete_api_specification(
     api_spec_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> None:
     """Delete API specification."""
     service = RequirementsService(session)
     success = await service.delete_api_specification(api_spec_id)
@@ -445,7 +437,7 @@ async def get_requirements_summary(
     project_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> RequirementsSummary:
     """Get requirements summary for a project."""
     service = RequirementsService(session)
     summary = await service.get_requirements_summary(project_id)
@@ -457,7 +449,7 @@ async def get_requirements_report(
     project_id: UUID,
     session: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> RequirementsReport:
     """Generate full requirements report."""
     service = RequirementsService(session)
     report = await service.get_requirements_report(project_id)

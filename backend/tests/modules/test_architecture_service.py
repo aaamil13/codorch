@@ -51,7 +51,9 @@ class TestArchitectureService:
 
         assert child.level == parent.level + 1
 
-    async def test_create_dependency_prevents_self_reference(self, async_session: AsyncSession, sample_project: Project) -> None:
+    async def test_create_dependency_prevents_self_reference(
+        self, async_session: AsyncSession, sample_project: Project
+    ) -> None:
         """Test that module cannot depend on itself."""
         service = ArchitectureService(async_session)
 

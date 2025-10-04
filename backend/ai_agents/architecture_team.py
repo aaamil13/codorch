@@ -171,7 +171,7 @@ Focus on:
 
         try:
             result = await self.agent.run(prompt)
-            return result # type: ignore
+            return result  # type: ignore
         except Exception as e:
             print(f"SoftwareArchitectAgent error: {e}")
             # Fallback minimal architecture
@@ -182,7 +182,7 @@ Focus on:
                         description="Core business logic",
                         module_type="package",
                         level=0,
-                        parent_name=None, # Added parent_name
+                        parent_name=None,  # Added parent_name
                         technologies=["Python"],
                         patterns=["Repository", "Service Layer"],
                     )
@@ -251,7 +251,7 @@ Provide:
 
         try:
             result = await self.agent.run(prompt)
-            return result # type: ignore
+            return result  # type: ignore
         except Exception as e:
             print(f"DependencyExpertAgent error: {e}")
             return DependencyValidationResult(
@@ -313,7 +313,7 @@ Calculate:
 
         try:
             result = await self.agent.run(prompt)
-            return result # type: ignore
+            return result  # type: ignore
         except Exception as e:
             print(f"ComplexityAnalyzerAgent error: {e}")
             # Simple fallback calculation
@@ -396,7 +396,7 @@ Consider:
 
         try:
             result = await self.agent.run(prompt)
-            return result # type: ignore
+            return result  # type: ignore
         except Exception as e:
             print(f"ArchitectureReviewerAgent error: {e}")
             return ArchitectureReview(

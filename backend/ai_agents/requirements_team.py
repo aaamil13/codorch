@@ -50,9 +50,9 @@ class TechnologyRecommendations(BaseModel):
 
 
 # Requirements Analyst Agent
-def get_requirements_analyst_agent() -> Agent:
+def get_requirements_analyst_agent() -> "Agent[None, RequirementAnalysis]":
     return Agent(
-        "google-gla:gemini-2.0-flash-001",
+        "google-gla:gemini-2.5-flash",
         output_type=RequirementAnalysis,
         system_prompt="""You are an expert Requirements Analyst specializing in software requirements engineering.
 
@@ -81,7 +81,7 @@ Be thorough but constructive. Focus on helping improve the requirement.""",
 
 
 # Requirements Validator Agent
-def get_requirements_validator_agent() -> Agent:
+def get_requirements_validator_agent() -> "Agent[None, ValidationResult]":
     return Agent(
         "google-gla:gemini-2.0-flash-001",
         output_type=ValidationResult,
@@ -119,7 +119,7 @@ Be strict but fair. Safety and quality are paramount.""",
 
 
 # Technology Advisor Agent
-def get_technology_advisor_agent() -> Agent:
+def get_technology_advisor_agent() -> "Agent[None, TechnologyRecommendations]":
     return Agent(
         "google-gla:gemini-2.0-flash-001",
         output_type=TechnologyRecommendations,

@@ -75,10 +75,10 @@ class GoalService:
             overall_smart_score=validation_result["overall_smart_score"],
             is_smart_validated=bool(validation_result["is_smart_compliant"]),
         )
-        
+
         updated_goal = await self.repository.update(created_goal.id, update_data)
         if updated_goal is None:
-             raise ValueError("Failed to update goal after creation.") # Should not happen
+            raise ValueError("Failed to update goal after creation.")  # Should not happen
         return updated_goal
 
     async def get_goal(self, goal_id: UUID) -> Optional[Goal]:
@@ -153,7 +153,7 @@ class GoalService:
             goal.relevant_score = validation_result["relevant_score"]
             goal.time_bound_score = validation_result["time_bound_score"]
             goal.overall_smart_score = validation_result["overall_smart_score"]
-            goal.is_smart_validated = validation_result["is_smart_compliant"] # type: ignore
+            goal.is_smart_validated = validation_result["is_smart_compliant"]  # type: ignore
 
         updated_goal = await self.repository.update(goal_id, goal_update)
         if updated_goal is None:
@@ -219,7 +219,7 @@ class GoalService:
         await self.repository.update(goal.id, update_data)
 
         # Build response
-        from backend.modules.goals.schemas import AIFeedback, SMARTScores, MetricDefinition # Import MetricDefinition
+        from backend.modules.goals.schemas import AIFeedback, SMARTScores, MetricDefinition  # Import MetricDefinition
 
         response = GoalAnalysisResponse(
             goal_id=goal.id,
@@ -237,7 +237,9 @@ class GoalService:
                 strengths=ai_result.strengths,
                 weaknesses=ai_result.weaknesses,
             ),
-            suggested_metrics=[MetricDefinition.model_validate(m) for m in suggested_metrics], # Convert MetricSuggestion to MetricDefinition
+            suggested_metrics=[
+                MetricDefinition.model_validate(m) for m in suggested_metrics
+            ],  # Convert MetricSuggestion to MetricDefinition
             suggested_subgoals=suggested_subgoals,
             is_smart_compliant=goal.is_smart_validated,
         )

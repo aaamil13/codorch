@@ -21,7 +21,7 @@ from backend.modules.architecture.repository import (
 
 # RefMemTree imports
 try:
-    from refmemtree import AIGovernor as RefMemAIGovernor # type: ignore
+    from refmemtree import AIGovernor as RefMemAIGovernor  # type: ignore
 
     AIGOVERNOR_AVAILABLE = True
 except ImportError:
@@ -129,7 +129,7 @@ class AIGovernor:
             # Step 5: Check execution result
             if not execution_result.success:
                 # Rollback if failed
-                if snapshot_id and not dry_run and graph: # Ensure graph is not None for rollback
+                if snapshot_id and not dry_run and graph:  # Ensure graph is not None for rollback
                     print(f"❌ Execution failed, rolling back to {snapshot_id}")
                     # ⭐ REAL RefMemTree API
                     graph.rollback_to_version(snapshot_id)
@@ -166,7 +166,7 @@ class AIGovernor:
                 try:
                     _, _, analytics, _ = await self.graph_manager.get_or_create_services(project_id, session)
                     graph = analytics.graph_system
-                    if graph: # Ensure graph is not None for rollback
+                    if graph:  # Ensure graph is not None for rollback
                         # ⭐ REAL RefMemTree API
                         graph.rollback_to_version(snapshot_id)
                         print(f"✅ Rolled back to snapshot {snapshot_id}")

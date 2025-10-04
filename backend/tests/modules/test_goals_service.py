@@ -13,12 +13,7 @@ from backend.modules.goals.service import GoalService
 @pytest.fixture
 async def test_project(db_session: AsyncSession, test_user: User) -> Project:
     """Create a test project."""
-    project = Project(
-        name="Test Project",
-        description="Test project",
-        goal="Test Goal",
-        owner_id=test_user.id
-    )
+    project = Project(name="Test Project", description="Test project", goal="Test Goal", owner_id=test_user.id)
     db_session.add(project)
     await db_session.commit()
     await db_session.refresh(project)
@@ -77,7 +72,7 @@ class TestGoalService:
                 test_project.id,
                 GoalCreate(
                     title=f"Goal {i}",
-                )
+                ),
             )
 
         goals = await goal_service.list_goals(test_project.id)
@@ -91,7 +86,7 @@ class TestGoalService:
             test_project.id,
             GoalCreate(
                 title="Original Title",
-            )
+            ),
         )
 
         updated_goal = await goal_service.update_goal(
@@ -111,7 +106,7 @@ class TestGoalService:
             test_project.id,
             GoalCreate(
                 title="Goal to Delete",
-            )
+            ),
         )
 
         await goal_service.delete_goal(goal.id)
@@ -126,7 +121,7 @@ class TestGoalService:
             GoalCreate(
                 title="Increase user engagement",
                 description="Improve user engagement metrics",
-            )
+            ),
         )
 
         with patch("backend.modules.goals.service.GoalAnalystAgent") as mock_agent_class:
@@ -144,6 +139,7 @@ class TestGoalService:
             )
             mock_agent_class.return_value = mock_agent
             from backend.modules.goals.schemas import GoalAnalysisRequest
+
             request = GoalAnalysisRequest(include_suggestions=True, include_metrics=True, include_subgoals=False)
             analysis = await goal_service.analyze_goal(goal.id, request)
 
@@ -159,7 +155,7 @@ class TestGoalService:
             GoalCreate(
                 title="Launch new product",
                 description="Launch new SaaS product by Q4",
-            )
+            ),
         )
 
         with patch("backend.modules.goals.service.GoalAnalystAgent") as mock_agent_class:
@@ -183,6 +179,7 @@ class TestGoalService:
             )
             mock_agent_class.return_value = mock_agent
             from backend.modules.goals.schemas import GoalDecomposeRequest
+
             request = GoalDecomposeRequest(num_subgoals=3, include_metrics=True)
             result = await goal_service.decompose_goal(goal.id, request)
 
@@ -200,7 +197,7 @@ class TestGoalService:
                 title="Increase sales by 25%",
                 description="Increase monthly sales by 25% by December 2025 through new marketing campaign",
                 category="business",
-            )
+            ),
         )
 
         # Goal with poor SMART properties
@@ -210,7 +207,7 @@ class TestGoalService:
                 title="Be better",
                 description="Improve things",
                 category="other",
-            )
+            ),
         )
 
         # SMART goal should have higher overall score

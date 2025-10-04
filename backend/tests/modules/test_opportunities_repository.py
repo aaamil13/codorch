@@ -70,10 +70,7 @@ class TestOpportunityRepository:
     async def test_get_by_project(self, opp_repo: OpportunityRepository, test_project: Project) -> None:
         """Test getting opportunities by project."""
         for i in range(3):
-            await opp_repo.create(
-                OpportunityCreate(title=f"Opportunity {i}"),
-                test_project.id
-            )
+            await opp_repo.create(OpportunityCreate(title=f"Opportunity {i}"), test_project.id)
 
         opps = await opp_repo.get_by_project(test_project.id)
 
@@ -115,7 +112,6 @@ class TestOpportunityRepository:
             opp.description = update_data.description
         updated = await opp_repo.update(opp)
 
-
         assert updated is not None
         assert updated.title == "Updated"
         assert updated.description == "New description"
@@ -146,7 +142,6 @@ class TestOpportunityRepository:
         opp3.score = 0.6
         await opp_repo.update(opp3)
 
-
         top_opps = await opp_repo.get_top_scored(test_project.id, limit=2)
 
         assert len(top_opps) == 2
@@ -167,10 +162,7 @@ class TestOpportunityRepository:
     async def test_pagination(self, opp_repo: OpportunityRepository, test_project: Project) -> None:
         """Test pagination."""
         for i in range(10):
-            await opp_repo.create(
-                OpportunityCreate(title=f"Opp {i}"),
-                test_project.id
-            )
+            await opp_repo.create(OpportunityCreate(title=f"Opp {i}"), test_project.id)
 
         page1 = await opp_repo.get_by_project(test_project.id, skip=0, limit=5)
         page2 = await opp_repo.get_by_project(test_project.id, skip=5, limit=5)

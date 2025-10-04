@@ -138,6 +138,7 @@ Focus on CREATIVE and INNOVATIVE ideas."""
         """Parse ideas from AI response (simplified)."""
         # Simple parsing - in production use structured output
         from typing import Dict, Any
+
         ideas = []
         lines = content.split("\n")
 

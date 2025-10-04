@@ -9,6 +9,7 @@ from backend.core.graph_analytics_service import GraphAnalyticsService
 from backend.core.graph_versioning_service import GraphVersioningService
 from refmemtree import GraphSystem
 
+
 class GraphManagerService:
     def __init__(self) -> None:
         self._graph_cache: Dict[UUID, GraphSystem] = {}
@@ -17,7 +18,9 @@ class GraphManagerService:
         self._analytics_services: Dict[UUID, GraphAnalyticsService] = {}
         self._versioning_services: Dict[UUID, GraphVersioningService] = {}
 
-    async def get_or_create_services(self, project_id: UUID, session: AsyncSession) -> Tuple[GraphHydrationService, GraphOperationsService, GraphAnalyticsService, GraphVersioningService]:
+    async def get_or_create_services(
+        self, project_id: UUID, session: AsyncSession
+    ) -> Tuple[GraphHydrationService, GraphOperationsService, GraphAnalyticsService, GraphVersioningService]:
         if project_id not in self._graph_cache:
             graph_system = GraphSystem()
             self._graph_cache[project_id] = graph_system
@@ -34,15 +37,21 @@ class GraphManagerService:
             self._versioning_services[project_id],
         )
 
-    async def add_node_to_graph(self, project_id: UUID, session: AsyncSession, node_id: UUID, node_type: str, data: dict) -> bool:
+    async def add_node_to_graph(
+        self, project_id: UUID, session: AsyncSession, node_id: UUID, node_type: str, data: dict
+    ) -> bool:
         _, ops, _, _ = await self.get_or_create_services(project_id, session)
         return await ops.add_node_to_graph(node_id, node_type, data)
 
-    async def add_dependency_to_graph(self, project_id: UUID, session: AsyncSession, from_node_id: UUID, to_node_id: UUID, dependency_type: str) -> bool:
+    async def add_dependency_to_graph(
+        self, project_id: UUID, session: AsyncSession, from_node_id: UUID, to_node_id: UUID, dependency_type: str
+    ) -> bool:
         _, ops, _, _ = await self.get_or_create_services(project_id, session)
         return await ops.add_dependency_to_graph(from_node_id, to_node_id, dependency_type)
 
-    async def update_node_in_graph(self, project_id: UUID, session: AsyncSession, node_id: UUID, node_type: str, data: dict) -> bool:
+    async def update_node_in_graph(
+        self, project_id: UUID, session: AsyncSession, node_id: UUID, node_type: str, data: dict
+    ) -> bool:
         _, ops, _, _ = await self.get_or_create_services(project_id, session)
         return await ops.update_node_in_graph(node_id, node_type, data)
 
@@ -54,11 +63,15 @@ class GraphManagerService:
         _, _, analytics, _ = await self.get_or_create_services(project_id, session)
         return await analytics.detect_circular_dependencies()
 
-    async def calculate_node_impact(self, project_id: UUID, session: AsyncSession, node_id: UUID, change_type: str = "update") -> dict:
+    async def calculate_node_impact(
+        self, project_id: UUID, session: AsyncSession, node_id: UUID, change_type: str = "update"
+    ) -> dict:
         _, _, analytics, _ = await self.get_or_create_services(project_id, session)
         return await analytics.calculate_node_impact(node_id, change_type)
 
-    async def simulate_change(self, project_id: UUID, session: AsyncSession, node_id: UUID, proposed_change: dict) -> dict:
+    async def simulate_change(
+        self, project_id: UUID, session: AsyncSession, node_id: UUID, proposed_change: dict
+    ) -> dict:
         _, _, analytics, _ = await self.get_or_create_services(project_id, session)
         return await analytics.simulate_change(node_id, proposed_change)
 
@@ -78,7 +91,9 @@ class GraphManagerService:
         _, _, _, versioning = await self.get_or_create_services(project_id, session)
         return await versioning.list_snapshots()
 
-    async def get_transitive_dependencies(self, project_id: UUID, session: AsyncSession, node_id: UUID, max_depth: int = 10) -> Dict:
+    async def get_transitive_dependencies(
+        self, project_id: UUID, session: AsyncSession, node_id: UUID, max_depth: int = 10
+    ) -> Dict:
         _, _, analytics, _ = await self.get_or_create_services(project_id, session)
         return await analytics.get_transitive_dependencies(node_id, max_depth)
 

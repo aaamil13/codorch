@@ -1,5 +1,5 @@
 tests\modules\test_opportunities_service.py: note: In member "test_generate_opportunities" of class "TestOpportunityService":
-tests\modules\test_opportunities_service.py:137: error: Missing named argument "goal_id" for "OpportunityGenerateRequest"  [call-arg]
+tests\modules\test_opportunities_service.py:134: error: Missing named argument "goal_id" for "OpportunityGenerateRequest"  [call-arg]
 modules\architecture\service.py: note: In member "set_project_context" of class "ArchitectureService":
 modules\architecture\service.py:50: error: Function is missing a return type annotation  [no-untyped-def]
 modules\architecture\service.py:52: error: Incompatible types in assignment (expression has type "UUID", variable has type "None")  [assignment]
@@ -24,66 +24,14 @@ modules\architecture\service.py:348: error: Function is missing a return type an
 core\tree_monitors.py: note: In member "_check_high_complexity" of class "TreeMonitoringService":
 core\tree_monitors.py:117: error: Returning Any from function declared to return "bool"  [no-any-return]
 core\ai_governor.py:24: error: Unused "type: ignore" comment  [unused-ignore]
-ai_agents\requirements_team.py: note: In function "get_requirements_analyst_agent":
-ai_agents\requirements_team.py:53: error: Function is missing a return type annotation  [no-untyped-def]
-ai_agents\requirements_team.py: note: In function "get_requirements_validator_agent":
-ai_agents\requirements_team.py:84: error: Function is missing a return type annotation  [no-untyped-def]
-ai_agents\requirements_team.py: note: In function "get_technology_advisor_agent":
-ai_agents\requirements_team.py:122: error: Function is missing a return type annotation  [no-untyped-def]
 ai_agents\code_generation_team.py:267: error: Unused "type: ignore" comment  [unused-ignore]
 ai_agents\code_generation_team.py:274: error: Unused "type: ignore" comment  [unused-ignore]
-api\v1\requirements.py: note: In function "create_requirement":
-api\v1\requirements.py:42: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "list_requirements":
-api\v1\requirements.py:54: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "list_module_requirements":
-api\v1\requirements.py:74: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "get_requirement":
-api\v1\requirements.py:86: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "update_requirement":
-api\v1\requirements.py:100: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "delete_requirement":
-api\v1\requirements.py:115: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "approve_requirement":
-api\v1\requirements.py:128: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "validate_requirement":
-api\v1\requirements.py:147: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py:184: error: List comprehension has incompatible type List[dict[str, Any]]; expected List[ValidationIssue]  [misc]
-api\v1\requirements.py: note: In function "validate_batch":
-api\v1\requirements.py:198: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "get_suggestions":
-api\v1\requirements.py:211: error: Function is missing a return type annotation  [no-untyped-def]
 api\v1\requirements.py: note: In function "generate_technology_recommendations":
-api\v1\requirements.py:238: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py:298: error: Incompatible types in assignment (expression has type "TechnologyRecommendation", variable has type "dict[str, Any]")  [assignment]
-api\v1\requirements.py:299: error: "dict[str, Any]" has no attribute "technology_type"  [attr-defined]
-api\v1\requirements.py:302: error: Argument "recommendations" to "TechnologyRecommendationSummary" has incompatible type "list[TechnologyRecommendation]"; expected "list[TechnologyRecommendationResponse]"  [arg-type]
-api\v1\requirements.py: note: In function "list_technology_recommendations":
-api\v1\requirements.py:312: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "get_technology_recommendation":
-api\v1\requirements.py:326: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "update_technology_recommendation":
-api\v1\requirements.py:340: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "delete_technology_recommendation":
-api\v1\requirements.py:355: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "create_api_specification":
-api\v1\requirements.py:373: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "list_api_specifications":
-api\v1\requirements.py:385: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "get_api_specification":
-api\v1\requirements.py:397: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "update_api_specification":
-api\v1\requirements.py:411: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "delete_api_specification":
-api\v1\requirements.py:426: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "get_requirements_summary":
-api\v1\requirements.py:444: error: Function is missing a return type annotation  [no-untyped-def]
-api\v1\requirements.py: note: In function "get_requirements_report":
-api\v1\requirements.py:456: error: Function is missing a return type annotation  [no-untyped-def]
+api\v1\requirements.py:290: error: Incompatible types in assignment (expression has type "TechnologyRecommendation", variable has type "dict[str, Any]")  [assignment]
+api\v1\requirements.py:291: error: "dict[str, Any]" has no attribute "technology_type"  [attr-defined]
+api\v1\requirements.py:294: error: Argument "recommendations" to "TechnologyRecommendationSummary" has incompatible type "list[TechnologyRecommendation]"; expected "list[TechnologyRecommendationResponse]"  [arg-type]
 api\v1\architecture.py: note: In function "generate_architecture":
 api\v1\architecture.py:141: error: Need type annotation for "created_rules" (hint: "created_rules: list[<type>] = ...")  [var-annotated]
-api\v1\architecture.py: note: In function "analyze_module_impact_advanced":
-api\v1\architecture.py:477: error: Function is missing a return type annotation  [no-untyped-def]
 api\v1\architecture.py: note: In function "simulate_module_change":
 api\v1\architecture.py:496: error: Function is missing a return type annotation  [no-untyped-def]
 api\v1\architecture.py: note: In function "get_dependency_analysis":
@@ -143,4 +91,4 @@ tests\e2e\test_refmemtree_e2e.py: note: In function "auth_headers":
 tests\e2e\test_refmemtree_e2e.py:423: error: Function is missing a return type annotation  [no-untyped-def]
 tests\e2e\test_refmemtree_e2e.py: note: In function "sample_project":
 tests\e2e\test_refmemtree_e2e.py:430: error: Function is missing a type annotation  [no-untyped-def]
-Found 77 errors in 12 files (checked 118 source files)
+Found 50 errors in 11 files (checked 118 source files)

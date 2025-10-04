@@ -33,14 +33,16 @@ class TestGraphManagerService:
         assert id(manager1) == id(manager2)
 
     @pytest.mark.asyncio
-    async def test_service_instance_caching(self, graph_manager: GraphManagerService, async_session: AsyncSession) -> None:
+    async def test_service_instance_caching(
+        self, graph_manager: GraphManagerService, async_session: AsyncSession
+    ) -> None:
         """Test that services are cached per project_id."""
         project_id = uuid4()
 
         # First call - should create services
         services1 = await graph_manager.get_or_create_services(project_id, async_session)
         assert all(s is not None for s in services1)
-        
+
         # Second call - should return the same cached instances
         services2 = await graph_manager.get_or_create_services(project_id, async_session)
         assert all(s is not None for s in services2)

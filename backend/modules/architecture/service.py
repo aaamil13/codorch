@@ -201,7 +201,7 @@ class ArchitectureService:
         try:
             graph_manager = get_graph_manager()
             _, _, analytics, _ = await graph_manager.get_or_create_services(data.project_id, self.db)
-            graph = analytics.graph_system # Or from any other service
+            graph = analytics.graph_system  # Or from any other service
 
             if graph:
                 # Get nodes from RefMemTree

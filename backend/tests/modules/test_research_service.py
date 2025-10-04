@@ -39,7 +39,9 @@ class TestResearchService:
     """Test ResearchService methods."""
 
     @pytest.mark.asyncio
-    async def test_create_session(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_create_session(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test creating research session."""
         data = ResearchSessionCreate(
             project_id=test_project.id,
@@ -69,7 +71,9 @@ class TestResearchService:
         assert retrieved.id == created.id
 
     @pytest.mark.asyncio
-    async def test_list_sessions(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_list_sessions(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test listing sessions."""
         for i in range(3):
             data = ResearchSessionCreate(
@@ -83,7 +87,9 @@ class TestResearchService:
         assert len(sessions) == 3
 
     @pytest.mark.asyncio
-    async def test_list_sessions_with_status_filter(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_list_sessions_with_status_filter(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test filtering sessions by status."""
         # Create active session
         data1 = ResearchSessionCreate(
@@ -106,7 +112,9 @@ class TestResearchService:
         assert active_sessions[0].status == "active"
 
     @pytest.mark.asyncio
-    async def test_archive_session(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_archive_session(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test archiving session."""
         data = ResearchSessionCreate(
             project_id=test_project.id,
@@ -120,7 +128,9 @@ class TestResearchService:
         assert archived.status == "archived"
 
     @pytest.mark.asyncio
-    async def test_create_message(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_create_message(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test creating message."""
         session_data = ResearchSessionCreate(
             project_id=test_project.id,
@@ -140,7 +150,9 @@ class TestResearchService:
         assert message.message_metadata == {"test": "data"}
 
     @pytest.mark.asyncio
-    async def test_get_messages(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_get_messages(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test getting messages."""
         session_data = ResearchSessionCreate(
             project_id=test_project.id,
@@ -160,7 +172,9 @@ class TestResearchService:
         assert len(messages) == 3
 
     @pytest.mark.asyncio
-    async def test_create_finding(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_create_finding(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test creating finding."""
         session_data = ResearchSessionCreate(
             project_id=test_project.id,
@@ -183,7 +197,9 @@ class TestResearchService:
         assert finding.confidence_score == 0.8
 
     @pytest.mark.asyncio
-    async def test_list_findings(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_list_findings(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test listing findings."""
         session_data = ResearchSessionCreate(
             project_id=test_project.id,
@@ -205,7 +221,9 @@ class TestResearchService:
         assert len(findings) == 3
 
     @pytest.mark.asyncio
-    async def test_get_high_confidence_findings(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_get_high_confidence_findings(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test getting high-confidence findings."""
         session_data = ResearchSessionCreate(
             project_id=test_project.id,
@@ -242,7 +260,9 @@ class TestResearchService:
         assert high_findings[0].confidence_score >= 0.7
 
     @pytest.mark.asyncio
-    async def test_get_session_statistics(self, research_service: ResearchService, test_project: Project, test_user: User) -> None:
+    async def test_get_session_statistics(
+        self, research_service: ResearchService, test_project: Project, test_user: User
+    ) -> None:
         """Test getting session statistics."""
         session_data = ResearchSessionCreate(
             project_id=test_project.id,

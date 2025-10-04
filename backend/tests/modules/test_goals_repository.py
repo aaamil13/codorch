@@ -49,7 +49,7 @@ class TestGoalRepository:
         assert goal.description == "Test description"
         assert goal.category == "business"
         assert goal.project_id == test_project.id
-        assert goal.status == "draft" # Default status
+        assert goal.status == "draft"  # Default status
 
     @pytest.mark.asyncio
     async def test_get_goal_by_id(self, goal_repo: GoalRepository, test_project: Project) -> None:
@@ -97,14 +97,14 @@ class TestGoalRepository:
                 title="Business Goal",
                 category="business",
             ),
-            test_project.id
+            test_project.id,
         )
         await goal_repo.create(
             GoalCreate(
                 title="Technical Goal",
                 category="technical",
             ),
-            test_project.id
+            test_project.id,
         )
 
         # Note: get_by_project doesn't filter by category, this test is flawed.
@@ -163,7 +163,7 @@ class TestGoalRepository:
                 GoalCreate(
                     title=f"Goal {i}",
                 ),
-                test_project.id
+                test_project.id,
             )
 
         # Get first 5

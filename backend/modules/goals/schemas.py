@@ -78,7 +78,7 @@ class GoalUpdate(BaseSchema):
     status: Optional[str] = Field(default=None)
     completion_percentage: Optional[float] = Field(default=None, ge=0, le=100)
     metrics: Optional[list[MetricDefinition]] = Field(default=None)
-    
+
     # SMART validation scores
     specific_score: Optional[float] = Field(default=None)
     measurable_score: Optional[float] = Field(default=None)
