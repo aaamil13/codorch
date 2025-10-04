@@ -4,9 +4,11 @@ version = "0.2.0"
 description = "Codorch Backend - AI-Powered Business Orchestration Platform"
 authors = ["Codorch Team"]
 readme = "README.md"
-packages = [{include = "backend"}]
+packages = [{include = "*"}]
+
 
 [tool.poetry.dependencies]
+refmemtree = {path = "D:/Dev/RefMemTree-main", develop = true}
 python = ">=3.11,<3.14"
 fastapi = "^0.118.0"
 pyyaml = ">=6.0"
@@ -31,6 +33,7 @@ python-multipart = "^0.0.20"
 websockets = "^15.0.1"
 pydantic-settings = "^2.11.0"
 starlette = "^0.48.0"
+
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.4.2"

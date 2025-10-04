@@ -3,7 +3,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.lib.refmemtree.graph_system import GraphSystem, GraphNode
+from refmemtree import GraphSystem, GraphNode
 
 
 class GraphAnalyticsService:

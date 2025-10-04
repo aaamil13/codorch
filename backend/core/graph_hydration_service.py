@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import ArchitectureModule, ArchitectureRule, ModuleDependency
-from backend.lib.refmemtree.graph_system import GraphSystem, GraphNode
+from refmemtree import GraphSystem, GraphNode
 
 
 class GraphHydrationService:
